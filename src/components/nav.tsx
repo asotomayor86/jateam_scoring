@@ -1,0 +1,190 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/auth/client";
+
+type Props = {
+  displayName: string;
+  isAdmin: boolean;
+};
+
+const enlaces = [
+  { href: "/", label: "Inicio" },
+  { href: "/tiradas", label: "Tiradas" },
+  { href: "/yo", label: "Mis tiradas" },
+  { href: "/perfil", label: "Perfil" },
+];
+
+/**
+ * Barra de navegación del área privada. En móvil pasa a hamburguesa + drawer
+ * (CSS en globals.css). El enlace "Miembros" solo aparece para el encargado.
+ */
+export function Nav({ displayName, isAdmin }: Props) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  async function cerrarSesion() {
+    await authClient.signOut();
+    router.replace("/login");
+    router.refresh();
+  }
+
+  const items = isAdmin
+    ? [...enlaces, { href: "/miembros", label: "Miembros" }]
+    : enlaces;
+
+  const esActivo = (href: string) =>
+    href === "/"
+      ? pathname === "/"
+      : pathname === href || pathname.startsWith(href + "/");
+
+  return (
+    <header
+      className={open ? "nav-open" : undefined}
+      style={{
+        borderBottom: "1px solid var(--borde)",
+        background: "var(--superficie)",
+        WebkitBackdropFilter: "blur(14px) saturate(140%)",
+        backdropFilter: "blur(14px) saturate(140%)",
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+      }}
+    >
+      <nav
+        className="contenedor"
+        style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+      >
+        <Link
+          href="/"
+          onClick={() => setOpen(false)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.45rem",
+            fontWeight: 700,
+            color: "inherit",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icon.svg"
+            alt=""
+            aria-hidden="true"
+            width={28}
+            height={28}
+            style={{ display: "block", borderRadius: 6 }}
+          />
+          JA Team
+        </Link>
+
+        {/* Enlaces en línea (solo escritorio). */}
+        <div className="nav-links">
+          {items.map((e) => {
+            const activo = esActivo(e.href);
+            return (
+              <Link
+                key={e.href}
+                href={e.href}
+                style={{
+                  padding: "0.35rem 0.7rem",
+                  borderRadius: 8,
+                  fontSize: "0.9rem",
+                  background: activo ? "var(--superficie-2)" : "transparent",
+                  color: activo ? "var(--texto)" : "var(--texto-suave)",
+                }}
+              >
+                {e.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        <span
+          className="nav-user"
+          style={{
+            fontSize: "0.85rem",
+            color: "var(--texto-suave)",
+            maxWidth: 140,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {displayName}
+        </span>
+        <button
+          className="nav-signout"
+          type="button"
+          onClick={cerrarSesion}
+          style={{
+            border: "1px solid var(--borde)",
+            background: "transparent",
+            color: "var(--texto-suave)",
+            borderRadius: 8,
+            padding: "0.35rem 0.7rem",
+            cursor: "pointer",
+            fontSize: "0.85rem",
+          }}
+        >
+          Salir
+        </button>
+
+        {/* Hamburguesa (solo móvil). */}
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={open}
+          aria-controls="nav-drawer"
+          onClick={() => setOpen((o) => !o)}
+          style={{ marginLeft: "auto" }}
+        >
+          {open ? "✕" : "☰"}
+        </button>
+      </nav>
+
+      {/* Drawer móvil. */}
+      <div id="nav-drawer" className="nav-drawer">
+        {items.map((e) => (
+          <Link key={e.href} href={e.href} data-activo={esActivo(e.href)}>
+            {e.label}
+          </Link>
+        ))}
+        <div className="nav-drawer-foot">
+          <span
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {displayName}
+          </span>
+          <button
+            type="button"
+            onClick={cerrarSesion}
+            style={{
+              border: "1px solid var(--borde)",
+              background: "transparent",
+              color: "var(--texto-suave)",
+              borderRadius: 8,
+              padding: "0.45rem 0.85rem",
+              cursor: "pointer",
+              fontSize: "0.9rem",
+            }}
+          >
+            Salir
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

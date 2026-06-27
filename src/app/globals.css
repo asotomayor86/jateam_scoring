@@ -1,0 +1,297 @@
+@import "tailwindcss";
+
+/* Estilos de los componentes de UI de Neon Auth (login, reset, etc.). */
+@import "@neondatabase/auth/ui/tailwind";
+
+/* ============================================================================
+   Tema JA Team Scoring: oscuro de polígono de tiro, paneles translúcidos
+   ("glass") y acentos ámbar/oro (anillos de diana). Mobile-first.
+   ========================================================================== */
+:root {
+  --fondo: #0b0f14;
+  --superficie: rgba(20, 27, 36, 0.62);
+  --superficie-2: rgba(33, 43, 56, 0.62);
+  --borde: rgba(255, 255, 255, 0.10);
+  --texto: #eef2f6;
+  --texto-suave: #9fb0c0;
+  --acento: #ffc34d;
+  --acento-fuerte: #f59e0b;
+  --oro: #f5c451;
+  --verde: #46c98b;
+  --rojo: #ef5a6f;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--font-barlow), "Barlow Semi Condensed", system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fondo fijo: degradados oscuros + un sutil "anillo de diana" arriba. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--fondo);
+  background-image:
+    radial-gradient(900px 640px at 80% -16%, rgba(245, 158, 11, 0.16) 0%, transparent 56%),
+    radial-gradient(820px 620px at 8% 112%, rgba(56, 132, 255, 0.10) 0%, transparent 60%),
+    linear-gradient(155deg, #121922 0%, #0c1117 55%, #080b10 100%);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Contenedor central, mobile-first. */
+.contenedor {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Panel "glass" reutilizable (lo usan Card y la barra de navegación). */
+.glass {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* Botones de acción reutilizables. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+  background: var(--superficie-2);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primario {
+  border: none;
+  background: var(--acento-fuerte);
+  color: #1a1205;
+}
+.btn-bloque {
+  width: 100%;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Etiquetas de tipo de tirada. */
+.chip {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--borde);
+  color: var(--texto-suave);
+}
+.chip-oficial { color: #1a1205; background: var(--oro); border-color: transparent; }
+.chip-semioficial { color: var(--acento); border-color: var(--acento); }
+.chip-entrenamiento { color: var(--texto-suave); }
+
+/* --- Banner de instalación (PWA) --- */
+.install-banner {
+  background: linear-gradient(
+    90deg,
+    rgba(245, 158, 11, 0.20),
+    rgba(33, 43, 56, 0.62)
+  );
+  border-bottom: 1px solid var(--borde);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  padding-top: env(safe-area-inset-top);
+}
+.install-banner-row {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0.55rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.install-banner-row img {
+  display: block;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.install-banner-text {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--texto);
+  line-height: 1.2;
+}
+.install-banner-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.install-banner-cta {
+  border: none;
+  background: var(--acento-fuerte);
+  color: #1a1205;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.install-banner-close {
+  border: 1px solid var(--borde);
+  background: transparent;
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.install-banner-help {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1rem 0.7rem 2.4rem;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.install-banner-help strong {
+  color: var(--texto);
+}
+
+/* --- Navegación: dos variantes según viewport --- */
+.nav-toggle { display: none; }
+.nav-drawer { display: none; }
+.nav-links { display: flex; gap: 0.5rem; flex: 1; flex-wrap: wrap; }
+
+@media (max-width: 720px) {
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--texto);
+    cursor: pointer;
+    font-size: 1.1rem;
+  }
+  .nav-links { display: none; }
+  .nav-user { display: none; }
+  .nav-signout { display: none; }
+  .nav-drawer {
+    display: none;
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid var(--borde);
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .nav-open .nav-drawer { display: flex; }
+  .nav-drawer a {
+    padding: 0.7rem 0.85rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    background: var(--superficie-2);
+  }
+  .nav-drawer a[data-activo="true"] {
+    background: var(--acento-fuerte);
+    color: #1a1205;
+  }
+  .nav-drawer-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 0.4rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid var(--borde);
+    color: var(--texto-suave);
+    font-size: 0.9rem;
+  }
+}
+
+/* Títulos de sección: condensados, en mayúsculas. */
+.seccion-titulo {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+/* --- Libreta: rejilla de tiros y series --- */
+.serie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 0.4rem;
+}
+.tiro-input {
+  width: 100%;
+  text-align: center;
+  padding: 0.55rem 0.2rem;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--superficie-2);
+  color: var(--texto);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.tiro-input:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: 0;
+}
+
+/* Tabla de ranking / series. */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.tabla th,
+.tabla td {
+  text-align: left;
+  padding: 0.5rem 0.55rem;
+  border-bottom: 1px solid var(--borde);
+}
+.tabla th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texto-suave);
+}
+.tabla .num { text-align: right; }
