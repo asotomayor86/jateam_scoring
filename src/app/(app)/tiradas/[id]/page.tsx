@@ -8,6 +8,7 @@ import { RankingTable } from "@/components/ranking-table";
 import { Card, SeccionTitulo, TipoChip } from "@/components/ui";
 import { ConfirmButton } from "@/components/confirm-button";
 import { formatPunt } from "@/lib/scoring";
+import { etiquetaGranularidad } from "@/lib/granularidad";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function TiradaDetallePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { user } = await requireUser();
+  const { user, profile } = await requireUser();
   const { id } = await params;
 
   const tirada = await getTirada(id);
@@ -122,12 +123,48 @@ export default async function TiradaDetallePage({
           </form>
         </Card>
       ) : (
-        <form action={apuntarme} style={{ marginBottom: "1rem" }}>
-          <input type="hidden" name="tiradaId" value={id} />
-          <button type="submit" className="btn btn-primario btn-bloque">
-            🎯 Apuntarme a esta tirada
-          </button>
-        </form>
+        <Card style={{ marginBottom: "1rem" }}>
+          <form
+            action={apuntarme}
+            style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
+          >
+            <input type="hidden" name="tiradaId" value={id} />
+            <label
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--texto-suave)",
+              }}
+            >
+              ¿Cómo quieres apuntar esta tirada?
+            </label>
+            <select
+              name="granularity"
+              defaultValue={profile.defaultGranularity}
+              style={{
+                width: "100%",
+                padding: "0.6rem 0.7rem",
+                borderRadius: 8,
+                border: "1px solid var(--borde)",
+                background: "var(--superficie-2)",
+                color: "var(--texto)",
+                fontSize: "0.95rem",
+              }}
+            >
+              <option value="tiro">Tiro a tiro</option>
+              <option value="bloque5">Total de bloques de 5</option>
+              <option value="bloque10">Total de bloques de 10</option>
+              <option value="serie">Total por serie</option>
+            </select>
+            <span style={{ fontSize: "0.78rem", color: "var(--texto-suave)" }}>
+              Es el modo inicial; podrás cambiarlo en cada serie dentro de la
+              libreta. (Tu preferencia por defecto:{" "}
+              {etiquetaGranularidad(profile.defaultGranularity)}).
+            </span>
+            <button type="submit" className="btn btn-primario btn-bloque">
+              🎯 Apuntarme a esta tirada
+            </button>
+          </form>
+        </Card>
       )}
 
       <SeccionTitulo>Ranking</SeccionTitulo>

@@ -23,6 +23,7 @@ export const config = {
   matcher: [
     "/",
     "/tiradas/:path*",
+    "/clubs/:path*",
     "/perfil/:path*",
     "/yo/:path*",
     "/miembros/:path*",

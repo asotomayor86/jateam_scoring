@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/auth/client";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type Props = {
   displayName: string;
@@ -14,6 +15,7 @@ const enlaces = [
   { href: "/", label: "Inicio" },
   { href: "/tiradas", label: "Tiradas" },
   { href: "/yo", label: "Mis tiradas" },
+  { href: "/clubs", label: "Clubes" },
   { href: "/perfil", label: "Perfil" },
 ];
 
@@ -120,6 +122,9 @@ export function Nav({ displayName, isAdmin }: Props) {
         >
           {displayName}
         </span>
+        <span className="nav-signout">
+          <ThemeToggle />
+        </span>
         <button
           className="nav-signout"
           type="button"
@@ -168,6 +173,7 @@ export function Nav({ displayName, isAdmin }: Props) {
           >
             {displayName}
           </span>
+          <ThemeToggle />
           <button
             type="button"
             onClick={cerrarSesion}

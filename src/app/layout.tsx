@@ -39,8 +39,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={barlow.variable}>
+    <html lang="es" className={barlow.variable} suppressHydrationWarning>
       <body>
+        {/* Aplica el tema (claro/oscuro) antes de pintar para evitar parpadeo. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('tema');if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';}if(t==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();`,
+          }}
+        />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

@@ -25,6 +25,30 @@ html {
   color-scheme: dark;
 }
 
+/* --- Tema claro (data-theme="light" en <html>) --- */
+:root[data-theme="light"] {
+  --fondo: #eef1f5;
+  --superficie: rgba(255, 255, 255, 0.82);
+  --superficie-2: rgba(20, 30, 45, 0.06);
+  --borde: rgba(20, 30, 45, 0.14);
+  --texto: #18212e;
+  --texto-suave: #566472;
+  --acento: #b45309;
+  --acento-fuerte: #f59e0b;
+  --oro: #d99a16;
+  --verde: #1f9d57;
+  --rojo: #d6394f;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="light"] body::before {
+  background-image:
+    radial-gradient(900px 640px at 80% -16%, rgba(245, 158, 11, 0.18) 0%, transparent 56%),
+    radial-gradient(820px 620px at 8% 112%, rgba(56, 132, 255, 0.10) 0%, transparent 60%),
+    linear-gradient(155deg, #f7f9fc 0%, #eef1f5 55%, #e7ebf1 100%);
+}
+
 body {
   margin: 0;
   background: var(--fondo);

@@ -172,11 +172,65 @@ export async function crearClub(
   return { ok: true, mensaje: `Club «${parsed.data.name}» añadido` };
 }
 
+/** Actualiza nombre y sigla de un club (cualquier miembro). */
+export async function actualizarClub(formData: FormData): Promise<void> {
+  await requireUser();
+  const id = String(formData.get("id") ?? "");
+  const esquema = z.object({
+    name: z.string().trim().min(2).max(60),
+    abbr: z
+      .string()
+      .trim()
+      .min(2)
+      .max(12)
+      .regex(/^[A-Za-z0-9]+$/),
+  });
+  const parsed = esquema.safeParse({
+    name: formData.get("name"),
+    abbr: formData.get("abbr"),
+  });
+  if (!id || !parsed.success) return;
+
+  await db
+    .update(clubs)
+    .set({ name: parsed.data.name, abbr: parsed.data.abbr.toUpperCase() })
+    .where(eq(clubs.id, id));
+
+  revalidatePath("/clubs");
+  revalidatePath("/tiradas/nueva");
+}
+
+/** Borra un club, solo si ninguna tirada lo usa (FK restrict). */
+export async function borrarClub(formData: FormData): Promise<void> {
+  await requireUser();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const enUso = await db
+    .select({ id: tiradas.id })
+    .from(tiradas)
+    .where(eq(tiradas.clubId, id))
+    .limit(1);
+  if (enUso.length > 0) return; // hay tiradas con ese club: no se borra
+
+  await db.delete(clubs).where(eq(clubs.id, id));
+  revalidatePath("/clubs");
+  revalidatePath("/tiradas/nueva");
+}
+
+const GRANULARIDADES = ["tiro", "bloque5", "bloque10", "serie"] as const;
+
 /** Apunta al usuario actual a una tirada: crea su hoja si no la tiene. */
 export async function apuntarme(formData: FormData): Promise<void> {
   const { user, profile } = await requireUser();
   const tiradaId = String(formData.get("tiradaId") ?? "");
   if (!tiradaId) return;
+
+  // Granularidad elegida al apuntarse; si no llega válida, la del perfil.
+  const elegida = String(formData.get("granularity") ?? "");
+  const granularity = (GRANULARIDADES as readonly string[]).includes(elegida)
+    ? (elegida as (typeof GRANULARIDADES)[number])
+    : profile.defaultGranularity;
 
   const existente = await db
     .select({ id: scorecards.id })
@@ -190,7 +244,7 @@ export async function apuntarme(formData: FormData): Promise<void> {
     await db.insert(scorecards).values({
       tiradaId,
       userId: user.id,
-      granularity: profile.defaultGranularity,
+      granularity,
     });
   }
 
