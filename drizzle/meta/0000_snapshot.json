@@ -1,5 +1,5 @@
 {
-  "id": "61c41223-e998-436d-8ae9-178a8104f2c7",
+  "id": "31e3ceda-14e2-4822-8d2a-d2451612f314",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -59,45 +59,7 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {
-        "crud-authenticated-policy-select": {
-          "name": "crud-authenticated-policy-select",
-          "as": "PERMISSIVE",
-          "for": "SELECT",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true"
-        },
-        "crud-authenticated-policy-insert": {
-          "name": "crud-authenticated-policy-insert",
-          "as": "PERMISSIVE",
-          "for": "INSERT",
-          "to": [
-            "authenticated"
-          ],
-          "withCheck": "true"
-        },
-        "crud-authenticated-policy-update": {
-          "name": "crud-authenticated-policy-update",
-          "as": "PERMISSIVE",
-          "for": "UPDATE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true",
-          "withCheck": "true"
-        },
-        "crud-authenticated-policy-delete": {
-          "name": "crud-authenticated-policy-delete",
-          "as": "PERMISSIVE",
-          "for": "DELETE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true"
-        }
-      },
+      "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
@@ -195,45 +157,7 @@
           ]
         }
       },
-      "policies": {
-        "crud-authenticated-policy-select": {
-          "name": "crud-authenticated-policy-select",
-          "as": "PERMISSIVE",
-          "for": "SELECT",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true"
-        },
-        "crud-authenticated-policy-insert": {
-          "name": "crud-authenticated-policy-insert",
-          "as": "PERMISSIVE",
-          "for": "INSERT",
-          "to": [
-            "authenticated"
-          ],
-          "withCheck": "(\n  select exists (\n    select 1 from profiles p\n    where p.id = (select auth.user_id()) and p.is_admin = true\n  )\n)"
-        },
-        "crud-authenticated-policy-update": {
-          "name": "crud-authenticated-policy-update",
-          "as": "PERMISSIVE",
-          "for": "UPDATE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(\n  select exists (\n    select 1 from profiles p\n    where p.id = (select auth.user_id()) and p.is_admin = true\n  )\n)",
-          "withCheck": "(\n  select exists (\n    select 1 from profiles p\n    where p.id = (select auth.user_id()) and p.is_admin = true\n  )\n)"
-        },
-        "crud-authenticated-policy-delete": {
-          "name": "crud-authenticated-policy-delete",
-          "as": "PERMISSIVE",
-          "for": "DELETE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(\n  select exists (\n    select 1 from profiles p\n    where p.id = (select auth.user_id()) and p.is_admin = true\n  )\n)"
-        }
-      },
+      "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
@@ -286,45 +210,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {
-        "crud-authenticated-policy-select": {
-          "name": "crud-authenticated-policy-select",
-          "as": "PERMISSIVE",
-          "for": "SELECT",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true"
-        },
-        "crud-authenticated-policy-insert": {
-          "name": "crud-authenticated-policy-insert",
-          "as": "PERMISSIVE",
-          "for": "INSERT",
-          "to": [
-            "authenticated"
-          ],
-          "withCheck": "(select auth.user_id() = \"profiles\".\"id\")"
-        },
-        "crud-authenticated-policy-update": {
-          "name": "crud-authenticated-policy-update",
-          "as": "PERMISSIVE",
-          "for": "UPDATE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(select auth.user_id() = \"profiles\".\"id\")",
-          "withCheck": "(select auth.user_id() = \"profiles\".\"id\")"
-        },
-        "crud-authenticated-policy-delete": {
-          "name": "crud-authenticated-policy-delete",
-          "as": "PERMISSIVE",
-          "for": "DELETE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(select auth.user_id() = \"profiles\".\"id\")"
-        }
-      },
+      "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
@@ -429,45 +315,7 @@
           ]
         }
       },
-      "policies": {
-        "crud-authenticated-policy-select": {
-          "name": "crud-authenticated-policy-select",
-          "as": "PERMISSIVE",
-          "for": "SELECT",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true"
-        },
-        "crud-authenticated-policy-insert": {
-          "name": "crud-authenticated-policy-insert",
-          "as": "PERMISSIVE",
-          "for": "INSERT",
-          "to": [
-            "authenticated"
-          ],
-          "withCheck": "(select auth.user_id() = \"scorecards\".\"user_id\")"
-        },
-        "crud-authenticated-policy-update": {
-          "name": "crud-authenticated-policy-update",
-          "as": "PERMISSIVE",
-          "for": "UPDATE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(select auth.user_id() = \"scorecards\".\"user_id\")",
-          "withCheck": "(select auth.user_id() = \"scorecards\".\"user_id\")"
-        },
-        "crud-authenticated-policy-delete": {
-          "name": "crud-authenticated-policy-delete",
-          "as": "PERMISSIVE",
-          "for": "DELETE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(select auth.user_id() = \"scorecards\".\"user_id\")"
-        }
-      },
+      "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
@@ -554,45 +402,7 @@
           ]
         }
       },
-      "policies": {
-        "crud-authenticated-policy-select": {
-          "name": "crud-authenticated-policy-select",
-          "as": "PERMISSIVE",
-          "for": "SELECT",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true"
-        },
-        "crud-authenticated-policy-insert": {
-          "name": "crud-authenticated-policy-insert",
-          "as": "PERMISSIVE",
-          "for": "INSERT",
-          "to": [
-            "authenticated"
-          ],
-          "withCheck": "(\n        select exists (\n          select 1 from scorecards s\n          where s.id = \"series\".\"scorecard_id\" and s.user_id = (select auth.user_id())\n        )\n      )"
-        },
-        "crud-authenticated-policy-update": {
-          "name": "crud-authenticated-policy-update",
-          "as": "PERMISSIVE",
-          "for": "UPDATE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(\n        select exists (\n          select 1 from scorecards s\n          where s.id = \"series\".\"scorecard_id\" and s.user_id = (select auth.user_id())\n        )\n      )",
-          "withCheck": "(\n        select exists (\n          select 1 from scorecards s\n          where s.id = \"series\".\"scorecard_id\" and s.user_id = (select auth.user_id())\n        )\n      )"
-        },
-        "crud-authenticated-policy-delete": {
-          "name": "crud-authenticated-policy-delete",
-          "as": "PERMISSIVE",
-          "for": "DELETE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(\n        select exists (\n          select 1 from scorecards s\n          where s.id = \"series\".\"scorecard_id\" and s.user_id = (select auth.user_id())\n        )\n      )"
-        }
-      },
+      "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
@@ -722,45 +532,7 @@
           ]
         }
       },
-      "policies": {
-        "crud-authenticated-policy-select": {
-          "name": "crud-authenticated-policy-select",
-          "as": "PERMISSIVE",
-          "for": "SELECT",
-          "to": [
-            "authenticated"
-          ],
-          "using": "true"
-        },
-        "crud-authenticated-policy-insert": {
-          "name": "crud-authenticated-policy-insert",
-          "as": "PERMISSIVE",
-          "for": "INSERT",
-          "to": [
-            "authenticated"
-          ],
-          "withCheck": "(select auth.user_id() = \"tiradas\".\"created_by\")"
-        },
-        "crud-authenticated-policy-update": {
-          "name": "crud-authenticated-policy-update",
-          "as": "PERMISSIVE",
-          "for": "UPDATE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(select auth.user_id() = \"tiradas\".\"created_by\")",
-          "withCheck": "(select auth.user_id() = \"tiradas\".\"created_by\")"
-        },
-        "crud-authenticated-policy-delete": {
-          "name": "crud-authenticated-policy-delete",
-          "as": "PERMISSIVE",
-          "for": "DELETE",
-          "to": [
-            "authenticated"
-          ],
-          "using": "(select auth.user_id() = \"tiradas\".\"created_by\")"
-        }
-      },
+      "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     }

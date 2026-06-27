@@ -35,3 +35,5 @@ yarn-error.log*
 
 # Build artifact de TypeScript
 tsconfig.tsbuildinfo
+
+.vercel
