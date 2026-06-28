@@ -64,6 +64,7 @@ export async function getTirada(id: string) {
       notes: tiradas.notes,
       createdBy: tiradas.createdBy,
       modalityId: tiradas.modalityId,
+      clubId: tiradas.clubId,
       modalitySlug: modalities.slug,
       modalityName: modalities.name,
       modalityAbbr: modalities.abbr,

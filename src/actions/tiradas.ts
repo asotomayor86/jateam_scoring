@@ -48,13 +48,18 @@ const esquemaTirada = z.object({
     .transform((v) => (v ? v : null)),
 });
 
-/** Encuentra un código libre añadiendo sufijo -2, -3… si el base ya existe. */
-async function codigoLibre(base: string): Promise<string> {
+/**
+ * Encuentra un código libre añadiendo sufijo -2, -3… si el base ya existe.
+ * `excludeId` ignora la propia tirada (al editar) para no chocar consigo misma.
+ */
+async function codigoLibre(base: string, excludeId?: string): Promise<string> {
   const existentes = await db
-    .select({ code: tiradas.code })
+    .select({ id: tiradas.id, code: tiradas.code })
     .from(tiradas)
     .where(like(tiradas.code, `${base}%`));
-  const usados = new Set(existentes.map((r) => r.code));
+  const usados = new Set(
+    existentes.filter((r) => r.id !== excludeId).map((r) => r.code),
+  );
   if (!usados.has(base)) return base;
   let n = 2;
   while (usados.has(`${base}-${n}`)) n++;
@@ -121,6 +126,81 @@ export async function crearTirada(
   revalidatePath("/tiradas");
   revalidatePath("/");
   redirect(`/tiradas/${nuevoId}`);
+}
+
+/**
+ * Edita una tirada existente. La puede editar quien la creó o el encargado.
+ * Regenera el código estandarizado a partir de los nuevos valores.
+ */
+export async function actualizarTirada(
+  _prev: ResultadoAccion,
+  formData: FormData,
+): Promise<ResultadoAccion> {
+  const { user, profile } = await requireUser();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { ok: false, mensaje: "Falta la tirada" };
+
+  const [actual] = await db
+    .select({ createdBy: tiradas.createdBy })
+    .from(tiradas)
+    .where(eq(tiradas.id, id))
+    .limit(1);
+  if (!actual) return { ok: false, mensaje: "La tirada no existe" };
+  if (actual.createdBy !== user.id && !profile.isAdmin) {
+    return { ok: false, mensaje: "No puedes editar esta tirada" };
+  }
+
+  const parsed = esquemaTirada.safeParse({
+    date: formData.get("date"),
+    startTime: formData.get("startTime"),
+    modalityId: formData.get("modalityId"),
+    clubId: formData.get("clubId"),
+    type: formData.get("type"),
+    caliber: formData.get("caliber"),
+    name: formData.get("name"),
+    notes: formData.get("notes"),
+  });
+  if (!parsed.success) {
+    return { ok: false, mensaje: parsed.error.issues[0]?.message };
+  }
+  const datos = parsed.data;
+
+  const [mod] = await db
+    .select({ abbr: modalities.abbr })
+    .from(modalities)
+    .where(eq(modalities.id, datos.modalityId))
+    .limit(1);
+  const [club] = await db
+    .select({ abbr: clubs.abbr })
+    .from(clubs)
+    .where(eq(clubs.id, datos.clubId))
+    .limit(1);
+  if (!mod || !club) {
+    return { ok: false, mensaje: "Modalidad o campo no válidos" };
+  }
+
+  const base = codigoTirada({
+    date: datos.date,
+    modalityAbbr: mod.abbr,
+    clubAbbr: club.abbr,
+    type: datos.type as TiradaType,
+  });
+  const code = await codigoLibre(base, id);
+
+  try {
+    await db
+      .update(tiradas)
+      .set({ ...datos, code })
+      .where(eq(tiradas.id, id));
+  } catch (e) {
+    console.error("actualizarTirada error:", e);
+    return { ok: false, mensaje: "No se pudo guardar la tirada" };
+  }
+
+  revalidatePath(`/tiradas/${id}`);
+  revalidatePath("/tiradas");
+  revalidatePath("/");
+  redirect(`/tiradas/${id}`);
 }
 
 /** Borra una tirada (solo quien la creó). En cascada borra hojas y series. */

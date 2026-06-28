@@ -260,9 +260,19 @@ export default async function TiradaDetallePage({
       ) : null}
 
       {puedeGestionarCierre ? (
+        <Link
+          href={`/tiradas/${id}/editar`}
+          className="btn btn-bloque"
+          style={{ marginTop: "1.5rem" }}
+        >
+          ✏️ Editar tirada
+        </Link>
+      ) : null}
+
+      {puedeGestionarCierre ? (
         <form
           action={tirada.closed ? reabrirTirada : cerrarTirada}
-          style={{ marginTop: "1.5rem" }}
+          style={{ marginTop: "0.6rem" }}
         >
           <input type="hidden" name="id" value={id} />
           <ConfirmButton

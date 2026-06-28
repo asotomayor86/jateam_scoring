@@ -2,10 +2,28 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
-import { crearTirada, crearClub, type ResultadoAccion } from "@/actions/tiradas";
+import {
+  crearTirada,
+  actualizarTirada,
+  crearClub,
+  type ResultadoAccion,
+} from "@/actions/tiradas";
 import { Aviso, Card, estiloCampo } from "@/components/ui";
 
 type Opcion = { id: string; name: string };
+
+/** Valores de una tirada existente, para precargar el formulario al editar. */
+export type TiradaInicial = {
+  id: string;
+  date: string;
+  startTime: string | null;
+  modalityId: string;
+  clubId: string;
+  type: string;
+  caliber: string | null;
+  name: string | null;
+  notes: string | null;
+};
 
 const inicial: ResultadoAccion = { ok: false };
 
@@ -20,13 +38,19 @@ export function CreateTiradaForm({
   modalidades,
   clubs,
   hoy,
+  tirada,
 }: {
   modalidades: Opcion[];
   clubs: Opcion[];
   hoy: string;
+  tirada?: TiradaInicial;
 }) {
   const router = useRouter();
-  const [estado, accion, enviando] = useActionState(crearTirada, inicial);
+  const editar = !!tirada;
+  const [estado, accion, enviando] = useActionState(
+    editar ? actualizarTirada : crearTirada,
+    inicial,
+  );
   const [verClub, setVerClub] = useState(false);
 
   return (
@@ -35,6 +59,7 @@ export function CreateTiradaForm({
         action={accion}
         style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}
       >
+        {editar ? <input type="hidden" name="id" value={tirada!.id} /> : null}
         <div style={{ display: "flex", gap: "0.6rem" }}>
           <div style={{ flex: 1 }}>
             <label style={etiqueta}>Fecha</label>
@@ -42,19 +67,29 @@ export function CreateTiradaForm({
               name="date"
               type="date"
               required
-              defaultValue={hoy}
+              defaultValue={tirada?.date ?? hoy}
               style={estiloCampo}
             />
           </div>
           <div style={{ width: 120 }}>
             <label style={etiqueta}>Hora inicio</label>
-            <input name="startTime" type="time" style={estiloCampo} />
+            <input
+              name="startTime"
+              type="time"
+              defaultValue={tirada?.startTime ?? ""}
+              style={estiloCampo}
+            />
           </div>
         </div>
 
         <div>
           <label style={etiqueta}>Modalidad</label>
-          <select name="modalityId" required style={estiloCampo} defaultValue="">
+          <select
+            name="modalityId"
+            required
+            style={estiloCampo}
+            defaultValue={tirada?.modalityId ?? ""}
+          >
             <option value="" disabled>
               Elige modalidad…
             </option>
@@ -68,7 +103,12 @@ export function CreateTiradaForm({
 
         <div>
           <label style={etiqueta}>Campo</label>
-          <select name="clubId" required style={estiloCampo} defaultValue="">
+          <select
+            name="clubId"
+            required
+            style={estiloCampo}
+            defaultValue={tirada?.clubId ?? ""}
+          >
             <option value="" disabled>
               Elige campo…
             </option>
@@ -97,7 +137,12 @@ export function CreateTiradaForm({
 
         <div>
           <label style={etiqueta}>Tipo de tirada</label>
-          <select name="type" required style={estiloCampo} defaultValue="entrenamiento">
+          <select
+            name="type"
+            required
+            style={estiloCampo}
+            defaultValue={tirada?.type ?? "entrenamiento"}
+          >
             <option value="entrenamiento">Entrenamiento</option>
             <option value="semioficial">Semioficial</option>
             <option value="oficial">Oficial</option>
@@ -110,6 +155,7 @@ export function CreateTiradaForm({
             name="caliber"
             placeholder="p. ej. 9mm, .38, 22"
             maxLength={16}
+            defaultValue={tirada?.caliber ?? ""}
             style={estiloCampo}
           />
         </div>
@@ -120,13 +166,20 @@ export function CreateTiradaForm({
             name="name"
             placeholder="p. ej. Liga social jornada 3"
             maxLength={60}
+            defaultValue={tirada?.name ?? ""}
             style={estiloCampo}
           />
         </div>
 
         <div>
           <label style={etiqueta}>Notas (opcional)</label>
-          <textarea name="notes" rows={2} maxLength={300} style={estiloCampo} />
+          <textarea
+            name="notes"
+            rows={2}
+            maxLength={300}
+            defaultValue={tirada?.notes ?? ""}
+            style={estiloCampo}
+          />
         </div>
 
         <button
@@ -134,7 +187,11 @@ export function CreateTiradaForm({
           className="btn btn-primario btn-bloque"
           disabled={enviando}
         >
-          {enviando ? "Creando…" : "Crear tirada"}
+          {enviando
+            ? "Guardando…"
+            : editar
+              ? "Guardar cambios"
+              : "Crear tirada"}
         </button>
         {estado.mensaje && <Aviso tipo="error">{estado.mensaje}</Aviso>}
       </form>
