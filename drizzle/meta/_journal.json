@@ -43,6 +43,13 @@
       "when": 1782653583986,
       "tag": "0005_tranquil_menace",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782654173883,
+      "tag": "0006_chilly_shen",
+      "breakpoints": true
     }
   ]
 }

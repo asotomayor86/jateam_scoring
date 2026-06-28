@@ -17,8 +17,10 @@ export async function listComidas() {
       startTime: comidas.startTime,
       name: comidas.name,
       restaurantName: restaurants.name,
+      // Total de personas (cada apuntado cuenta como 1 + sus acompañantes).
       asistentes: sql<number>`(
-        select count(*)::int from ${comidaAttendees}
+        select coalesce(sum(1 + ${comidaAttendees.guests}), 0)::int
+        from ${comidaAttendees}
         where ${comidaAttendees.comidaId} = ${comidas.id}
       )`,
     })
@@ -48,11 +50,12 @@ export async function getComida(id: string) {
   return row ?? null;
 }
 
-/** Asistentes apuntados a una comida (nombre/apodo). */
+/** Asistentes apuntados a una comida (nombre/apodo + acompañantes). */
 export async function getAsistentes(comidaId: string) {
   return db
     .select({
       userId: comidaAttendees.userId,
+      guests: comidaAttendees.guests,
       displayName: profiles.displayName,
       nickname: profiles.nickname,
     })
@@ -62,10 +65,10 @@ export async function getAsistentes(comidaId: string) {
     .orderBy(asc(profiles.displayName));
 }
 
-/** ¿Está el usuario apuntado a la comida? */
-export async function estoyApuntado(comidaId: string, userId: string) {
+/** Asistencia del usuario a la comida (con acompañantes), o `null`. */
+export async function miAsistencia(comidaId: string, userId: string) {
   const [row] = await db
-    .select({ userId: comidaAttendees.userId })
+    .select({ guests: comidaAttendees.guests })
     .from(comidaAttendees)
     .where(
       and(
@@ -74,5 +77,5 @@ export async function estoyApuntado(comidaId: string, userId: string) {
       ),
     )
     .limit(1);
-  return !!row;
+  return row ?? null;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "comida_attendees" ADD COLUMN "guests" integer DEFAULT 0 NOT NULL;

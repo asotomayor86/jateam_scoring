@@ -87,16 +87,27 @@ export async function borrarComida(formData: FormData): Promise<void> {
   redirect("/comidas");
 }
 
-/** Apuntarse a una comida. */
+/**
+ * Apuntarse a una comida (o actualizar el nº de acompañantes si ya está
+ * apuntado). `guests` = personas además de uno mismo.
+ */
 export async function apuntarmeComida(formData: FormData): Promise<void> {
   const { user } = await requireUser();
   const comidaId = String(formData.get("comidaId") ?? "");
   if (!comidaId) return;
 
+  const guestsRaw = Number(formData.get("guests"));
+  const guests = Number.isFinite(guestsRaw)
+    ? Math.min(50, Math.max(0, Math.trunc(guestsRaw)))
+    : 0;
+
   await db
     .insert(comidaAttendees)
-    .values({ comidaId, userId: user.id })
-    .onConflictDoNothing();
+    .values({ comidaId, userId: user.id, guests })
+    .onConflictDoUpdate({
+      target: [comidaAttendees.comidaId, comidaAttendees.userId],
+      set: { guests },
+    });
 
   revalidatePath(`/comidas/${comidaId}`);
 }

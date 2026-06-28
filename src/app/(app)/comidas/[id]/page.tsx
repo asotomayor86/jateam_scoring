@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/auth/helpers";
-import { getComida, getAsistentes, estoyApuntado } from "@/db/queries/comidas";
+import { getComida, getAsistentes, miAsistencia } from "@/db/queries/comidas";
 import {
   apuntarmeComida,
   desapuntarmeComida,
@@ -22,11 +22,23 @@ export default async function ComidaDetallePage({
   const comida = await getComida(id);
   if (!comida) notFound();
 
-  const [asistentes, apuntado] = await Promise.all([
+  const [asistentes, mi] = await Promise.all([
     getAsistentes(id),
-    estoyApuntado(id, user.id),
+    miAsistencia(id, user.id),
   ]);
   const puedeBorrar = comida.createdBy === user.id || profile.isAdmin;
+  const totalPersonas = asistentes.reduce((a, x) => a + 1 + x.guests, 0);
+
+  const estiloNum = {
+    width: 80,
+    textAlign: "center" as const,
+    padding: "0.55rem 0.2rem",
+    borderRadius: 8,
+    border: "1px solid var(--borde)",
+    background: "var(--superficie-2)",
+    color: "var(--texto)",
+    fontSize: "1rem",
+  };
 
   return (
     <>
@@ -58,23 +70,71 @@ export default async function ComidaDetallePage({
         ) : null}
       </Card>
 
-      {apuntado ? (
-        <form action={desapuntarmeComida} style={{ marginBottom: "1rem" }}>
-          <input type="hidden" name="comidaId" value={id} />
-          <button type="submit" className="btn btn-bloque">
-            Estás apuntado · Desapuntarme
-          </button>
-        </form>
+      {mi ? (
+        <Card style={{ marginBottom: "1rem" }}>
+          <form
+            action={apuntarmeComida}
+            style={{ display: "flex", alignItems: "flex-end", gap: "0.6rem", flexWrap: "wrap" }}
+          >
+            <input type="hidden" name="comidaId" value={id} />
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", color: "var(--texto-suave)", marginBottom: "0.2rem" }}>
+                Acompañantes (además de ti)
+              </label>
+              <input
+                name="guests"
+                type="number"
+                min={0}
+                max={50}
+                defaultValue={mi.guests}
+                style={estiloNum}
+              />
+            </div>
+            <button type="submit" className="btn btn-primario">
+              Actualizar
+            </button>
+          </form>
+          <form action={desapuntarmeComida} style={{ marginTop: "0.6rem" }}>
+            <input type="hidden" name="comidaId" value={id} />
+            <button
+              type="submit"
+              className="btn"
+              style={{ fontSize: "0.85rem", color: "var(--rojo)" }}
+            >
+              Desapuntarme
+            </button>
+          </form>
+        </Card>
       ) : (
-        <form action={apuntarmeComida} style={{ marginBottom: "1rem" }}>
-          <input type="hidden" name="comidaId" value={id} />
-          <button type="submit" className="btn btn-primario btn-bloque">
-            🍽️ Apuntarme a la comida
-          </button>
-        </form>
+        <Card style={{ marginBottom: "1rem" }}>
+          <form
+            action={apuntarmeComida}
+            style={{ display: "flex", alignItems: "flex-end", gap: "0.6rem", flexWrap: "wrap" }}
+          >
+            <input type="hidden" name="comidaId" value={id} />
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", color: "var(--texto-suave)", marginBottom: "0.2rem" }}>
+                Acompañantes (además de ti)
+              </label>
+              <input
+                name="guests"
+                type="number"
+                min={0}
+                max={50}
+                defaultValue={0}
+                style={estiloNum}
+              />
+            </div>
+            <button type="submit" className="btn btn-primario">
+              🍽️ Apuntarme
+            </button>
+          </form>
+        </Card>
       )}
 
-      <SeccionTitulo>Apuntados ({asistentes.length})</SeccionTitulo>
+      <SeccionTitulo>
+        Apuntados ({totalPersonas} {totalPersonas === 1 ? "persona" : "personas"})
+      </SeccionTitulo>
       <Card>
         {asistentes.length === 0 ? (
           <p style={{ color: "var(--texto-suave)", margin: 0 }}>
@@ -86,6 +146,9 @@ export default async function ComidaDetallePage({
               <li key={a.userId} style={{ padding: "0.15rem 0" }}>
                 {a.nickname || a.displayName}
                 {a.userId === user.id ? " (tú)" : ""}
+                {a.guests > 0 ? (
+                  <span style={{ color: "var(--texto-suave)" }}> +{a.guests}</span>
+                ) : null}
               </li>
             ))}
           </ul>

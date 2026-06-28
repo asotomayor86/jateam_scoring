@@ -263,6 +263,8 @@ export const comidaAttendees = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
+    // Acompañantes que trae además de sí mismo (+1, +2, …).
+    guests: integer("guests").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
