@@ -90,6 +90,10 @@ export default async function ComidaDetallePage({
               style={estiloNum}
             />
           </form>
+          <p style={{ margin: "0.3rem 0 0", fontSize: "0.78rem", color: "var(--texto-suave)" }}>
+            El número de la derecha son tus <strong>acompañantes</strong> (personas
+            que traes además de ti).
+          </p>
           <form action={desapuntarmeComida} style={{ marginTop: "0.5rem" }}>
             <input type="hidden" name="comidaId" value={id} />
             <button
@@ -102,26 +106,29 @@ export default async function ComidaDetallePage({
           </form>
         </div>
       ) : (
-        <form
-          action={apuntarmeComida}
-          style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}
-        >
-          <input type="hidden" name="comidaId" value={id} />
-          <button type="submit" className="btn btn-primario" style={{ flex: 4 }}>
-            🍽️ Apuntarme
-          </button>
-          <input
-            name="guests"
-            type="number"
-            min={0}
-            max={50}
-            defaultValue={0}
-            aria-label="Acompañantes"
-            title="Acompañantes (+N)"
-            placeholder="+0"
-            style={estiloNum}
-          />
-        </form>
+        <div style={{ marginBottom: "1rem" }}>
+          <form action={apuntarmeComida} style={{ display: "flex", gap: "0.5rem" }}>
+            <input type="hidden" name="comidaId" value={id} />
+            <button type="submit" className="btn btn-primario" style={{ flex: 4 }}>
+              🍽️ Apuntarme
+            </button>
+            <input
+              name="guests"
+              type="number"
+              min={0}
+              max={50}
+              defaultValue={0}
+              aria-label="Acompañantes"
+              title="Acompañantes (+N)"
+              placeholder="+0"
+              style={estiloNum}
+            />
+          </form>
+          <p style={{ margin: "0.3rem 0 0", fontSize: "0.78rem", color: "var(--texto-suave)" }}>
+            El número de la derecha son tus <strong>acompañantes</strong> (personas
+            que traes además de ti).
+          </p>
+        </div>
       )}
 
       <SeccionTitulo>

@@ -87,7 +87,17 @@ export function Nav({ displayName, isAdmin }: Props) {
             height={28}
             style={{ display: "block", borderRadius: 6 }}
           />
-          <span className="titulo-app" style={{ fontSize: "1.35rem" }}>
+          <span
+            className="titulo-app"
+            style={{
+              fontSize: "1.45rem",
+              lineHeight: 1,
+              // La fuente Avengeance tira hacia arriba: la bajamos un pelín
+              // para alinearla con el icono.
+              position: "relative",
+              top: "0.09em",
+            }}
+          >
             JA Team
           </span>
         </Link>
