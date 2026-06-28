@@ -10,6 +10,7 @@ import {
 } from "@/actions/scorecards";
 import { parseTiro, redondea1, formatPunt } from "@/lib/scoring";
 import { Card } from "@/components/ui";
+import { AjusteFinalField } from "@/components/ajuste-final";
 
 type SerieInicial = {
   idx: number;
@@ -117,6 +118,8 @@ export function Libreta({
   totalInicial,
   innerInicial,
   finalizada,
+  permiteAjuste,
+  ajusteInicial,
 }: {
   scorecardId: string;
   modalidad: Modalidad;
@@ -125,6 +128,8 @@ export function Libreta({
   totalInicial: number;
   innerInicial: number;
   finalizada: boolean;
+  permiteAjuste: boolean;
+  ajusteInicial: number;
 }) {
   const router = useRouter();
   const [filas, setFilas] = useState<Fila[]>(() =>
@@ -132,6 +137,7 @@ export function Libreta({
   );
   const [total, setTotal] = useState(totalInicial);
   const [inner, setInner] = useState(innerInicial);
+  const [ajuste, setAjuste] = useState(ajusteInicial);
   const filasRef = useRef(filas);
   filasRef.current = filas;
   const timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
@@ -255,6 +261,15 @@ export function Libreta({
           </span>
         </span>
       </div>
+
+      {permiteAjuste && ajuste !== 0 ? (
+        <p style={{ margin: 0, color: "var(--texto-suave)", fontSize: "0.82rem" }}>
+          Bruto {formatPunt(redondea1(total - ajuste), modalidad.allowsDecimals)} ·
+          ajuste {ajuste > 0 ? "+" : ""}
+          {formatPunt(ajuste, modalidad.allowsDecimals)} → final{" "}
+          <strong>{formatPunt(total, modalidad.allowsDecimals)}</strong>
+        </p>
+      ) : null}
 
       {finalizada ? (
         <p
@@ -385,6 +400,16 @@ export function Libreta({
           </Card>
         );
       })}
+
+      {permiteAjuste ? (
+        <AjusteFinalField
+          scorecardId={scorecardId}
+          inicial={ajusteInicial}
+          finalizada={finalizada}
+          onValue={setAjuste}
+          onSaved={setTotal}
+        />
+      ) : null}
 
       <div style={{ marginTop: "0.5rem" }}>
         {finalizada ? (

@@ -165,7 +165,11 @@ export const scorecards = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     granularity: entryGranularity("granularity").notNull().default("tiro"),
+    // Total final (suma de series + ajuste). Es lo que ordena el ranking.
     total: real("total").notNull().default(0),
+    // Ajuste manual del árbitro al total (puede ser negativo). Solo se usa en
+    // tiradas oficiales/semioficiales.
+    adjustment: real("adjustment").notNull().default(0),
     // Dieces interiores ("X") anotados, para desempate.
     innerCount: integer("inner_count").notNull().default(0),
     status: scorecardStatus("status").notNull().default("borrador"),

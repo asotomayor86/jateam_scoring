@@ -69,6 +69,8 @@ export default async function LibretaPage({
             buckets: s.buckets,
           }))}
           finalizada={hoja.status === "finalizada"}
+          permiteAjuste={tirada.type !== "entrenamiento"}
+          ajusteInicial={hoja.adjustment}
         />
       ) : (
         <Libreta
@@ -91,6 +93,8 @@ export default async function LibretaPage({
           totalInicial={hoja.total}
           innerInicial={hoja.innerCount}
           finalizada={hoja.status === "finalizada"}
+          permiteAjuste={tirada.type !== "entrenamiento"}
+          ajusteInicial={hoja.adjustment}
         />
       )}
     </>

@@ -12,9 +12,11 @@ import {
   puntosDeRecuento,
   tirosDeRecuento,
   restaRecuentos,
+  redondea1,
   formatPunt,
 } from "@/lib/scoring";
 import { Card } from "@/components/ui";
+import { AjusteFinalField } from "@/components/ajuste-final";
 
 type SerieInicial = {
   idx: number;
@@ -84,21 +86,27 @@ export function LibretaAsistida({
   modalidad,
   seriesIniciales,
   finalizada,
+  permiteAjuste,
+  ajusteInicial,
 }: {
   scorecardId: string;
   modalidad: Modalidad;
   seriesIniciales: SerieInicial[];
   finalizada: boolean;
+  permiteAjuste: boolean;
+  ajusteInicial: number;
 }) {
   const router = useRouter();
   const [filas, setFilas] = useState<Fila[]>(() =>
     filasIniciales(seriesIniciales, modalidad),
   );
+  const [ajuste, setAjuste] = useState(ajusteInicial);
   const filasRef = useRef(filas);
   filasRef.current = filas;
   const timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const { porFila, total, inner } = useMemo(() => calculaTodo(filas), [filas]);
+  const finalTotal = redondea1(total + ajuste);
 
   const setEstado = useCallback((idx: number, estado: EstadoGuardado) => {
     setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, estado } : f)));
@@ -174,7 +182,7 @@ export function LibretaAsistida({
           </span>
         </span>
         <span style={{ fontSize: "1.7rem", fontWeight: 700 }}>
-          {formatPunt(total)}
+          {formatPunt(finalTotal)}
           <span
             style={{
               fontSize: "0.85rem",
@@ -187,6 +195,13 @@ export function LibretaAsistida({
           </span>
         </span>
       </div>
+
+      {permiteAjuste && ajuste !== 0 ? (
+        <p style={{ margin: 0, color: "var(--texto-suave)", fontSize: "0.82rem" }}>
+          Bruto {formatPunt(total)} · ajuste {ajuste > 0 ? "+" : ""}
+          {formatPunt(ajuste)} → final <strong>{formatPunt(finalTotal)}</strong>
+        </p>
+      ) : null}
 
       <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
         Modo <strong>Asistido competición</strong>: escribe cuántos <strong>10, 9,
@@ -288,6 +303,15 @@ export function LibretaAsistida({
           </Card>
         );
       })}
+
+      {permiteAjuste ? (
+        <AjusteFinalField
+          scorecardId={scorecardId}
+          inicial={ajusteInicial}
+          finalizada={finalizada}
+          onValue={setAjuste}
+        />
+      ) : null}
 
       <div style={{ marginTop: "0.5rem" }}>
         {finalizada ? (

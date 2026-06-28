@@ -1,0 +1,1 @@
+ALTER TABLE "scorecards" ADD COLUMN "adjustment" real DEFAULT 0 NOT NULL;

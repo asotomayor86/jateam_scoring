@@ -61,6 +61,14 @@ async function recomputar(
     .where(eq(series.scorecardId, scorecardId))
     .orderBy(asc(series.idx));
 
+  // Ajuste manual del árbitro (se suma al total final).
+  const [hoja] = await db
+    .select({ adjustment: scorecards.adjustment })
+    .from(scorecards)
+    .where(eq(scorecards.id, scorecardId))
+    .limit(1);
+  const ajuste = hoja?.adjustment ?? 0;
+
   const calculadas: SerieCalculada[] = [];
 
   if (granularity === "asistido") {
@@ -86,7 +94,7 @@ async function recomputar(
       }
       calculadas.push({ idx: f.idx, subtotal, shotCount });
     }
-    total = redondea1(total);
+    total = redondea1(total + ajuste);
     await db
       .update(scorecards)
       .set({ total, innerCount })
@@ -95,7 +103,9 @@ async function recomputar(
   }
 
   // Modos normales: el subtotal ya es el definitivo.
-  const total = redondea1(filas.reduce((a, r) => a + r.subtotal, 0));
+  const total = redondea1(
+    filas.reduce((a, r) => a + r.subtotal, 0) + ajuste,
+  );
   const innerCount = filas.reduce((a, r) => a + r.inner, 0);
   for (const f of filas) {
     calculadas.push({ idx: f.idx, subtotal: f.subtotal, shotCount: f.shotCount });
@@ -239,6 +249,41 @@ export async function borrarSerie(input: {
       and(eq(series.scorecardId, input.scorecardId), eq(series.idx, input.idx)),
     );
   const r = await recomputar(input.scorecardId, hoja.granularity);
+  revalidatePath(`/tiradas/${hoja.tiradaId}`);
+  return { ok: true, ...r };
+}
+
+const esquemaAjuste = z.object({
+  scorecardId: z.string().uuid(),
+  adjustment: z.number().min(-600).max(600),
+});
+
+/**
+ * Guarda el "ajuste final de puntuación" (suma/resta manual del árbitro) y
+ * recalcula el total final de la hoja.
+ */
+export async function guardarAjuste(
+  input: z.input<typeof esquemaAjuste>,
+): Promise<ResultadoSerie> {
+  const { user } = await requireUser();
+
+  const parsed = esquemaAjuste.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, mensaje: parsed.error.issues[0]?.message };
+  }
+  const d = parsed.data;
+
+  const hoja = await hojaEditable(d.scorecardId, user.id);
+  if (!hoja || hoja.status !== "borrador") {
+    return { ok: false, mensaje: "No puedes editar esta hoja" };
+  }
+
+  await db
+    .update(scorecards)
+    .set({ adjustment: redondea1(d.adjustment) })
+    .where(eq(scorecards.id, d.scorecardId));
+
+  const r = await recomputar(d.scorecardId, hoja.granularity);
   revalidatePath(`/tiradas/${hoja.tiradaId}`);
   return { ok: true, ...r };
 }
