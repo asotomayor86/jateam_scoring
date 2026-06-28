@@ -13,7 +13,7 @@ type Props = {
 
 const enlaces = [
   { href: "/calendario", label: "Calendario" },
-  { href: "/tiradas", label: "Tiradas" },
+  { href: "/tiradas", label: "Tiradas y Entrenamientos" },
   { href: "/yo", label: "Mis tiradas" },
   { href: "/clubs", label: "Campos" },
   { href: "/comidas", label: "Comidas" },
@@ -63,11 +63,12 @@ export function Nav({ displayName, isAdmin }: Props) {
       }}
     >
       <nav
-        className="contenedor"
+        className="contenedor nav-bar"
         style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
       >
         <Link
           href="/"
+          className="nav-brand"
           onClick={() => setOpen(false)}
           style={{
             display: "inline-flex",
@@ -154,7 +155,6 @@ export function Nav({ displayName, isAdmin }: Props) {
           aria-expanded={open}
           aria-controls="nav-drawer"
           onClick={() => setOpen((o) => !o)}
-          style={{ marginLeft: "auto" }}
         >
           {open ? "✕" : "☰"}
         </button>

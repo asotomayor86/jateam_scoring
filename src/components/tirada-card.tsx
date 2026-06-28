@@ -25,19 +25,22 @@ function fechaCorta(iso: string): string {
   return `${d} ${meses[(m ?? 1) - 1]} ${y}`;
 }
 
+/** Color de fondo según el tipo de tirada (oficial/semioficial/entrenamiento). */
+export function tintaTipo(tipo: string): string {
+  if (tipo === "oficial") return "rgba(239, 90, 111, 0.16)"; // rojo
+  if (tipo === "semioficial") return "rgba(245, 158, 11, 0.16)"; // ámbar
+  return "rgba(70, 201, 139, 0.16)"; // verde (entrenamiento)
+}
+
 export function TiradaCard(t: Props) {
   return (
     <Link href={`/tiradas/${t.id}`} style={{ display: "block" }}>
       <Card
         style={{
           marginBottom: "0.6rem",
-          // Cerrada = "pasada": fondo gris apagado y texto atenuado.
-          ...(t.closed
-            ? {
-                background: "rgba(120, 130, 140, 0.16)",
-                opacity: 0.78,
-              }
-            : null),
+          background: tintaTipo(t.type),
+          // Cerrada: solo se atenúa (independiente de si es pasada).
+          ...(t.closed ? { opacity: 0.7 } : null),
         }}
       >
         <div

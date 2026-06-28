@@ -30,10 +30,11 @@ export default async function ComidaDetallePage({
   const totalPersonas = asistentes.reduce((a, x) => a + 1 + x.guests, 0);
 
   const estiloNum = {
-    width: 80,
+    flex: 1,
+    minWidth: 0,
     textAlign: "center" as const,
-    padding: "0.55rem 0.2rem",
-    borderRadius: 8,
+    padding: "0.6rem 0.2rem",
+    borderRadius: 10,
     border: "1px solid var(--borde)",
     background: "var(--superficie-2)",
     color: "var(--texto)",
@@ -71,30 +72,25 @@ export default async function ComidaDetallePage({
       </Card>
 
       {mi ? (
-        <Card style={{ marginBottom: "1rem" }}>
-          <form
-            action={apuntarmeComida}
-            style={{ display: "flex", alignItems: "flex-end", gap: "0.6rem", flexWrap: "wrap" }}
-          >
+        <div style={{ marginBottom: "1rem" }}>
+          <form action={apuntarmeComida} style={{ display: "flex", gap: "0.5rem" }}>
             <input type="hidden" name="comidaId" value={id} />
-            <div>
-              <label style={{ display: "block", fontSize: "0.8rem", color: "var(--texto-suave)", marginBottom: "0.2rem" }}>
-                Acompañantes (además de ti)
-              </label>
-              <input
-                name="guests"
-                type="number"
-                min={0}
-                max={50}
-                defaultValue={mi.guests}
-                style={estiloNum}
-              />
-            </div>
-            <button type="submit" className="btn btn-primario">
+            <button type="submit" className="btn btn-primario" style={{ flex: 4 }}>
               Actualizar
             </button>
+            <input
+              name="guests"
+              type="number"
+              min={0}
+              max={50}
+              defaultValue={mi.guests}
+              aria-label="Acompañantes"
+              title="Acompañantes (+N)"
+              placeholder="+0"
+              style={estiloNum}
+            />
           </form>
-          <form action={desapuntarmeComida} style={{ marginTop: "0.6rem" }}>
+          <form action={desapuntarmeComida} style={{ marginTop: "0.5rem" }}>
             <input type="hidden" name="comidaId" value={id} />
             <button
               type="submit"
@@ -104,32 +100,28 @@ export default async function ComidaDetallePage({
               Desapuntarme
             </button>
           </form>
-        </Card>
+        </div>
       ) : (
-        <Card style={{ marginBottom: "1rem" }}>
-          <form
-            action={apuntarmeComida}
-            style={{ display: "flex", alignItems: "flex-end", gap: "0.6rem", flexWrap: "wrap" }}
-          >
-            <input type="hidden" name="comidaId" value={id} />
-            <div>
-              <label style={{ display: "block", fontSize: "0.8rem", color: "var(--texto-suave)", marginBottom: "0.2rem" }}>
-                Acompañantes (además de ti)
-              </label>
-              <input
-                name="guests"
-                type="number"
-                min={0}
-                max={50}
-                defaultValue={0}
-                style={estiloNum}
-              />
-            </div>
-            <button type="submit" className="btn btn-primario">
-              🍽️ Apuntarme
-            </button>
-          </form>
-        </Card>
+        <form
+          action={apuntarmeComida}
+          style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}
+        >
+          <input type="hidden" name="comidaId" value={id} />
+          <button type="submit" className="btn btn-primario" style={{ flex: 4 }}>
+            🍽️ Apuntarme
+          </button>
+          <input
+            name="guests"
+            type="number"
+            min={0}
+            max={50}
+            defaultValue={0}
+            aria-label="Acompañantes"
+            title="Acompañantes (+N)"
+            placeholder="+0"
+            style={estiloNum}
+          />
+        </form>
       )}
 
       <SeccionTitulo>

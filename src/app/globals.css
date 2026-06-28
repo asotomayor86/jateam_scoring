@@ -239,6 +239,11 @@ a {
 .nav-links { display: flex; gap: 0.5rem; flex: 1; flex-wrap: wrap; }
 
 @media (max-width: 720px) {
+  /* Logo + título centrados en la barra; hamburguesa a la derecha. */
+  .nav-bar {
+    justify-content: center;
+    position: relative;
+  }
   .nav-toggle {
     display: inline-flex;
     align-items: center;
@@ -251,6 +256,10 @@ a {
     color: var(--texto);
     cursor: pointer;
     font-size: 1.1rem;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
   }
   .nav-links { display: none; }
   .nav-user { display: none; }
@@ -390,13 +399,41 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cal-pill-tirada {
-  background: rgba(245, 158, 11, 0.85);
+.cal-pill-oficial {
+  background: rgba(239, 90, 111, 0.9);
+  color: #fff;
+}
+.cal-pill-semioficial {
+  background: rgba(245, 158, 11, 0.9);
   color: #1a1205;
 }
+.cal-pill-entrenamiento {
+  background: rgba(70, 201, 139, 0.9);
+  color: #06231a;
+}
 .cal-pill-comida {
-  background: rgba(56, 132, 255, 0.85);
+  background: rgba(56, 132, 255, 0.9);
   color: #fff;
+}
+/* Leyenda de colores. */
+.cal-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  margin: 0 0 0.7rem;
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+}
+.cal-leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.cal-leyenda i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
 }
 .cal-mas {
   font-size: 0.62rem;

@@ -49,7 +49,7 @@ export default async function TiradasPage({
           </Link>
         }
       >
-        Tiradas
+        Tiradas y Entrenamientos
       </SeccionTitulo>
 
       <TiradasFiltros
