@@ -87,7 +87,9 @@ export function Nav({ displayName, isAdmin }: Props) {
             height={28}
             style={{ display: "block", borderRadius: 6 }}
           />
-          JA Team
+          <span className="titulo-app" style={{ fontSize: "1.35rem" }}>
+            JA Team
+          </span>
         </Link>
 
         {/* Enlaces en línea (solo escritorio). */}
