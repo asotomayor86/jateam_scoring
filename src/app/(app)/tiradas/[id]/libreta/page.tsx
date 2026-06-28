@@ -4,6 +4,7 @@ import { requireUser } from "@/auth/helpers";
 import { getTirada, getMiScorecard } from "@/db/queries/tiradas";
 import { getScorecardConSeries } from "@/db/queries/scorecards";
 import { Libreta } from "@/components/libreta";
+import { LibretaAsistida } from "@/components/libreta-asistida";
 import { SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -54,27 +55,44 @@ export default async function LibretaPage({
         {tirada.caliber ? ` · ${tirada.caliber}` : ""} · {tirada.date}
       </p>
 
-      <Libreta
-        scorecardId={hoja.id}
-        modalidad={{
-          totalShots: tirada.totalShots,
-          seriesCount: tirada.seriesCount,
-          defaultSeriesSize: tirada.defaultSeriesSize,
-          allowsDecimals: tirada.allowsDecimals,
-          maxPerShot: tirada.maxPerShot,
-        }}
-        seriesIniciales={hoja.series.map((s) => ({
-          idx: s.idx,
-          shots: s.shots,
-          shotCount: s.shotCount,
-          subtotal: s.subtotal,
-          inner: s.inner,
-        }))}
-        preferTotal={hoja.granularity !== "tiro"}
-        totalInicial={hoja.total}
-        innerInicial={hoja.innerCount}
-        finalizada={hoja.status === "finalizada"}
-      />
+      {hoja.granularity === "asistido" ? (
+        <LibretaAsistida
+          scorecardId={hoja.id}
+          modalidad={{
+            seriesCount: tirada.seriesCount,
+            totalShots: tirada.totalShots,
+            maxPerShot: tirada.maxPerShot,
+          }}
+          seriesIniciales={hoja.series.map((s) => ({
+            idx: s.idx,
+            blancoNuevo: s.blancoNuevo,
+            buckets: s.buckets,
+          }))}
+          finalizada={hoja.status === "finalizada"}
+        />
+      ) : (
+        <Libreta
+          scorecardId={hoja.id}
+          modalidad={{
+            totalShots: tirada.totalShots,
+            seriesCount: tirada.seriesCount,
+            defaultSeriesSize: tirada.defaultSeriesSize,
+            allowsDecimals: tirada.allowsDecimals,
+            maxPerShot: tirada.maxPerShot,
+          }}
+          seriesIniciales={hoja.series.map((s) => ({
+            idx: s.idx,
+            shots: s.shots,
+            shotCount: s.shotCount,
+            subtotal: s.subtotal,
+            inner: s.inner,
+          }))}
+          preferTotal={hoja.granularity !== "tiro"}
+          totalInicial={hoja.total}
+          innerInicial={hoja.innerCount}
+          finalizada={hoja.status === "finalizada"}
+        />
+      )}
     </>
   );
 }

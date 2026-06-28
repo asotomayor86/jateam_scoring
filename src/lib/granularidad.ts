@@ -11,5 +11,7 @@ export function etiquetaGranularidad(g: EntryGranularity): string {
       return "Total de bloques de 10";
     case "serie":
       return "Total por serie";
+    case "asistido":
+      return "Asistido competición";
   }
 }

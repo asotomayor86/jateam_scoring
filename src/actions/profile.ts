@@ -16,7 +16,13 @@ const esquemaPerfil = z.object({
     .max(24)
     .optional()
     .transform((v) => (v ? v : null)),
-  defaultGranularity: z.enum(["tiro", "bloque5", "bloque10", "serie"]),
+  defaultGranularity: z.enum([
+    "tiro",
+    "bloque5",
+    "bloque10",
+    "serie",
+    "asistido",
+  ]),
 });
 
 /** Actualiza el perfil del usuario actual (nombre, apodo y preferencia). */

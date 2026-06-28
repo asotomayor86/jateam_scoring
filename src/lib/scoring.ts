@@ -46,3 +46,31 @@ export function parseTiro(
 export function formatPunt(n: number, allowsDecimals = false): string {
   return allowsDecimals ? n.toFixed(1) : String(Math.round(n));
 }
+
+// --- Modo "asistido competición" ---------------------------------------------
+
+/** Valores de los anillos, en el orden de las casillas: 10, 9, …, 1, 0. */
+export const ASISTIDO_VALORES = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+
+/** Puntos de un recuento por valor: Σ count[i] · valor[i]. */
+export function puntosDeRecuento(counts: number[]): number {
+  let s = 0;
+  for (let i = 0; i < ASISTIDO_VALORES.length; i++) {
+    s += (counts[i] || 0) * ASISTIDO_VALORES[i];
+  }
+  return s;
+}
+
+/** Nº de tiros de un recuento: Σ count[i]. */
+export function tirosDeRecuento(counts: number[]): number {
+  let n = 0;
+  for (const c of counts) n += c || 0;
+  return n;
+}
+
+/** Resta dos recuentos elemento a elemento (no baja de 0). */
+export function restaRecuentos(actual: number[], previo: number[]): number[] {
+  return ASISTIDO_VALORES.map((_, i) =>
+    Math.max(0, (actual[i] || 0) - (previo[i] || 0)),
+  );
+}

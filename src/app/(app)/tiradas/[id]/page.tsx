@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/auth/helpers";
 import { getTirada, getRanking, getMiScorecard } from "@/db/queries/tiradas";
 import { apuntarme, borrarTirada } from "@/actions/tiradas";
-import { borrarHoja } from "@/actions/scorecards";
+import { borrarHoja, finalizarHoja } from "@/actions/scorecards";
 import { RankingTable } from "@/components/ranking-table";
 import { Card, SeccionTitulo, TipoChip } from "@/components/ui";
 import { ConfirmButton } from "@/components/confirm-button";
@@ -111,16 +111,29 @@ export default async function TiradaDetallePage({
               {miHoja.status === "finalizada" ? "Ver libreta" : "Abrir libreta"}
             </Link>
           </div>
-          <form action={borrarHoja} style={{ marginTop: "0.7rem" }}>
-            <input type="hidden" name="scorecardId" value={miHoja.id} />
-            <ConfirmButton
-              message="¿Desapuntarte y borrar tu hoja de esta tirada?"
-              className="btn"
-              style={{ fontSize: "0.85rem", color: "var(--rojo)" }}
+          {miHoja.total > 0 ? (
+            <p
+              style={{
+                marginTop: "0.7rem",
+                fontSize: "0.8rem",
+                color: "var(--texto-suave)",
+              }}
             >
-              Desapuntarme
-            </ConfirmButton>
-          </form>
+              Ya tienes puntos anotados: esta tirada queda registrada y no puedes
+              desapuntarte.
+            </p>
+          ) : (
+            <form action={borrarHoja} style={{ marginTop: "0.7rem" }}>
+              <input type="hidden" name="scorecardId" value={miHoja.id} />
+              <ConfirmButton
+                message="¿Desapuntarte y borrar tu hoja de esta tirada?"
+                className="btn"
+                style={{ fontSize: "0.85rem", color: "var(--rojo)" }}
+              >
+                Desapuntarme
+              </ConfirmButton>
+            </form>
+          )}
         </Card>
       ) : (
         <Card style={{ marginBottom: "1rem" }}>
@@ -154,6 +167,7 @@ export default async function TiradaDetallePage({
               <option value="bloque5">Total de bloques de 5</option>
               <option value="bloque10">Total de bloques de 10</option>
               <option value="serie">Total por serie</option>
+              <option value="asistido">Asistido competición</option>
             </select>
             <span style={{ fontSize: "0.78rem", color: "var(--texto-suave)" }}>
               Es el modo inicial; podrás cambiarlo en cada serie dentro de la
@@ -175,6 +189,45 @@ export default async function TiradaDetallePage({
           currentUserId={user.id}
         />
       </Card>
+
+      {/* Encargado: cerrar hojas que alguien dejó sin finalizar. */}
+      {profile.isAdmin && ranking.some((r) => r.status === "borrador") ? (
+        <>
+          <SeccionTitulo>Cerrar hojas (encargado)</SeccionTitulo>
+          <Card>
+            <table className="tabla">
+              <tbody>
+                {ranking
+                  .filter((r) => r.status === "borrador")
+                  .map((r) => (
+                    <tr key={r.scorecardId}>
+                      <td>{r.nickname || r.displayName}</td>
+                      <td className="num">
+                        {formatPunt(r.total, tirada.allowsDecimals)}
+                      </td>
+                      <td className="num">
+                        <form action={finalizarHoja}>
+                          <input
+                            type="hidden"
+                            name="scorecardId"
+                            value={r.scorecardId}
+                          />
+                          <ConfirmButton
+                            message={`¿Cerrar la hoja de ${r.nickname || r.displayName}?`}
+                            className="btn"
+                            style={{ fontSize: "0.8rem" }}
+                          >
+                            Cerrar
+                          </ConfirmButton>
+                        </form>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </Card>
+        </>
+      ) : null}
 
       {soyCreador ? (
         <form action={borrarTirada} style={{ marginTop: "1.5rem" }}>

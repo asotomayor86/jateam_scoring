@@ -1,6 +1,6 @@
-import { asc } from "drizzle-orm";
+import Link from "next/link";
 import { requireAdmin } from "@/auth/helpers";
-import { db, profiles } from "@/db";
+import { getMiembros } from "@/db/queries/members";
 import { InviteForm } from "@/components/invite-form";
 import { Card, SeccionTitulo } from "@/components/ui";
 
@@ -9,16 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function MiembrosPage() {
   // Solo el encargado entra aquí.
   await requireAdmin();
-
-  const miembros = await db
-    .select({
-      id: profiles.id,
-      displayName: profiles.displayName,
-      nickname: profiles.nickname,
-      isAdmin: profiles.isAdmin,
-    })
-    .from(profiles)
-    .orderBy(asc(profiles.displayName));
+  const miembros = await getMiembros();
 
   return (
     <>
@@ -38,28 +29,56 @@ export default async function MiembrosPage() {
       </Card>
 
       <SeccionTitulo>Miembros ({miembros.length})</SeccionTitulo>
-      <Card>
-        <table className="tabla">
-          <tbody>
-            {miembros.map((m) => (
-              <tr key={m.id}>
-                <td>
-                  {m.displayName}
-                  {m.nickname ? (
-                    <span style={{ color: "var(--texto-suave)" }}>
-                      {" "}
-                      · {m.nickname}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="num">
-                  {m.isAdmin ? <span className="chip chip-semioficial">Encargado</span> : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      {miembros.map((m) => (
+        <Card key={m.id} style={{ marginBottom: "0.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.6rem",
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 600 }}>
+                {m.displayName}
+                {m.nickname ? (
+                  <span style={{ color: "var(--texto-suave)" }}>
+                    {" "}
+                    · {m.nickname}
+                  </span>
+                ) : null}
+                {m.isAdmin ? (
+                  <span
+                    className="chip chip-semioficial"
+                    style={{ marginLeft: "0.4rem" }}
+                  >
+                    Encargado
+                  </span>
+                ) : null}
+              </div>
+              <div
+                style={{
+                  color: "var(--texto-suave)",
+                  fontSize: "0.82rem",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {m.email ?? "sin email"}
+              </div>
+            </div>
+            <Link
+              href={`/miembros/${m.id}`}
+              className="btn"
+              style={{ fontSize: "0.85rem", flexShrink: 0 }}
+            >
+              Editar
+            </Link>
+          </div>
+        </Card>
+      ))}
     </>
   );
 }

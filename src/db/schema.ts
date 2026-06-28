@@ -44,13 +44,15 @@ export const scorecardStatus = pgEnum("scorecard_status", [
 
 /**
  * Granularidad con la que un tirador apunta: tiro a tiro, en bloques de 5 o 10,
- * o el total de la serie completa.
+ * el total de la serie, o "asistido" (competición: recuento por valor con
+ * descuento de blanco compartido).
  */
 export const entryGranularity = pgEnum("entry_granularity", [
   "tiro",
   "bloque5",
   "bloque10",
   "serie",
+  "asistido",
 ]);
 
 // --- Tablas ------------------------------------------------------------------
@@ -192,6 +194,13 @@ export const series = pgTable(
     subtotal: real("subtotal").notNull().default(0),
     inner: integer("inner").notNull().default(0), // dieces interiores en la serie
     notes: text("notes"),
+    // --- Solo modo "asistido" (competición) ---
+    // ¿Esta serie empieza un blanco nuevo? (la serie 1, por defecto, sí).
+    blancoNuevo: boolean("blanco_nuevo").notNull().default(true),
+    // Recuento ACUMULADO en la diana por valor [#10, #9, …, #0] tal como se
+    // introduce. El subtotal/shotCount de la serie se derivan restando el
+    // acumulado de la serie anterior del mismo blanco.
+    buckets: jsonb("buckets").$type<number[] | null>(),
   },
   (t) => [unique().on(t.scorecardId, t.idx)],
 );

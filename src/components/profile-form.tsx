@@ -66,6 +66,7 @@ export function ProfileForm({
           <option value="bloque5">Total de bloques de 5</option>
           <option value="bloque10">Total de bloques de 10</option>
           <option value="serie">Total por serie</option>
+          <option value="asistido">Asistido competición</option>
         </select>
         <span style={{ fontSize: "0.78rem", color: "var(--texto-suave)" }}>
           Es solo el modo inicial de la libreta; siempre puedes cambiarlo en cada

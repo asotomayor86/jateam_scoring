@@ -218,7 +218,13 @@ export async function borrarClub(formData: FormData): Promise<void> {
   revalidatePath("/tiradas/nueva");
 }
 
-const GRANULARIDADES = ["tiro", "bloque5", "bloque10", "serie"] as const;
+const GRANULARIDADES = [
+  "tiro",
+  "bloque5",
+  "bloque10",
+  "serie",
+  "asistido",
+] as const;
 
 /** Apunta al usuario actual a una tirada: crea su hoja si no la tiene. */
 export async function apuntarme(formData: FormData): Promise<void> {
