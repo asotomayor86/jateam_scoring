@@ -23,6 +23,7 @@ export async function getClubsConUso() {
       id: clubs.id,
       name: clubs.name,
       abbr: clubs.abbr,
+      mapsUrl: clubs.mapsUrl,
       usos: sql<number>`(
         select count(*)::int from ${tiradas}
         where ${tiradas.clubId} = ${clubs.id}

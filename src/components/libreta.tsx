@@ -11,6 +11,8 @@ import {
 import { parseTiro, redondea1, formatPunt } from "@/lib/scoring";
 import { Card } from "@/components/ui";
 import { AjusteFinalField } from "@/components/ajuste-final";
+import { SeriesTimer } from "@/components/series-timer";
+import { faseSerie, planTimer } from "@/lib/fases";
 
 type SerieInicial = {
   idx: number;
@@ -120,6 +122,8 @@ export function Libreta({
   finalizada,
   permiteAjuste,
   ajusteInicial,
+  modalitySlug,
+  tipo,
 }: {
   scorecardId: string;
   modalidad: Modalidad;
@@ -130,6 +134,8 @@ export function Libreta({
   finalizada: boolean;
   permiteAjuste: boolean;
   ajusteInicial: number;
+  modalitySlug: string;
+  tipo: string;
 }) {
   const router = useRouter();
   const [filas, setFilas] = useState<Fila[]>(() =>
@@ -290,17 +296,45 @@ export function Libreta({
 
       {filas.map((fila) => {
         const c = calcula(fila, modalidad);
+        const completa =
+          fila.modo === "tiros"
+            ? fila.celdas.filter((x) => x.trim() !== "").length ===
+              modalidad.defaultSeriesSize
+            : fila.totalStr.trim() !== "";
+        const fase = faseSerie(modalitySlug, fila.idx);
+        const plan = planTimer(tipo, modalitySlug, fila.idx);
         return (
-          <Card key={fila.idx} style={{ opacity: finalizada ? 0.85 : 1 }}>
+          <Card
+            key={fila.idx}
+            style={{
+              opacity: finalizada ? 0.85 : 1,
+              // Serie completa: tinte verde suave para ver el progreso.
+              ...(completa
+                ? { background: "rgba(70, 201, 139, 0.16)" }
+                : null),
+            }}
+          >
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 marginBottom: "0.5rem",
+                gap: "0.4rem",
+                flexWrap: "wrap",
               }}
             >
-              <strong style={{ fontSize: "0.95rem" }}>Serie {fila.idx}</strong>
+              <strong style={{ fontSize: "0.95rem" }}>
+                Serie {fila.idx}
+                {fase ? (
+                  <span
+                    className="chip"
+                    style={{ marginLeft: "0.4rem", fontWeight: 600 }}
+                  >
+                    {fase.nombre} · {fase.segundos}s
+                  </span>
+                ) : null}
+              </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span
                   style={{
@@ -397,6 +431,8 @@ export function Libreta({
                     ? "Error al guardar"
                     : ""}
             </div>
+
+            {plan && !finalizada ? <SeriesTimer plan={plan} /> : null}
           </Card>
         );
       })}
@@ -404,9 +440,11 @@ export function Libreta({
       {permiteAjuste ? (
         <AjusteFinalField
           scorecardId={scorecardId}
-          inicial={ajusteInicial}
+          bruto={redondea1(total - ajuste)}
+          finalInicial={totalInicial}
           finalizada={finalizada}
-          onValue={setAjuste}
+          allowsDecimals={modalidad.allowsDecimals}
+          onDiff={setAjuste}
           onSaved={setTotal}
         />
       ) : null}

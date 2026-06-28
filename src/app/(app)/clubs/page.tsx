@@ -11,7 +11,7 @@ export default async function ClubsPage() {
 
   return (
     <>
-      <SeccionTitulo>Clubes</SeccionTitulo>
+      <SeccionTitulo>Campos</SeccionTitulo>
       <p
         style={{
           color: "var(--texto-suave)",
@@ -19,8 +19,8 @@ export default async function ClubsPage() {
           margin: "0 0 1rem",
         }}
       >
-        Cualquiera puede añadir o editar clubes. Solo se pueden borrar los que no
-        tengan tiradas.
+        Cualquiera puede añadir o editar campos (con su enlace de Google Maps).
+        Solo se pueden borrar los que no tengan tiradas.
       </p>
       <ClubsManager clubs={clubs} />
     </>

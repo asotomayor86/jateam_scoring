@@ -15,7 +15,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       }}
     >
       <div style={{ textAlign: "center" }}>
-        <h1 style={{ margin: 0, fontSize: "1.6rem" }}>🎯 JA Team Scoring</h1>
+        <h1 className="titulo-app" style={{ margin: 0, fontSize: "2.2rem" }}>
+          JA TEAM SCORING
+        </h1>
         <p style={{ margin: "0.25rem 0 0", color: "var(--texto-suave)" }}>
           Libreta y ranking de tiro del grupo
         </p>

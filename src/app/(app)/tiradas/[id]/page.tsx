@@ -53,9 +53,25 @@ export default async function TiradaDetallePage({
           <TipoChip tipo={tirada.type} />
           {tirada.closed ? <span className="chip">Cerrada</span> : null}
           <span style={{ color: "var(--texto-suave)", fontSize: "0.9rem" }}>
-            {tirada.date} · {tirada.clubName}
+            {tirada.date}
+            {tirada.startTime ? ` · ${tirada.startTime}` : ""} · {tirada.clubName}
           </span>
         </div>
+        {tirada.clubMapsUrl ? (
+          <a
+            href={tirada.clubMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "var(--acento)",
+              fontSize: "0.85rem",
+              display: "inline-block",
+              marginTop: "0.3rem",
+            }}
+          >
+            📍 Ver campo en Google Maps
+          </a>
+        ) : null}
         <div
           style={{
             color: "var(--texto-suave)",

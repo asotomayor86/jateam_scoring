@@ -3,6 +3,21 @@
 /* Estilos de los componentes de UI de Neon Auth (login, reset, etc.). */
 @import "@neondatabase/auth/ui/tailwind";
 
+/* Fuente de títulos (la misma que en Assemble). */
+@font-face {
+  font-family: "Avengeance";
+  src: url("/fonts/avengeance-mightiest.ttf") format("truetype");
+  font-display: swap;
+}
+
+/* Título de la app (portada y login). */
+.titulo-app {
+  font-family: "Avengeance", system-ui, sans-serif;
+  letter-spacing: 0.03em;
+  line-height: 1.02;
+  color: var(--texto);
+}
+
 /* ============================================================================
    Tema JA Team Scoring: oscuro de polígono de tiro, paneles translúcidos
    ("glass") y acentos ámbar/oro (anillos de diana). Mobile-first.

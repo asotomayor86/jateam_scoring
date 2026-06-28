@@ -24,7 +24,12 @@ type SerieInicial = {
   buckets: number[] | null;
 };
 
-type Modalidad = { seriesCount: number; totalShots: number; maxPerShot: number };
+type Modalidad = {
+  seriesCount: number;
+  totalShots: number;
+  defaultSeriesSize: number;
+  maxPerShot: number;
+};
 
 type EstadoGuardado = "" | "guardando" | "guardado" | "error";
 
@@ -213,8 +218,15 @@ export function LibretaAsistida({
 
       {filas.map((fila) => {
         const calc = porFila.get(fila.idx) ?? { subtotal: 0, tiros: 0 };
+        const completa = calc.tiros === modalidad.defaultSeriesSize;
         return (
-          <Card key={fila.idx} style={{ opacity: finalizada ? 0.85 : 1 }}>
+          <Card
+            key={fila.idx}
+            style={{
+              opacity: finalizada ? 0.85 : 1,
+              ...(completa ? { background: "rgba(70, 201, 139, 0.16)" } : null),
+            }}
+          >
             <div
               style={{
                 display: "flex",
@@ -307,9 +319,10 @@ export function LibretaAsistida({
       {permiteAjuste ? (
         <AjusteFinalField
           scorecardId={scorecardId}
-          inicial={ajusteInicial}
+          bruto={total}
+          finalInicial={finalTotal}
           finalizada={finalizada}
-          onValue={setAjuste}
+          onDiff={setAjuste}
         />
       ) : null}
 

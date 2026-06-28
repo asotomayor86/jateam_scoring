@@ -61,6 +61,7 @@ export default async function LibretaPage({
           modalidad={{
             seriesCount: tirada.seriesCount,
             totalShots: tirada.totalShots,
+            defaultSeriesSize: tirada.defaultSeriesSize,
             maxPerShot: tirada.maxPerShot,
           }}
           seriesIniciales={hoja.series.map((s) => ({
@@ -95,6 +96,8 @@ export default async function LibretaPage({
           finalizada={hoja.status === "finalizada"}
           permiteAjuste={tirada.type !== "entrenamiento"}
           ajusteInicial={hoja.adjustment}
+          modalitySlug={tirada.modalitySlug}
+          tipo={tirada.type}
         />
       )}
     </>

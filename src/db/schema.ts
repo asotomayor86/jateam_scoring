@@ -102,14 +102,18 @@ export const modalities = pgTable("modalities", {
 });
 
 /**
- * Catálogo de clubs (para estandarizar el identificador de la tirada). Cualquier
- * autenticado puede añadir uno nuevo si falta.
+ * Catálogo de "campos" (campos de tiro) para estandarizar el identificador de la
+ * tirada. Internamente la tabla sigue llamándose `clubs` por compatibilidad con
+ * los datos existentes; en la app se muestra como "Campo". Cualquier autenticado
+ * puede añadir uno nuevo si falta.
  */
 export const clubs = pgTable("clubs", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   // Sigla para el código de tirada (p. ej. "JATEAM").
   abbr: text("abbr").notNull(),
+  // Enlace de Google Maps con la ubicación del campo (opcional).
+  mapsUrl: text("maps_url"),
   createdBy: text("created_by").references(() => profiles.id, {
     onDelete: "set null",
   }),
@@ -134,6 +138,8 @@ export const tiradas = pgTable("tiradas", {
     .notNull()
     .references(() => clubs.id, { onDelete: "restrict" }),
   type: tiradaType("type").notNull(),
+  // Hora de inicio (HH:MM), opcional.
+  startTime: text("start_time"),
   // Cerrada: nadie nuevo puede apuntarse y se muestra como "pasada".
   closed: boolean("closed").notNull().default(false),
   // Calibre libre opcional (p. ej. "9mm", ".38", "22").

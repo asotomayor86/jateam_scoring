@@ -31,6 +31,7 @@ export async function listTiradas(filtros: FiltrosTiradas = {}) {
       date: tiradas.date,
       type: tiradas.type,
       closed: tiradas.closed,
+      startTime: tiradas.startTime,
       name: tiradas.name,
       caliber: tiradas.caliber,
       modalityName: modalities.name,
@@ -57,11 +58,13 @@ export async function getTirada(id: string) {
       date: tiradas.date,
       type: tiradas.type,
       closed: tiradas.closed,
+      startTime: tiradas.startTime,
       name: tiradas.name,
       caliber: tiradas.caliber,
       notes: tiradas.notes,
       createdBy: tiradas.createdBy,
       modalityId: tiradas.modalityId,
+      modalitySlug: modalities.slug,
       modalityName: modalities.name,
       modalityAbbr: modalities.abbr,
       modalityDistance: modalities.distance,
@@ -71,6 +74,7 @@ export async function getTirada(id: string) {
       allowsDecimals: modalities.allowsDecimals,
       maxPerShot: modalities.maxPerShot,
       clubName: clubs.name,
+      clubMapsUrl: clubs.mapsUrl,
     })
     .from(tiradas)
     .innerJoin(modalities, eq(tiradas.modalityId, modalities.id))

@@ -15,7 +15,8 @@ const enlaces = [
   { href: "/", label: "Inicio" },
   { href: "/tiradas", label: "Tiradas" },
   { href: "/yo", label: "Mis tiradas" },
-  { href: "/clubs", label: "Clubes" },
+  { href: "/clubs", label: "Campos" },
+  { href: "/calendario", label: "Calendario" },
   { href: "/perfil", label: "Perfil" },
 ];
 

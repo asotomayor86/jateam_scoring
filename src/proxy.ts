@@ -24,6 +24,7 @@ export const config = {
     "/",
     "/tiradas/:path*",
     "/clubs/:path*",
+    "/calendario/:path*",
     "/perfil/:path*",
     "/yo/:path*",
     "/miembros/:path*",

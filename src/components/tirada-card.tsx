@@ -7,6 +7,7 @@ type Props = {
   date: string;
   type: string;
   closed: boolean;
+  startTime: string | null;
   name: string | null;
   caliber: string | null;
   modalityName: string;
@@ -60,7 +61,8 @@ export function TiradaCard(t: Props) {
               </div>
             ) : null}
             <div style={{ color: "var(--texto-suave)", fontSize: "0.85rem" }}>
-              {fechaCorta(t.date)} · {t.clubName}
+              {fechaCorta(t.date)}
+              {t.startTime ? ` · ${t.startTime}` : ""} · {t.clubName}
             </div>
             <div
               style={{

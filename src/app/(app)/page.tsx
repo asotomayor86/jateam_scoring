@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/auth/helpers";
 import { listTiradas } from "@/db/queries/tiradas";
 import { TiradaCard } from "@/components/tirada-card";
+import { Portada } from "@/components/portada";
 import { SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +14,20 @@ export default async function HomePage() {
 
   return (
     <>
-      <div style={{ margin: "0.5rem 0 0.25rem" }}>
-        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>
-          Hola, {profile.nickname || profile.displayName} 👋
+      <div style={{ textAlign: "center", margin: "0.5rem 0 1rem" }}>
+        <h1
+          className="titulo-app"
+          style={{ margin: 0, fontSize: "2.6rem" }}
+        >
+          JA TEAM SCORING
         </h1>
+        <Portada />
+      </div>
+
+      <div style={{ margin: "0.5rem 0 0.25rem" }}>
+        <h2 style={{ margin: 0, fontSize: "1.3rem" }}>
+          Hola, {profile.nickname || profile.displayName} 👋
+        </h2>
         <p style={{ margin: "0.25rem 0 0", color: "var(--texto-suave)" }}>
           Apunta tu tirada o consulta el ranking del grupo.
         </p>

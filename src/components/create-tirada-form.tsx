@@ -35,15 +35,21 @@ export function CreateTiradaForm({
         action={accion}
         style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}
       >
-        <div>
-          <label style={etiqueta}>Fecha</label>
-          <input
-            name="date"
-            type="date"
-            required
-            defaultValue={hoy}
-            style={estiloCampo}
-          />
+        <div style={{ display: "flex", gap: "0.6rem" }}>
+          <div style={{ flex: 1 }}>
+            <label style={etiqueta}>Fecha</label>
+            <input
+              name="date"
+              type="date"
+              required
+              defaultValue={hoy}
+              style={estiloCampo}
+            />
+          </div>
+          <div style={{ width: 120 }}>
+            <label style={etiqueta}>Hora inicio</label>
+            <input name="startTime" type="time" style={estiloCampo} />
+          </div>
         </div>
 
         <div>
@@ -61,10 +67,10 @@ export function CreateTiradaForm({
         </div>
 
         <div>
-          <label style={etiqueta}>Club</label>
+          <label style={etiqueta}>Campo</label>
           <select name="clubId" required style={estiloCampo} defaultValue="">
             <option value="" disabled>
-              Elige club…
+              Elige campo…
             </option>
             {clubs.map((c) => (
               <option key={c.id} value={c.id}>
@@ -85,7 +91,7 @@ export function CreateTiradaForm({
               padding: 0,
             }}
           >
-            {verClub ? "Cancelar" : "+ Añadir un club nuevo"}
+            {verClub ? "Cancelar" : "+ Añadir un campo nuevo"}
           </button>
         </div>
 
@@ -160,8 +166,8 @@ function ClubForm({ onCreado }: { onCreado: () => void }) {
       action={accion}
       style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
     >
-      <strong style={{ fontSize: "0.95rem" }}>Nuevo club</strong>
-      <input name="name" placeholder="Nombre del club" required maxLength={60} style={estiloCampo} />
+      <strong style={{ fontSize: "0.95rem" }}>Nuevo campo</strong>
+      <input name="name" placeholder="Nombre del campo" required maxLength={60} style={estiloCampo} />
       <input
         name="abbr"
         placeholder="Sigla (p. ej. JATEAM)"
@@ -169,8 +175,14 @@ function ClubForm({ onCreado }: { onCreado: () => void }) {
         maxLength={12}
         style={estiloCampo}
       />
+      <input
+        name="mapsUrl"
+        type="url"
+        placeholder="Enlace de Google Maps (opcional)"
+        style={estiloCampo}
+      />
       <button type="submit" className="btn" disabled={enviando}>
-        {enviando ? "Añadiendo…" : "Añadir club"}
+        {enviando ? "Añadiendo…" : "Añadir campo"}
       </button>
       {estado.mensaje && (
         <Aviso tipo={estado.ok ? "ok" : "error"}>{estado.mensaje}</Aviso>

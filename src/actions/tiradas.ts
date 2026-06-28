@@ -19,8 +19,14 @@ export type ResultadoAccion = { ok: boolean; mensaje?: string };
 
 const esquemaTirada = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha no válida"),
+  startTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "Hora no válida")
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
   modalityId: z.string().uuid("Elige una modalidad"),
-  clubId: z.string().uuid("Elige un club"),
+  clubId: z.string().uuid("Elige un campo"),
   type: z.enum(["entrenamiento", "oficial", "semioficial"]),
   caliber: z
     .string()
@@ -64,6 +70,7 @@ export async function crearTirada(
 
   const parsed = esquemaTirada.safeParse({
     date: formData.get("date"),
+    startTime: formData.get("startTime"),
     modalityId: formData.get("modalityId"),
     clubId: formData.get("clubId"),
     type: formData.get("type"),
@@ -148,10 +155,18 @@ export async function crearClub(
       .min(2, "Sigla obligatoria")
       .max(12)
       .regex(/^[A-Za-z0-9]+$/, "Sigla: solo letras y números"),
+    mapsUrl: z
+      .string()
+      .trim()
+      .url("El enlace de mapa no es válido")
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
   });
   const parsed = esquema.safeParse({
     name: formData.get("name"),
     abbr: formData.get("abbr"),
+    mapsUrl: formData.get("mapsUrl"),
   });
   if (!parsed.success) {
     return { ok: false, mensaje: parsed.error.issues[0]?.message };
@@ -161,15 +176,17 @@ export async function crearClub(
     await db.insert(clubs).values({
       name: parsed.data.name,
       abbr: parsed.data.abbr.toUpperCase(),
+      mapsUrl: parsed.data.mapsUrl,
       createdBy: user.id,
     });
   } catch (e) {
     console.error("crearClub error:", e);
-    return { ok: false, mensaje: "No se pudo crear el club" };
+    return { ok: false, mensaje: "No se pudo crear el campo" };
   }
 
+  revalidatePath("/clubs");
   revalidatePath("/tiradas/nueva");
-  return { ok: true, mensaje: `Club «${parsed.data.name}» añadido` };
+  return { ok: true, mensaje: `Campo «${parsed.data.name}» añadido` };
 }
 
 /** Actualiza nombre y sigla de un club (cualquier miembro). */
@@ -184,16 +201,28 @@ export async function actualizarClub(formData: FormData): Promise<void> {
       .min(2)
       .max(12)
       .regex(/^[A-Za-z0-9]+$/),
+    mapsUrl: z
+      .string()
+      .trim()
+      .url()
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
   });
   const parsed = esquema.safeParse({
     name: formData.get("name"),
     abbr: formData.get("abbr"),
+    mapsUrl: formData.get("mapsUrl"),
   });
   if (!id || !parsed.success) return;
 
   await db
     .update(clubs)
-    .set({ name: parsed.data.name, abbr: parsed.data.abbr.toUpperCase() })
+    .set({
+      name: parsed.data.name,
+      abbr: parsed.data.abbr.toUpperCase(),
+      mapsUrl: parsed.data.mapsUrl,
+    })
     .where(eq(clubs.id, id));
 
   revalidatePath("/clubs");
