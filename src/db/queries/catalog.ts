@@ -1,6 +1,6 @@
 import "server-only";
 import { asc, eq, sql } from "drizzle-orm";
-import { db, modalities, clubs, tiradas } from "@/db";
+import { db, modalities, clubs, tiradas, restaurants, comidas } from "@/db";
 
 /** Modalidades activas, ordenadas por nombre. */
 export async function getModalidades() {
@@ -31,4 +31,26 @@ export async function getClubsConUso() {
     })
     .from(clubs)
     .orderBy(asc(clubs.name));
+}
+
+/** Todos los restaurantes, ordenados por nombre. */
+export async function getRestaurantes() {
+  return db.select().from(restaurants).orderBy(asc(restaurants.name));
+}
+
+/** Restaurantes con el nº de comidas que los usan (para la gestión). */
+export async function getRestaurantesConUso() {
+  return db
+    .select({
+      id: restaurants.id,
+      name: restaurants.name,
+      abbr: restaurants.abbr,
+      mapsUrl: restaurants.mapsUrl,
+      usos: sql<number>`(
+        select count(*)::int from ${comidas}
+        where ${comidas.restaurantId} = ${restaurants.id}
+      )`,
+    })
+    .from(restaurants)
+    .orderBy(asc(restaurants.name));
 }

@@ -20,6 +20,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   real,
   text,
   timestamp,
@@ -217,6 +218,58 @@ export const series = pgTable(
   (t) => [unique().on(t.scorecardId, t.idx)],
 );
 
+/**
+ * Catálogo de restaurantes (para los eventos "Comidas"). Mismos campos que los
+ * campos de tiro, con enlace de Google Maps.
+ */
+export const restaurants = pgTable("restaurants", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  abbr: text("abbr").notNull(),
+  mapsUrl: text("maps_url"),
+  createdBy: text("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/** Evento "Comida": fecha, hora y restaurante; la gente se apunta. */
+export const comidas = pgTable("comidas", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  date: text("date").notNull(), // ISO YYYY-MM-DD
+  startTime: text("start_time"), // HH:MM
+  restaurantId: uuid("restaurant_id")
+    .notNull()
+    .references(() => restaurants.id, { onDelete: "restrict" }),
+  name: text("name"),
+  notes: text("notes"),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/** Asistentes apuntados a una comida. */
+export const comidaAttendees = pgTable(
+  "comida_attendees",
+  {
+    comidaId: uuid("comida_id")
+      .notNull()
+      .references(() => comidas.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.comidaId, t.userId] })],
+);
+
 // --- Tipos inferidos ---------------------------------------------------------
 
 export type TiradaType = (typeof tiradaType.enumValues)[number];
@@ -229,3 +282,6 @@ export type Club = typeof clubs.$inferSelect;
 export type Tirada = typeof tiradas.$inferSelect;
 export type Scorecard = typeof scorecards.$inferSelect;
 export type Serie = typeof series.$inferSelect;
+export type Restaurant = typeof restaurants.$inferSelect;
+export type Comida = typeof comidas.$inferSelect;
+export type ComidaAttendee = typeof comidaAttendees.$inferSelect;

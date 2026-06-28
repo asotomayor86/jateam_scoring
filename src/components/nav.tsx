@@ -14,9 +14,11 @@ type Props = {
 const enlaces = [
   { href: "/", label: "Inicio" },
   { href: "/tiradas", label: "Tiradas" },
+  { href: "/comidas", label: "Comidas" },
+  { href: "/calendario", label: "Calendario" },
   { href: "/yo", label: "Mis tiradas" },
   { href: "/clubs", label: "Campos" },
-  { href: "/calendario", label: "Calendario" },
+  { href: "/restaurantes", label: "Restaurantes" },
   { href: "/perfil", label: "Perfil" },
 ];
 
