@@ -33,6 +33,8 @@ export type PlanTimer = {
   steps: PasoTimer[];
   // Estilo del paso de "disparo" (para resaltar ¡Disparen!).
   destacarUltimo?: boolean;
+  // Pitidos en las transiciones (solo en entrenamientos).
+  conPitido?: boolean;
 };
 
 /**
@@ -60,6 +62,7 @@ export function planTimer(
       startLabel: "Carguen",
       finalLabel: "Tiempo cumplido",
       steps,
+      conPitido: false,
     };
   }
 
@@ -72,6 +75,7 @@ export function planTimer(
         { label: "¡Disparen!", seconds: fase.segundos },
       ],
       destacarUltimo: true,
+      conPitido: true,
     };
   }
 

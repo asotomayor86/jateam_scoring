@@ -64,7 +64,7 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
         setRem(0);
         if (ultimoPaso.current !== plan.steps.length) {
           ultimoPaso.current = plan.steps.length;
-          beep(true);
+          if (plan.conPitido) beep(true);
         }
         return;
       }
@@ -78,7 +78,7 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
       setRem(Math.ceil(acc + plan.steps[i].seconds - el));
       if (i !== ultimoPaso.current) {
         ultimoPaso.current = i;
-        beep(false);
+        if (plan.conPitido) beep(false);
       }
     };
     update();
