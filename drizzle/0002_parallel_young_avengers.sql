@@ -1,0 +1,1 @@
+ALTER TABLE "tiradas" ADD COLUMN "closed" boolean DEFAULT false NOT NULL;

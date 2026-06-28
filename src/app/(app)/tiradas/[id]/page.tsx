@@ -2,7 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/auth/helpers";
 import { getTirada, getRanking, getMiScorecard } from "@/db/queries/tiradas";
-import { apuntarme, borrarTirada } from "@/actions/tiradas";
+import {
+  apuntarme,
+  borrarTirada,
+  cerrarTirada,
+  reabrirTirada,
+} from "@/actions/tiradas";
 import { borrarHoja, finalizarHoja } from "@/actions/scorecards";
 import { RankingTable } from "@/components/ranking-table";
 import { Card, SeccionTitulo, TipoChip } from "@/components/ui";
@@ -29,6 +34,7 @@ export default async function TiradaDetallePage({
   ]);
 
   const soyCreador = tirada.createdBy === user.id;
+  const puedeGestionarCierre = soyCreador || profile.isAdmin;
 
   return (
     <>
@@ -43,8 +49,9 @@ export default async function TiradaDetallePage({
             {tirada.name}
           </div>
         ) : null}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
           <TipoChip tipo={tirada.type} />
+          {tirada.closed ? <span className="chip">Cerrada</span> : null}
           <span style={{ color: "var(--texto-suave)", fontSize: "0.9rem" }}>
             {tirada.date} · {tirada.clubName}
           </span>
@@ -134,6 +141,13 @@ export default async function TiradaDetallePage({
               </ConfirmButton>
             </form>
           )}
+        </Card>
+      ) : tirada.closed ? (
+        <Card style={{ marginBottom: "1rem" }}>
+          <p style={{ margin: 0, color: "var(--texto-suave)" }}>
+            🔒 Esta tirada está <strong>cerrada</strong>: no se admiten nuevos
+            apuntes.
+          </p>
         </Card>
       ) : (
         <Card style={{ marginBottom: "1rem" }}>
@@ -229,8 +243,27 @@ export default async function TiradaDetallePage({
         </>
       ) : null}
 
+      {puedeGestionarCierre ? (
+        <form
+          action={tirada.closed ? reabrirTirada : cerrarTirada}
+          style={{ marginTop: "1.5rem" }}
+        >
+          <input type="hidden" name="id" value={id} />
+          <ConfirmButton
+            message={
+              tirada.closed
+                ? "¿Reabrir la tirada para que se pueda volver a apuntar gente?"
+                : "¿Cerrar la tirada? No podrá apuntarse nadie nuevo."
+            }
+            className="btn btn-bloque"
+          >
+            {tirada.closed ? "Reabrir tirada" : "Cerrar tirada"}
+          </ConfirmButton>
+        </form>
+      ) : null}
+
       {soyCreador ? (
-        <form action={borrarTirada} style={{ marginTop: "1.5rem" }}>
+        <form action={borrarTirada} style={{ marginTop: "0.6rem" }}>
           <input type="hidden" name="id" value={id} />
           <ConfirmButton
             message="¿Borrar la tirada entera? Se eliminarán todas las hojas y resultados. Esto no se puede deshacer."

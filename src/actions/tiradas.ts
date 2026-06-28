@@ -218,6 +218,46 @@ export async function borrarClub(formData: FormData): Promise<void> {
   revalidatePath("/tiradas/nueva");
 }
 
+/** Cierra una tirada (creador o encargado): impide nuevos apuntes. */
+export async function cerrarTirada(formData: FormData): Promise<void> {
+  const { user, profile } = await requireUser();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const [t] = await db
+    .select({ createdBy: tiradas.createdBy })
+    .from(tiradas)
+    .where(eq(tiradas.id, id))
+    .limit(1);
+  if (!t) return;
+  if (t.createdBy !== user.id && !profile.isAdmin) return;
+
+  await db.update(tiradas).set({ closed: true }).where(eq(tiradas.id, id));
+  revalidatePath(`/tiradas/${id}`);
+  revalidatePath("/tiradas");
+  revalidatePath("/");
+}
+
+/** Reabre una tirada cerrada (creador o encargado). */
+export async function reabrirTirada(formData: FormData): Promise<void> {
+  const { user, profile } = await requireUser();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const [t] = await db
+    .select({ createdBy: tiradas.createdBy })
+    .from(tiradas)
+    .where(eq(tiradas.id, id))
+    .limit(1);
+  if (!t) return;
+  if (t.createdBy !== user.id && !profile.isAdmin) return;
+
+  await db.update(tiradas).set({ closed: false }).where(eq(tiradas.id, id));
+  revalidatePath(`/tiradas/${id}`);
+  revalidatePath("/tiradas");
+  revalidatePath("/");
+}
+
 const GRANULARIDADES = [
   "tiro",
   "bloque5",
@@ -247,6 +287,15 @@ export async function apuntarme(formData: FormData): Promise<void> {
     .limit(1);
 
   if (existente.length === 0) {
+    // Si la tirada está cerrada, no se admiten nuevos apuntes.
+    const [t] = await db
+      .select({ closed: tiradas.closed })
+      .from(tiradas)
+      .where(eq(tiradas.id, tiradaId))
+      .limit(1);
+    if (!t || t.closed) {
+      redirect(`/tiradas/${tiradaId}`);
+    }
     await db.insert(scorecards).values({
       tiradaId,
       userId: user.id,

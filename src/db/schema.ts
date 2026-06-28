@@ -134,6 +134,8 @@ export const tiradas = pgTable("tiradas", {
     .notNull()
     .references(() => clubs.id, { onDelete: "restrict" }),
   type: tiradaType("type").notNull(),
+  // Cerrada: nadie nuevo puede apuntarse y se muestra como "pasada".
+  closed: boolean("closed").notNull().default(false),
   // Calibre libre opcional (p. ej. "9mm", ".38", "22").
   caliber: text("caliber"),
   // Etiqueta opcional para distinguir varias tiradas el mismo día.

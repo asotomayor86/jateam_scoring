@@ -6,6 +6,7 @@ type Props = {
   code: string;
   date: string;
   type: string;
+  closed: boolean;
   name: string | null;
   caliber: string | null;
   modalityName: string;
@@ -26,7 +27,18 @@ function fechaCorta(iso: string): string {
 export function TiradaCard(t: Props) {
   return (
     <Link href={`/tiradas/${t.id}`} style={{ display: "block" }}>
-      <Card style={{ marginBottom: "0.6rem" }}>
+      <Card
+        style={{
+          marginBottom: "0.6rem",
+          // Cerrada = "pasada": fondo gris apagado y texto atenuado.
+          ...(t.closed
+            ? {
+                background: "rgba(120, 130, 140, 0.16)",
+                opacity: 0.78,
+              }
+            : null),
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -62,6 +74,11 @@ export function TiradaCard(t: Props) {
             </div>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
+            {t.closed ? (
+              <span className="chip" style={{ marginRight: "0.3rem" }}>
+                Cerrada
+              </span>
+            ) : null}
             <TipoChip tipo={t.type} />
             <div
               style={{
