@@ -334,3 +334,71 @@ a {
   color: var(--texto-suave);
 }
 .tabla .num { text-align: right; }
+
+/* --- Calendario (vista mensual) --- */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-head {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--texto-suave);
+  text-align: center;
+  padding: 2px 0;
+}
+.cal-cell {
+  min-height: 66px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 3px;
+  background: var(--superficie);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+.cal-cell .dia {
+  font-size: 0.72rem;
+  color: var(--texto-suave);
+}
+.cal-dia-otro {
+  opacity: 0.4;
+}
+/* Semana en curso: fondo ligeramente distinto. */
+.cal-cell-actual {
+  background: rgba(245, 158, 11, 0.12);
+}
+/* Día de hoy. */
+.cal-hoy .dia {
+  color: #1a1205;
+  background: var(--acento-fuerte);
+  border-radius: 6px;
+  padding: 0 5px;
+  align-self: flex-start;
+  font-weight: 700;
+}
+.cal-pill {
+  font-size: 0.62rem;
+  line-height: 1.15;
+  padding: 2px 3px;
+  border-radius: 4px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-pill-tirada {
+  background: rgba(245, 158, 11, 0.85);
+  color: #1a1205;
+}
+.cal-pill-comida {
+  background: rgba(56, 132, 255, 0.85);
+  color: #fff;
+}
+.cal-mas {
+  font-size: 0.62rem;
+  color: var(--texto-suave);
+}
