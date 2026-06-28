@@ -17,6 +17,8 @@ import {
 } from "@/lib/scoring";
 import { Card } from "@/components/ui";
 import { AjusteFinalField } from "@/components/ajuste-final";
+import { SeriesTimer } from "@/components/series-timer";
+import { faseSerie, planTimer } from "@/lib/fases";
 
 type SerieInicial = {
   idx: number;
@@ -93,6 +95,8 @@ export function LibretaAsistida({
   finalizada,
   permiteAjuste,
   ajusteInicial,
+  modalitySlug,
+  tipo,
 }: {
   scorecardId: string;
   modalidad: Modalidad;
@@ -100,6 +104,8 @@ export function LibretaAsistida({
   finalizada: boolean;
   permiteAjuste: boolean;
   ajusteInicial: number;
+  modalitySlug: string;
+  tipo: string;
 }) {
   const router = useRouter();
   const [filas, setFilas] = useState<Fila[]>(() =>
@@ -219,6 +225,8 @@ export function LibretaAsistida({
       {filas.map((fila) => {
         const calc = porFila.get(fila.idx) ?? { subtotal: 0, tiros: 0 };
         const completa = calc.tiros === modalidad.defaultSeriesSize;
+        const fase = faseSerie(modalitySlug, fila.idx);
+        const plan = planTimer(tipo, modalitySlug, fila.idx);
         return (
           <Card
             key={fila.idx}
@@ -237,7 +245,14 @@ export function LibretaAsistida({
                 flexWrap: "wrap",
               }}
             >
-              <strong style={{ fontSize: "0.95rem" }}>Serie {fila.idx}</strong>
+              <strong style={{ fontSize: "0.95rem" }}>
+                Serie {fila.idx}
+                {fase ? (
+                  <span className="chip" style={{ marginLeft: "0.4rem", fontWeight: 600 }}>
+                    {fase.nombre} · {fase.segundos}s
+                  </span>
+                ) : null}
+              </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)" }}>
                   {calc.tiros} tiros
@@ -312,6 +327,8 @@ export function LibretaAsistida({
                     ? "Error al guardar"
                     : ""}
             </div>
+
+            {plan && !finalizada ? <SeriesTimer plan={plan} /> : null}
           </Card>
         );
       })}

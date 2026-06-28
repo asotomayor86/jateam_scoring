@@ -72,6 +72,8 @@ export default async function LibretaPage({
           finalizada={hoja.status === "finalizada"}
           permiteAjuste={tirada.type !== "entrenamiento"}
           ajusteInicial={hoja.adjustment}
+          modalitySlug={tirada.modalitySlug}
+          tipo={tirada.type}
         />
       ) : (
         <Libreta
