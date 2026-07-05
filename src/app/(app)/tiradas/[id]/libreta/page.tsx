@@ -20,6 +20,7 @@ export default async function LibretaPage({
 
   const tirada = await getTirada(id);
   if (!tirada) notFound();
+  if (!tirada.isPublic && tirada.createdBy !== user.id) notFound();
 
   const miHoja = await getMiScorecard(id, user.id);
   if (!miHoja) redirect(`/tiradas/${id}`); // hay que apuntarse primero

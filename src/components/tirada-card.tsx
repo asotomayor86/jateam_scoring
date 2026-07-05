@@ -7,6 +7,7 @@ type Props = {
   date: string;
   type: string;
   closed: boolean;
+  isPublic: boolean;
   startTime: string | null;
   name: string | null;
   caliber: string | null;
@@ -79,6 +80,11 @@ export function TiradaCard(t: Props) {
             </div>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
+            {!t.isPublic ? (
+              <span className="chip" style={{ marginRight: "0.3rem" }}>
+                🔒 Privado
+              </span>
+            ) : null}
             {t.closed ? (
               <span className="chip" style={{ marginRight: "0.3rem" }}>
                 Cerrada

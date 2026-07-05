@@ -57,6 +57,7 @@ export default async function EditarTiradaPage({
           modalityId: tirada.modalityId,
           clubId: tirada.clubId,
           type: tirada.type,
+          isPublic: tirada.isPublic,
           caliber: tirada.caliber,
           name: tirada.name,
           notes: tirada.notes,

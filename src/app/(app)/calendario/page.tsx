@@ -59,11 +59,14 @@ export default async function CalendarioPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireUser();
+  const { user } = await requireUser();
   const sp = await searchParams;
   const vista = sp.vista === "mes" ? "mes" : "lista";
 
-  const [tiradas, comidas] = await Promise.all([listTiradas(), listComidas()]);
+  const [tiradas, comidas] = await Promise.all([
+    listTiradas({}, user.id),
+    listComidas(),
+  ]);
   const items: Item[] = [
     ...tiradas.map(
       (t): Item => ({ kind: "tirada", date: t.date, startTime: t.startTime, data: t }),

@@ -22,7 +22,7 @@ export default async function TiradasPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireUser();
+  const { user } = await requireUser();
   const sp = await searchParams;
 
   const filtros: FiltrosTiradas = {
@@ -35,7 +35,7 @@ export default async function TiradasPage({
   };
 
   const [tiradas, modalidades, clubs] = await Promise.all([
-    listTiradas(filtros),
+    listTiradas(filtros, user.id),
     getModalidades(),
     getClubs(),
   ]);

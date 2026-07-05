@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import {
   db,
   tiradas,
@@ -16,9 +16,19 @@ export type FiltrosTiradas = {
   type?: TiradaType;
 };
 
-/** Listado de tiradas (con modalidad, club y nº de tiradores apuntados). */
-export async function listTiradas(filtros: FiltrosTiradas = {}) {
+/**
+ * Listado de tiradas (con modalidad, club y nº de tiradores apuntados).
+ * `viewerId`: además de las públicas, incluye las privadas de ese usuario.
+ */
+export async function listTiradas(
+  filtros: FiltrosTiradas = {},
+  viewerId?: string,
+) {
   const condiciones = [];
+  if (viewerId)
+    condiciones.push(
+      or(eq(tiradas.isPublic, true), eq(tiradas.createdBy, viewerId)),
+    );
   if (filtros.modalityId)
     condiciones.push(eq(tiradas.modalityId, filtros.modalityId));
   if (filtros.clubId) condiciones.push(eq(tiradas.clubId, filtros.clubId));
@@ -31,6 +41,7 @@ export async function listTiradas(filtros: FiltrosTiradas = {}) {
       date: tiradas.date,
       type: tiradas.type,
       closed: tiradas.closed,
+      isPublic: tiradas.isPublic,
       startTime: tiradas.startTime,
       name: tiradas.name,
       caliber: tiradas.caliber,
@@ -58,6 +69,7 @@ export async function getTirada(id: string) {
       date: tiradas.date,
       type: tiradas.type,
       closed: tiradas.closed,
+      isPublic: tiradas.isPublic,
       startTime: tiradas.startTime,
       name: tiradas.name,
       caliber: tiradas.caliber,

@@ -34,7 +34,10 @@ const clave = (e: Evento) => `${e.date} ${e.startTime ?? "23:59"}`;
 
 export default async function HomePage() {
   const { profile } = await requireUser();
-  const [tiradas, comidas] = await Promise.all([listTiradas(), listComidas()]);
+  const [tiradas, comidas] = await Promise.all([
+    listTiradas({}, profile.id),
+    listComidas(),
+  ]);
 
   const eventos: Evento[] = [
     ...tiradas.map(

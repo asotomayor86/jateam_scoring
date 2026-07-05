@@ -34,6 +34,8 @@ export default async function TiradaDetallePage({
 
   const tirada = await getTirada(id);
   if (!tirada) notFound();
+  // Privada: solo la ve quien la creó.
+  if (!tirada.isPublic && tirada.createdBy !== user.id) notFound();
 
   const [ranking, miHoja, tiradores] = await Promise.all([
     getRanking(id),
@@ -69,6 +71,7 @@ export default async function TiradaDetallePage({
         ) : null}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
           <TipoChip tipo={tirada.type} />
+          {!tirada.isPublic ? <span className="chip">🔒 Privado</span> : null}
           {tirada.closed ? <span className="chip">Cerrada</span> : null}
           <span style={{ color: "var(--texto-suave)", fontSize: "0.9rem" }}>
             {tirada.date}

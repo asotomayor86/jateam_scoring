@@ -146,6 +146,8 @@ export const tiradas = pgTable("tiradas", {
   startTime: text("start_time"),
   // Cerrada: nadie nuevo puede apuntarse y se muestra como "pasada".
   closed: boolean("closed").notNull().default(false),
+  // Público: si es false, solo lo ve (y se apunta) quien lo creó.
+  isPublic: boolean("is_public").notNull().default(true),
   // Calibre libre opcional (p. ej. "9mm", ".38", "22").
   caliber: text("caliber"),
   // Etiqueta opcional para distinguir varias tiradas el mismo día.

@@ -29,6 +29,7 @@ const esquemaTirada = z.object({
   modalityId: z.string().uuid("Elige una modalidad"),
   clubId: z.string().uuid("Elige un campo"),
   type: z.enum(["entrenamiento", "oficial", "semioficial"]),
+  isPublic: z.boolean(),
   caliber: z
     .string()
     .trim()
@@ -80,6 +81,8 @@ export async function crearTirada(
     modalityId: formData.get("modalityId"),
     clubId: formData.get("clubId"),
     type: formData.get("type"),
+    isPublic:
+      formData.get("isPublic") === "on" || formData.get("isPublic") === "true",
     caliber: formData.get("caliber"),
     name: formData.get("name"),
     notes: formData.get("notes"),
@@ -163,6 +166,8 @@ export async function actualizarTirada(
     modalityId: formData.get("modalityId"),
     clubId: formData.get("clubId"),
     type: formData.get("type"),
+    isPublic:
+      formData.get("isPublic") === "on" || formData.get("isPublic") === "true",
     caliber: formData.get("caliber"),
     name: formData.get("name"),
     notes: formData.get("notes"),
@@ -411,11 +416,17 @@ export async function apuntarme(formData: FormData): Promise<void> {
   if (existente.length === 0) {
     // Si la tirada está cerrada, no se admiten nuevos apuntes.
     const [t] = await db
-      .select({ closed: tiradas.closed, type: tiradas.type })
+      .select({
+        closed: tiradas.closed,
+        type: tiradas.type,
+        isPublic: tiradas.isPublic,
+        createdBy: tiradas.createdBy,
+      })
       .from(tiradas)
       .where(eq(tiradas.id, tiradaId))
       .limit(1);
-    if (!t || t.closed) {
+    // Cerrada o privada de otro: no se admite el apunte.
+    if (!t || t.closed || (!t.isPublic && t.createdBy !== user.id)) {
       redirect(`/tiradas/${tiradaId}`);
     }
     // En tiradas oficiales se guarda la categoría elegida.

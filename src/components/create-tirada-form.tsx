@@ -20,6 +20,7 @@ export type TiradaInicial = {
   modalityId: string;
   clubId: string;
   type: string;
+  isPublic: boolean;
   caliber: string | null;
   name: string | null;
   notes: string | null;
@@ -148,6 +149,23 @@ export function CreateTiradaForm({
             <option value="oficial">Oficial</option>
           </select>
         </div>
+
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.9rem",
+          }}
+        >
+          <input
+            type="checkbox"
+            name="isPublic"
+            defaultChecked={tirada ? tirada.isPublic : true}
+            style={{ width: 18, height: 18 }}
+          />
+          Público (otros pueden verlo y apuntarse; si lo desmarcas, solo tú)
+        </label>
 
         <div>
           <label style={etiqueta}>Calibre (opcional)</label>
