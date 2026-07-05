@@ -54,6 +54,7 @@ export default async function TiradaDetallePage({
         style={{
           marginBottom: "1rem",
           display: "flex",
+          alignItems: "flex-start",
           justifyContent: "space-between",
           gap: "0.6rem",
         }}
