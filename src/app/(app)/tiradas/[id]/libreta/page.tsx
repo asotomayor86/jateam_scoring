@@ -66,6 +66,7 @@ export default async function LibretaPage({
             shots: s.shots,
             subtotal: s.subtotal,
             buckets: s.buckets,
+            blancoNuevo: s.blancoNuevo,
           }))}
           finalizada={hoja.status === "finalizada"}
         />

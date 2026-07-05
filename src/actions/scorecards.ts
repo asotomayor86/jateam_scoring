@@ -72,24 +72,17 @@ async function recomputar(
   const calculadas: SerieCalculada[] = [];
 
   if (granularity === "asistido") {
-    // En modular, cada módulo es independiente (no arrastra el blanco).
-    const esModular = filas.some((f) => f.moduleType);
     let prev = CEROS();
     let total = 0;
     let innerCount = 0;
     for (const f of filas) {
       const acumulado = f.buckets ?? CEROS();
-      let incremental: number[];
-      if (esModular) {
-        incremental = acumulado;
-      } else {
-        if (f.blancoNuevo) prev = CEROS();
-        incremental = restaRecuentos(acumulado, prev);
-        prev = acumulado;
-      }
+      if (f.blancoNuevo) prev = CEROS();
+      const incremental = restaRecuentos(acumulado, prev);
       const subtotal = puntosDeRecuento(incremental);
       const shotCount = tirosDeRecuento(incremental);
       const inner = incremental[0] || 0; // nº de dieces (desempate)
+      prev = acumulado;
       total += subtotal;
       innerCount += inner;
       // Persiste los valores derivados si cambiaron.

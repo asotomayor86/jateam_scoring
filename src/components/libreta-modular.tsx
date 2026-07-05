@@ -15,6 +15,7 @@ import {
   formatPunt,
   ASISTIDO_VALORES,
   puntosDeRecuento,
+  restaRecuentos,
 } from "@/lib/scoring";
 import { MODULOS, getModulo, moduloPlan } from "@/lib/fases";
 import { Card } from "@/components/ui";
@@ -26,6 +27,7 @@ type SerieInicial = {
   shots: number[] | null;
   subtotal: number;
   buckets: number[] | null;
+  blancoNuevo: boolean;
 };
 
 type Modo = "tiros" | "total" | "asistido";
@@ -37,6 +39,7 @@ type Fila = {
   celdas: string[]; // modo tiros
   totalStr: string; // modo total
   counts: string[]; // modo asistido (10..0)
+  blancoNuevo: boolean; // modo asistido
   estado: EstadoGuardado;
 };
 
@@ -66,11 +69,13 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
         counts: ASISTIDO_VALORES.map((_, j) =>
           modo === "asistido" && s.buckets ? String(s.buckets[j] ?? 0) : "",
         ),
+        blancoNuevo: s.blancoNuevo,
         estado: "" as const,
       };
     });
 }
 
+/** Recuento numérico (asistido) de una fila. */
 function numsAsistido(fila: Fila): number[] {
   return fila.counts.map((c) => {
     const n = parseInt(c, 10);
@@ -78,7 +83,27 @@ function numsAsistido(fila: Fila): number[] {
   });
 }
 
-/** Subtotal de una fila según el modo. */
+/**
+ * Subtotales asistido con encadenado por "blanco nuevo" (igual que competición):
+ * si un módulo no es blanco nuevo, descuenta el acumulado del anterior.
+ */
+function calcAsistido(filas: Fila[]) {
+  let prev = ASISTIDO_VALORES.map(() => 0);
+  let total = 0;
+  const porFila = new Map<number, number>();
+  for (const f of filas) {
+    const acumulado = numsAsistido(f);
+    if (f.blancoNuevo) prev = ASISTIDO_VALORES.map(() => 0);
+    const incremental = restaRecuentos(acumulado, prev);
+    const subtotal = puntosDeRecuento(incremental);
+    prev = acumulado;
+    total += subtotal;
+    porFila.set(f.idx, subtotal);
+  }
+  return { porFila, total: redondea1(total) };
+}
+
+/** Subtotal de una fila en modos NO asistido (tiros / total). */
 function subtotalDe(fila: Fila, modo: Modo): number {
   if (modo === "tiros") {
     let s = 0;
@@ -88,13 +113,11 @@ function subtotalDe(fila: Fila, modo: Modo): number {
     }
     return redondea1(s);
   }
-  if (modo === "total") {
-    const n = Number(fila.totalStr.trim().replace(",", "."));
-    return fila.totalStr.trim() !== "" && Number.isFinite(n) && n >= 0
-      ? redondea1(n)
-      : 0;
-  }
-  return puntosDeRecuento(numsAsistido(fila));
+  // modo total
+  const n = Number(fila.totalStr.trim().replace(",", "."));
+  return fila.totalStr.trim() !== "" && Number.isFinite(n) && n >= 0
+    ? redondea1(n)
+    : 0;
 }
 
 export function LibretaModular({
@@ -118,10 +141,13 @@ export function LibretaModular({
   filasRef.current = filas;
   const timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
-  const total = useMemo(
-    () => redondea1(filas.reduce((a, f) => a + subtotalDe(f, modo), 0)),
+  const asistido = useMemo(
+    () => (modo === "asistido" ? calcAsistido(filas) : null),
     [filas, modo],
   );
+  const total = asistido
+    ? asistido.total
+    : redondea1(filas.reduce((a, f) => a + subtotalDe(f, modo), 0));
 
   const setEstado = useCallback((idx: number, estado: EstadoGuardado) => {
     setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, estado } : f)));
@@ -139,7 +165,7 @@ export function LibretaModular({
           const r = await guardarSerieAsistida({
             scorecardId,
             idx,
-            blancoNuevo: true,
+            blancoNuevo: fila.blancoNuevo,
             buckets: numsAsistido(fila),
           });
           ok = r.ok;
@@ -206,6 +232,14 @@ export function LibretaModular({
     );
     programar(idx);
   }
+  function alternaBlanco(idx: number) {
+    setFilas((prev) =>
+      prev.map((f) =>
+        f.idx === idx ? { ...f, blancoNuevo: !f.blancoNuevo } : f,
+      ),
+    );
+    programar(idx);
+  }
 
   async function anadirModulo() {
     const mod = getModulo(tipoNuevo);
@@ -222,6 +256,7 @@ export function LibretaModular({
         celdas: Array(mod.shots).fill(""),
         totalStr: "",
         counts: ASISTIDO_VALORES.map(() => ""),
+        blancoNuevo: true,
         estado: "",
       },
     ]);
@@ -282,7 +317,10 @@ export function LibretaModular({
       {filas.map((fila) => {
         const mod = getModulo(fila.moduleType);
         if (!mod) return null;
-        const sub = subtotalDe(fila, modo);
+        const sub =
+          modo === "asistido"
+            ? (asistido?.porFila.get(fila.idx) ?? 0)
+            : subtotalDe(fila, modo);
         return (
           <Card key={fila.idx}>
             <div
@@ -292,6 +330,7 @@ export function LibretaModular({
                 justifyContent: "space-between",
                 marginBottom: "0.5rem",
                 gap: "0.4rem",
+                flexWrap: "wrap",
               }}
             >
               <strong style={{ fontSize: "0.95rem" }}>
@@ -299,6 +338,25 @@ export function LibretaModular({
               </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span style={{ fontWeight: 700 }}>{formatPunt(sub)}</span>
+                {modo === "asistido" && !finalizada && (
+                  <button
+                    type="button"
+                    onClick={() => alternaBlanco(fila.idx)}
+                    aria-pressed={fila.blancoNuevo}
+                    style={{
+                      border: "1px solid var(--borde)",
+                      borderRadius: 8,
+                      padding: "0.3rem 0.5rem",
+                      fontSize: "0.78rem",
+                      cursor: "pointer",
+                      background: fila.blancoNuevo ? "var(--acento-fuerte)" : "transparent",
+                      color: fila.blancoNuevo ? "#1a1205" : "var(--texto-suave)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {fila.blancoNuevo ? "● Blanco nuevo" : "○ Blanco nuevo"}
+                  </button>
+                )}
                 {!finalizada && (
                   <button
                     type="button"
