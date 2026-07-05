@@ -55,6 +55,7 @@ export default async function EjercicioPage({
           style={{
             margin: "0 0 0.3rem",
             fontSize: "1.4rem",
+            fontWeight: 800,
             textTransform: "uppercase",
             letterSpacing: "0.02em",
           }}
