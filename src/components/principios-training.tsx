@@ -139,12 +139,12 @@ export function PrincipiosTraining() {
       {/* Pestañas (scroll horizontal) */}
       <div
         ref={tabsRef}
+        className="sin-scroll"
         style={{
           display: "flex",
           gap: "0.4rem",
           overflowX: "auto",
           paddingBottom: "0.4rem",
-          scrollbarWidth: "none",
         }}
       >
         {PRINCIPIOS.map((p, i) => (
@@ -170,24 +170,23 @@ export function PrincipiosTraining() {
         ))}
       </div>
 
-      {/* Carrusel con scroll-snap horizontal (swipe) */}
-      <div
-        ref={carruselRef}
-        onScroll={onScroll}
-        style={{
-          display: "flex",
-          overflowX: "auto",
-          scrollSnapType: "x mandatory",
-          gap: "0.6rem",
-          scrollbarWidth: "none",
-        }}
-      >
-        {PRINCIPIOS.map((p, i) => (
-          <div
-            key={i}
-            style={{ flex: "0 0 100%", scrollSnapAlign: "start", minWidth: 0 }}
-          >
-            <Card style={{ boxShadow: "none" }}>
+      {/* Tarjeta ESTÁTICA: solo se desliza el contenido dentro de ella. */}
+      <Card>
+        <div
+          ref={carruselRef}
+          onScroll={onScroll}
+          className="sin-scroll"
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            scrollSnapType: "x mandatory",
+          }}
+        >
+          {PRINCIPIOS.map((p, i) => (
+            <div
+              key={i}
+              style={{ flex: "0 0 100%", scrollSnapAlign: "start", minWidth: 0 }}
+            >
               <strong style={{ fontSize: "1rem" }}>{p.titulo}</strong>
               <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem", lineHeight: 1.4 }}>
                 {p.puntos.map((t, j) => (
@@ -196,10 +195,10 @@ export function PrincipiosTraining() {
                   </li>
                 ))}
               </ul>
-            </Card>
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* Puntos indicadores */}
       <div style={{ display: "flex", justifyContent: "center", gap: "0.35rem", marginTop: "0.5rem" }}>

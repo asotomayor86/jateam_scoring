@@ -352,6 +352,15 @@ a {
 }
 .tabla .num { text-align: right; }
 
+/* Ocultar barra de scroll (carruseles). */
+.sin-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.sin-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* --- Calendario (vista mensual) --- */
 .cal-grid {
   display: grid;
