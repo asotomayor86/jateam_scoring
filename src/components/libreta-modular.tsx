@@ -245,6 +245,8 @@ export function LibretaModular({
   async function anadirModulo() {
     const mod = getModulo(tipoNuevo);
     if (!mod) return;
+    // Solo el primer módulo es "blanco nuevo" por defecto; el resto no.
+    const esPrimero = filasRef.current.length === 0;
     const idx =
       (filasRef.current.length
         ? Math.max(...filasRef.current.map((f) => f.idx))
@@ -257,7 +259,7 @@ export function LibretaModular({
         celdas: Array(mod.shots).fill(""),
         totalStr: "",
         counts: ASISTIDO_VALORES.map(() => ""),
-        blancoNuevo: true,
+        blancoNuevo: esPrimero,
         estado: "",
       },
     ]);
@@ -265,7 +267,7 @@ export function LibretaModular({
       await guardarSerieAsistida({
         scorecardId,
         idx,
-        blancoNuevo: true,
+        blancoNuevo: esPrimero,
         buckets: ASISTIDO_VALORES.map(() => 0),
       });
     } else {
