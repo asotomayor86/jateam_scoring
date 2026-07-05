@@ -67,6 +67,7 @@ export default async function MiembrosPage() {
                 }}
               >
                 {m.email ?? "sin email"}
+                {m.licenseNumber ? ` · Lic. ${m.licenseNumber}` : ""}
               </div>
             </div>
             <Link

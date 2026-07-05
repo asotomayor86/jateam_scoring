@@ -18,6 +18,8 @@ export default async function PerfilPage() {
         <ProfileForm
           displayName={profile.displayName}
           nickname={profile.nickname}
+          dni={profile.dni}
+          licenseNumber={profile.licenseNumber}
           defaultGranularity={profile.defaultGranularity}
         />
       </Card>

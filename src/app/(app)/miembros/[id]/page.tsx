@@ -41,6 +41,8 @@ export default async function MiembroPage({
         email={miembro.email}
         displayName={miembro.displayName}
         nickname={miembro.nickname}
+        dni={miembro.dni}
+        licenseNumber={miembro.licenseNumber}
         isAdmin={miembro.isAdmin}
         defaultGranularity={miembro.defaultGranularity}
       />

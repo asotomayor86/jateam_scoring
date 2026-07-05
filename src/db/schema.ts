@@ -70,6 +70,9 @@ export const profiles = pgTable("profiles", {
   id: text("id").primaryKey(),
   displayName: text("display_name").notNull(),
   nickname: text("nickname"),
+  // Datos federativos (opcionales).
+  dni: text("dni"),
+  licenseNumber: text("license_number"),
   isAdmin: boolean("is_admin").notNull().default(false),
   // Preferencia por defecto al rellenar la libreta.
   defaultGranularity: entryGranularity("default_granularity")

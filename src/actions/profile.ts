@@ -23,6 +23,18 @@ const esquemaPerfil = z.object({
     "serie",
     "asistido",
   ]),
+  dni: z
+    .string()
+    .trim()
+    .max(20)
+    .optional()
+    .transform((v) => (v ? v : null)),
+  licenseNumber: z
+    .string()
+    .trim()
+    .max(30)
+    .optional()
+    .transform((v) => (v ? v : null)),
 });
 
 /** Actualiza el perfil del usuario actual (nombre, apodo y preferencia). */
@@ -36,6 +48,8 @@ export async function guardarPerfil(
     displayName: formData.get("displayName"),
     nickname: formData.get("nickname"),
     defaultGranularity: formData.get("defaultGranularity"),
+    dni: formData.get("dni"),
+    licenseNumber: formData.get("licenseNumber"),
   });
   if (!parsed.success) {
     return { ok: false, mensaje: parsed.error.issues[0]?.message };

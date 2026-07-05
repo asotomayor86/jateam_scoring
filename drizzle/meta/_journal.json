@@ -50,6 +50,13 @@
       "when": 1782654173883,
       "tag": "0006_chilly_shen",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783243117167,
+      "tag": "0007_neat_molecule_man",
+      "breakpoints": true
     }
   ]
 }

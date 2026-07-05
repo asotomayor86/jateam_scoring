@@ -8,6 +8,8 @@ import type { EntryGranularity } from "@/db/schema";
 type Props = {
   displayName: string;
   nickname: string | null;
+  dni: string | null;
+  licenseNumber: string | null;
   defaultGranularity: EntryGranularity;
 };
 
@@ -19,6 +21,8 @@ const etiqueta = { fontSize: "0.9rem" };
 export function ProfileForm({
   displayName,
   nickname,
+  dni,
+  licenseNumber,
   defaultGranularity,
 }: Props) {
   const [estado, accion, enviando] = useActionState(
@@ -51,6 +55,28 @@ export function ProfileForm({
           defaultValue={nickname ?? ""}
           maxLength={24}
           placeholder="Cómo quieres aparecer en los rankings"
+          style={estiloCampo}
+        />
+      </label>
+
+      <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <span style={etiqueta}>DNI</span>
+        <input
+          name="dni"
+          defaultValue={dni ?? ""}
+          maxLength={20}
+          placeholder="Opcional"
+          style={estiloCampo}
+        />
+      </label>
+
+      <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <span style={etiqueta}>Nº de licencia</span>
+        <input
+          name="licenseNumber"
+          defaultValue={licenseNumber ?? ""}
+          maxLength={30}
+          placeholder="Opcional"
           style={estiloCampo}
         />
       </label>

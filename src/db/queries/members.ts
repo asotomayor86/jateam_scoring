@@ -29,6 +29,7 @@ export async function getMiembros() {
       displayName: profiles.displayName,
       nickname: profiles.nickname,
       isAdmin: profiles.isAdmin,
+      licenseNumber: profiles.licenseNumber,
       email: authUsers.email,
     })
     .from(profiles)
@@ -45,6 +46,8 @@ export async function getMiembro(id: string) {
       nickname: profiles.nickname,
       isAdmin: profiles.isAdmin,
       defaultGranularity: profiles.defaultGranularity,
+      dni: profiles.dni,
+      licenseNumber: profiles.licenseNumber,
       email: authUsers.email,
     })
     .from(profiles)

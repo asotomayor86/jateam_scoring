@@ -112,6 +112,18 @@ const esquemaPerfilAdmin = z.object({
     .optional()
     .transform((v) => (v ? v : null)),
   defaultGranularity: z.enum(["tiro", "bloque5", "bloque10", "serie", "asistido"]),
+  dni: z
+    .string()
+    .trim()
+    .max(20)
+    .optional()
+    .transform((v) => (v ? v : null)),
+  licenseNumber: z
+    .string()
+    .trim()
+    .max(30)
+    .optional()
+    .transform((v) => (v ? v : null)),
   isAdmin: z.boolean(),
 });
 
@@ -131,17 +143,19 @@ export async function actualizarPerfilAdmin(
     displayName: formData.get("displayName"),
     nickname: formData.get("nickname"),
     defaultGranularity: formData.get("defaultGranularity"),
+    dni: formData.get("dni"),
+    licenseNumber: formData.get("licenseNumber"),
     isAdmin: formData.get("isAdmin") === "on" || formData.get("isAdmin") === "true",
   });
   if (!parsed.success) {
     return { ok: false, mensaje: parsed.error.issues[0]?.message };
   }
-  const { userId, displayName, nickname, defaultGranularity, isAdmin } =
+  const { userId, displayName, nickname, defaultGranularity, dni, licenseNumber, isAdmin } =
     parsed.data;
 
   await db
     .update(profiles)
-    .set({ displayName, nickname, defaultGranularity, isAdmin })
+    .set({ displayName, nickname, defaultGranularity, dni, licenseNumber, isAdmin })
     .where(eq(profiles.id, userId));
 
   // Sincroniza el rol en Neon Auth (mejor esfuerzo).

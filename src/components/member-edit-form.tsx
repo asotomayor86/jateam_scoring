@@ -14,6 +14,8 @@ type Props = {
   email: string | null;
   displayName: string;
   nickname: string | null;
+  dni: string | null;
+  licenseNumber: string | null;
   isAdmin: boolean;
   defaultGranularity: EntryGranularity;
 };
@@ -63,6 +65,26 @@ export function MemberEditForm(m: Props) {
               name="nickname"
               defaultValue={m.nickname ?? ""}
               maxLength={24}
+              style={estiloCampo}
+            />
+          </label>
+
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={etiqueta}>DNI</span>
+            <input
+              name="dni"
+              defaultValue={m.dni ?? ""}
+              maxLength={20}
+              style={estiloCampo}
+            />
+          </label>
+
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={etiqueta}>Nº de licencia</span>
+            <input
+              name="licenseNumber"
+              defaultValue={m.licenseNumber ?? ""}
+              maxLength={30}
               style={estiloCampo}
             />
           </label>
