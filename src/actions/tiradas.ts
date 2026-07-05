@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq, like } from "drizzle-orm";
 import { z } from "zod";
-import { requireUser } from "@/auth/helpers";
+import { requireUser, requireAdmin } from "@/auth/helpers";
 import { codigoTirada } from "@/lib/codigo";
 import { esCategoria } from "@/lib/categorias";
 import {
@@ -238,12 +238,12 @@ export async function borrarTirada(formData: FormData): Promise<void> {
   redirect("/tiradas");
 }
 
-/** Crea un club nuevo (cualquier miembro), para estandarizar el catálogo. */
+/** Crea un campo nuevo (solo encargado), para estandarizar el catálogo. */
 export async function crearClub(
   _prev: ResultadoAccion,
   formData: FormData,
 ): Promise<ResultadoAccion> {
-  const { user } = await requireUser();
+  const { user } = await requireAdmin();
 
   const esquema = z.object({
     name: z.string().trim().min(2, "Nombre obligatorio").max(60),
@@ -287,9 +287,9 @@ export async function crearClub(
   return { ok: true, mensaje: `Campo «${parsed.data.name}» añadido` };
 }
 
-/** Actualiza nombre y sigla de un club (cualquier miembro). */
+/** Actualiza nombre y sigla de un campo (solo encargado). */
 export async function actualizarClub(formData: FormData): Promise<void> {
-  await requireUser();
+  await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const esquema = z.object({
     name: z.string().trim().min(2).max(60),
@@ -327,9 +327,9 @@ export async function actualizarClub(formData: FormData): Promise<void> {
   revalidatePath("/tiradas/nueva");
 }
 
-/** Borra un club, solo si ninguna tirada lo usa (FK restrict). */
+/** Borra un campo (solo encargado), solo si ninguna tirada lo usa (FK restrict). */
 export async function borrarClub(formData: FormData): Promise<void> {
-  await requireUser();
+  await requireAdmin();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 

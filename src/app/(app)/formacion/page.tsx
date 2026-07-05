@@ -194,7 +194,8 @@ export default async function FormacionPage() {
           </li>
           <li>
             <strong>Campos</strong> y <strong>Restaurantes</strong>: catálogos con{" "}
-            <strong>enlace de Google Maps</strong>. Cualquiera puede añadir uno.
+            <strong>enlace de Google Maps</strong>. Los ve todo el mundo, pero{" "}
+            <strong>solo el encargado</strong> puede añadirlos o editarlos.
           </li>
         </ul>
       </Tema>
@@ -268,7 +269,7 @@ export default async function FormacionPage() {
           <li><strong>Miembros</strong>: invitar por email, editar perfiles, marcar encargados y reenviar invitaciones.</li>
           <li><strong>Cerrar hojas</strong> de otros que se hayan quedado sin finalizar, en la tirada.</li>
           <li><strong>Copiar tiradores</strong>: exporta la relación (nº, nombre, DNI, licencia, categoría) al portapapeles.</li>
-          <li>Gestionar la <strong>biblioteca de ejercicios</strong> (crear/editar/borrar).</li>
+          <li>Gestionar los catálogos: <strong>campos</strong>, <strong>restaurantes</strong>, <strong>modalidades</strong> y la <strong>biblioteca de ejercicios</strong> (crear/editar/borrar).</li>
         </ul>
       </Tema>
     </div>

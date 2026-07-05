@@ -6,7 +6,7 @@ import { SeccionTitulo } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function NuevaComidaPage() {
-  await requireUser();
+  const { profile } = await requireUser();
   const restaurantes = await getRestaurantes();
   const hoy = new Date().toISOString().slice(0, 10);
 
@@ -16,6 +16,7 @@ export default async function NuevaComidaPage() {
       <CreateComidaForm
         restaurantes={restaurantes.map((r) => ({ id: r.id, name: r.name }))}
         hoy={hoy}
+        puedeGestionarRestaurantes={profile.isAdmin}
       />
     </>
   );

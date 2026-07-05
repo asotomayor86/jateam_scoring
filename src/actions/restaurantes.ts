@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { requireUser } from "@/auth/helpers";
+import { requireAdmin } from "@/auth/helpers";
 import { db, restaurants, comidas } from "@/db";
 
 export type ResultadoAccion = { ok: boolean; mensaje?: string };
@@ -25,12 +25,12 @@ const esquema = z.object({
     .transform((v) => (v ? v : null)),
 });
 
-/** Crea un restaurante (cualquier miembro). */
+/** Crea un restaurante (solo encargado). */
 export async function crearRestaurante(
   _prev: ResultadoAccion,
   formData: FormData,
 ): Promise<ResultadoAccion> {
-  const { user } = await requireUser();
+  const { user } = await requireAdmin();
 
   const parsed = esquema.safeParse({
     name: formData.get("name"),
@@ -58,9 +58,9 @@ export async function crearRestaurante(
   return { ok: true, mensaje: `Restaurante «${parsed.data.name}» añadido` };
 }
 
-/** Actualiza un restaurante (cualquier miembro). */
+/** Actualiza un restaurante (solo encargado). */
 export async function actualizarRestaurante(formData: FormData): Promise<void> {
-  await requireUser();
+  await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const parsed = esquema.safeParse({
     name: formData.get("name"),
@@ -84,7 +84,7 @@ export async function actualizarRestaurante(formData: FormData): Promise<void> {
 
 /** Borra un restaurante, solo si ninguna comida lo usa (FK restrict). */
 export async function borrarRestaurante(formData: FormData): Promise<void> {
-  await requireUser();
+  await requireAdmin();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 

@@ -6,7 +6,7 @@ import { SeccionTitulo } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function RestaurantesPage() {
-  await requireUser();
+  const { profile } = await requireUser();
   const restaurantes = await getRestaurantesConUso();
 
   return (
@@ -19,10 +19,14 @@ export default async function RestaurantesPage() {
           margin: "0 0 1rem",
         }}
       >
-        Cualquiera puede añadir o editar restaurantes (con su enlace de Google
-        Maps). Solo se pueden borrar los que no tengan comidas.
+        {profile.isAdmin
+          ? "Como encargado, puedes añadir o editar restaurantes (con su enlace de Google Maps). Solo se pueden borrar los que no tengan comidas."
+          : "Listado de restaurantes. Solo el encargado puede añadir o editar restaurantes."}
       </p>
-      <RestaurantsManager restaurantes={restaurantes} />
+      <RestaurantsManager
+        restaurantes={restaurantes}
+        puedeGestionar={profile.isAdmin}
+      />
     </>
   );
 }

@@ -6,7 +6,7 @@ import { SeccionTitulo } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function NuevaTiradaPage() {
-  await requireUser();
+  const { profile } = await requireUser();
   const [modalidades, clubs] = await Promise.all([
     getModalidades(),
     getClubs(),
@@ -32,6 +32,7 @@ export default async function NuevaTiradaPage() {
         modalidades={modalidades.map((m) => ({ id: m.id, name: m.name }))}
         clubs={clubs.map((c) => ({ id: c.id, name: c.name }))}
         hoy={hoy}
+        puedeGestionarCampos={profile.isAdmin}
       />
     </>
   );

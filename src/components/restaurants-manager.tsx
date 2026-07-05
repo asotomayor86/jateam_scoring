@@ -23,8 +23,10 @@ const inicial: ResultadoAccion = { ok: false };
 
 export function RestaurantsManager({
   restaurantes,
+  puedeGestionar = false,
 }: {
   restaurantes: Restaurante[];
+  puedeGestionar?: boolean;
 }) {
   const router = useRouter();
   const [estado, accion, enviando] = useActionState(
@@ -38,6 +40,7 @@ export function RestaurantsManager({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {puedeGestionar ? (
       <Card>
         <form
           action={accion}
@@ -72,17 +75,26 @@ export function RestaurantsManager({
           )}
         </form>
       </Card>
+      ) : null}
 
       {restaurantes.length === 0 ? (
         <p style={{ color: "var(--texto-suave)" }}>Aún no hay restaurantes.</p>
       ) : (
-        restaurantes.map((r) => <RestauranteRow key={r.id} restaurante={r} />)
+        restaurantes.map((r) => (
+          <RestauranteRow key={r.id} restaurante={r} puedeGestionar={puedeGestionar} />
+        ))
       )}
     </div>
   );
 }
 
-function RestauranteRow({ restaurante }: { restaurante: Restaurante }) {
+function RestauranteRow({
+  restaurante,
+  puedeGestionar,
+}: {
+  restaurante: Restaurante;
+  puedeGestionar: boolean;
+}) {
   const [editando, setEditando] = useState(false);
 
   if (editando) {
@@ -162,6 +174,7 @@ function RestauranteRow({ restaurante }: { restaurante: Restaurante }) {
             </a>
           ) : null}
         </div>
+        {puedeGestionar ? (
         <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
           <button
             type="button"
@@ -191,6 +204,7 @@ function RestauranteRow({ restaurante }: { restaurante: Restaurante }) {
             </span>
           )}
         </div>
+        ) : null}
       </div>
     </Card>
   );

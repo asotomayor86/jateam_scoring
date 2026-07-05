@@ -40,11 +40,13 @@ export function CreateTiradaForm({
   clubs,
   hoy,
   tirada,
+  puedeGestionarCampos = false,
 }: {
   modalidades: Opcion[];
   clubs: Opcion[];
   hoy: string;
   tirada?: TiradaInicial;
+  puedeGestionarCampos?: boolean;
 }) {
   const router = useRouter();
   const editar = !!tirada;
@@ -119,21 +121,23 @@ export function CreateTiradaForm({
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={() => setVerClub((v) => !v)}
-            style={{
-              marginTop: "0.35rem",
-              background: "none",
-              border: "none",
-              color: "var(--acento)",
-              fontSize: "0.85rem",
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            {verClub ? "Cancelar" : "+ Añadir un campo nuevo"}
-          </button>
+          {puedeGestionarCampos ? (
+            <button
+              type="button"
+              onClick={() => setVerClub((v) => !v)}
+              style={{
+                marginTop: "0.35rem",
+                background: "none",
+                border: "none",
+                color: "var(--acento)",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              {verClub ? "Cancelar" : "+ Añadir un campo nuevo"}
+            </button>
+          ) : null}
         </div>
 
         <div>

@@ -23,9 +23,11 @@ const etiqueta = {
 export function CreateComidaForm({
   restaurantes,
   hoy,
+  puedeGestionarRestaurantes = false,
 }: {
   restaurantes: Opcion[];
   hoy: string;
+  puedeGestionarRestaurantes?: boolean;
 }) {
   const router = useRouter();
   const [estado, accion, enviando] = useActionState(crearComida, inicial);
@@ -66,21 +68,23 @@ export function CreateComidaForm({
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={() => setVerRest((v) => !v)}
-            style={{
-              marginTop: "0.35rem",
-              background: "none",
-              border: "none",
-              color: "var(--acento)",
-              fontSize: "0.85rem",
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            {verRest ? "Cancelar" : "+ Añadir un restaurante nuevo"}
-          </button>
+          {puedeGestionarRestaurantes ? (
+            <button
+              type="button"
+              onClick={() => setVerRest((v) => !v)}
+              style={{
+                marginTop: "0.35rem",
+                background: "none",
+                border: "none",
+                color: "var(--acento)",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              {verRest ? "Cancelar" : "+ Añadir un restaurante nuevo"}
+            </button>
+          ) : null}
         </div>
 
         <div>

@@ -6,7 +6,7 @@ import { SeccionTitulo } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function ClubsPage() {
-  await requireUser();
+  const { profile } = await requireUser();
   const clubs = await getClubsConUso();
 
   return (
@@ -19,10 +19,11 @@ export default async function ClubsPage() {
           margin: "0 0 1rem",
         }}
       >
-        Cualquiera puede añadir o editar campos (con su enlace de Google Maps).
-        Solo se pueden borrar los que no tengan tiradas.
+        {profile.isAdmin
+          ? "Como encargado, puedes añadir o editar campos (con su enlace de Google Maps). Solo se pueden borrar los que no tengan tiradas."
+          : "Listado de campos. Solo el encargado puede añadir o editar campos."}
       </p>
-      <ClubsManager clubs={clubs} />
+      <ClubsManager clubs={clubs} puedeGestionar={profile.isAdmin} />
     </>
   );
 }

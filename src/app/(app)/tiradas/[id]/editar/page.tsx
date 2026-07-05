@@ -50,6 +50,7 @@ export default async function EditarTiradaPage({
         modalidades={modalidades.map((m) => ({ id: m.id, name: m.name }))}
         clubs={clubs.map((c) => ({ id: c.id, name: c.name }))}
         hoy={tirada.date}
+        puedeGestionarCampos={profile.isAdmin}
         tirada={{
           id: tirada.id,
           date: tirada.date,

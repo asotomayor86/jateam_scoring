@@ -21,7 +21,13 @@ type Campo = {
 
 const inicial: ResultadoAccion = { ok: false };
 
-export function ClubsManager({ clubs }: { clubs: Campo[] }) {
+export function ClubsManager({
+  clubs,
+  puedeGestionar = false,
+}: {
+  clubs: Campo[];
+  puedeGestionar?: boolean;
+}) {
   const router = useRouter();
   const [estado, accion, enviando] = useActionState(
     async (prev: ResultadoAccion, fd: FormData) => {
@@ -34,6 +40,7 @@ export function ClubsManager({ clubs }: { clubs: Campo[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {puedeGestionar ? (
       <Card>
         <form
           action={accion}
@@ -68,17 +75,26 @@ export function ClubsManager({ clubs }: { clubs: Campo[] }) {
           )}
         </form>
       </Card>
+      ) : null}
 
       {clubs.length === 0 ? (
         <p style={{ color: "var(--texto-suave)" }}>Aún no hay campos.</p>
       ) : (
-        clubs.map((c) => <CampoRow key={c.id} campo={c} />)
+        clubs.map((c) => (
+          <CampoRow key={c.id} campo={c} puedeGestionar={puedeGestionar} />
+        ))
       )}
     </div>
   );
 }
 
-function CampoRow({ campo }: { campo: Campo }) {
+function CampoRow({
+  campo,
+  puedeGestionar,
+}: {
+  campo: Campo;
+  puedeGestionar: boolean;
+}) {
   const [editando, setEditando] = useState(false);
 
   if (editando) {
@@ -158,6 +174,7 @@ function CampoRow({ campo }: { campo: Campo }) {
             </a>
           ) : null}
         </div>
+        {puedeGestionar ? (
         <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
           <button
             type="button"
@@ -187,6 +204,7 @@ function CampoRow({ campo }: { campo: Campo }) {
             </span>
           )}
         </div>
+        ) : null}
       </div>
     </Card>
   );
