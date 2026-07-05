@@ -379,7 +379,8 @@ a {
 }
 .guia details[open] > summary::before { content: "▾"; }
 .guia .cuerpo {
-  padding: 0 0.9rem 0.85rem;
+  /* Sangría izquierda alineada con el texto del título (tras la flecha ▸). */
+  padding: 0 0.9rem 0.85rem 2rem;
   color: var(--texto);
   line-height: 1.5;
   font-size: 0.92rem;
