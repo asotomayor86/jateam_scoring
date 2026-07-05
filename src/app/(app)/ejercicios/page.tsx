@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/auth/helpers";
 import { getEjercicios } from "@/db/queries/exercises";
 import { ExercisesBrowser } from "@/components/exercises-browser";
+import { PrincipiosTraining } from "@/components/principios-training";
 import { SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +24,12 @@ export default async function EjerciciosPage() {
       >
         Ejercicios
       </SeccionTitulo>
+
+      <PrincipiosTraining />
+
+      <SeccionTitulo>Biblioteca</SeccionTitulo>
       <p style={{ color: "var(--texto-suave)", fontSize: "0.9rem", margin: "0 0 0.5rem" }}>
-        Biblioteca de ejercicios de entrenamiento. Filtra por tipología o busca.
+        Filtra por tipología o busca.
       </p>
       <ExercisesBrowser
         ejercicios={ejercicios.map((e) => ({
