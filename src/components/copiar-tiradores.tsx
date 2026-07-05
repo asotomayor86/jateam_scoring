@@ -50,7 +50,7 @@ export function CopiarTiradores({ tiradores }: { tiradores: Tirador[] }) {
       type="button"
       className="btn"
       onClick={copiar}
-      style={{ flexShrink: 0, fontSize: "0.85rem" }}
+      style={{ flexShrink: 0, whiteSpace: "nowrap" }}
     >
       {copiado ? "Copiado ✓" : "Copiar tiradores"}
     </button>
