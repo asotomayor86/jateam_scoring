@@ -7,10 +7,34 @@ import { SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
+/** "Ahora" en hora de España (YYYY-MM-DD HH:MM), para saber qué es futuro. */
+function ahoraMadrid(): string {
+  const parts = new Intl.DateTimeFormat("es-ES", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const g = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${g("year")}-${g("month")}-${g("day")} ${g("hour")}:${g("minute")}`;
+}
+
 export default async function HomePage() {
   const { profile } = await requireUser();
   const todas = await listTiradas();
-  const recientes = todas.slice(0, 6);
+
+  // Solo tiradas futuras (por hora de inicio; sin hora, hasta el fin del día).
+  const now = ahoraMadrid();
+  const proximas = todas
+    .filter((t) => `${t.date} ${t.startTime ?? "23:59"}` >= now)
+    .sort((a, b) =>
+      `${a.date} ${a.startTime ?? "23:59"}`.localeCompare(
+        `${b.date} ${b.startTime ?? "23:59"}`,
+      ),
+    );
 
   return (
     <>
@@ -59,15 +83,15 @@ export default async function HomePage() {
           </Link>
         }
       >
-        Tiradas recientes
+        Próximas tiradas
       </SeccionTitulo>
 
-      {recientes.length === 0 ? (
+      {proximas.length === 0 ? (
         <p style={{ color: "var(--texto-suave)" }}>
-          Todavía no hay tiradas. Crea la primera con «Nueva tirada».
+          No hay tiradas próximas. Crea una con «Nueva tirada».
         </p>
       ) : (
-        recientes.map((t) => <TiradaCard key={t.id} {...t} />)
+        proximas.map((t) => <TiradaCard key={t.id} {...t} />)
       )}
     </>
   );
