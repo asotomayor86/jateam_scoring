@@ -34,6 +34,9 @@
   --oro: #f5c451;
   --verde: #46c98b;
   --rojo: #ef5a6f;
+  /* Menú desplegable: fondo con ligera transparencia, botones opacos. */
+  --menu-fondo: rgba(11, 15, 20, 0.94);
+  --menu-item: #1b2430;
 }
 
 html {
@@ -53,6 +56,8 @@ html {
   --oro: #d99a16;
   --verde: #1f9d57;
   --rojo: #d6394f;
+  --menu-fondo: rgba(255, 255, 255, 0.95);
+  --menu-item: #ffffff;
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -253,6 +258,7 @@ a {
   margin-left: auto;
 }
 /* El panel flota por encima del contenido (overlay), no lo empuja hacia abajo. */
+/* Panel a TODO el ancho (móvil y PC); fondo con ligera transparencia. */
 .nav-drawer {
   display: none;
   position: absolute;
@@ -262,23 +268,29 @@ a {
   z-index: 30;
   padding: 0.75rem 1rem 1rem;
   border-top: 1px solid var(--borde);
-  background: var(--superficie);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  backdrop-filter: blur(16px) saturate(150%);
+  background: var(--menu-fondo);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
   flex-direction: column;
   gap: 0.5rem;
 }
 .nav-open .nav-drawer { display: flex; }
+/* Botones: opacos y en mayúscula. */
 .nav-drawer a {
-  padding: 0.7rem 0.85rem;
+  padding: 0.75rem 0.9rem;
   border-radius: 10px;
   font-size: 1rem;
-  background: var(--superficie-2);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--menu-item);
+  border: 1px solid var(--borde);
 }
 .nav-drawer a[data-activo="true"] {
   background: var(--acento-fuerte);
   color: #1a1205;
+  border-color: transparent;
 }
 .nav-drawer-foot {
   display: flex;
@@ -290,17 +302,6 @@ a {
   border-top: 1px solid var(--borde);
   color: var(--texto-suave);
   font-size: 0.9rem;
-}
-/* En pantallas anchas, el panel se muestra como una tarjeta alineada a la
-   derecha (bajo la hamburguesa), no a todo el ancho. */
-@media (min-width: 721px) {
-  .nav-drawer {
-    left: auto;
-    right: calc(max(0px, (100% - 960px) / 2) + 1rem);
-    max-width: 300px;
-    border: 1px solid var(--borde);
-    border-radius: 0 0 12px 12px;
-  }
 }
 
 /* Títulos de sección: condensados, en mayúsculas. */
