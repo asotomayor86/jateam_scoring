@@ -6,22 +6,31 @@ type Tirador = {
   displayName: string;
   dni: string | null;
   licenseNumber: string | null;
+  category: string | null;
 };
 
 /**
- * Botón (solo encargado) que copia al portapapeles la relación de tiradores:
- * Nº, nombre, DNI y licencia, separados por tabuladores (pega bien en Excel).
+ * Botón (solo encargado) que copia al portapapeles la relación de tiradores en
+ * formato multilínea:
+ *   1.Nombre
+ *      - DNI: ...
+ *      - LIC: ...
+ *      - CAT: ...   (solo si tiene categoría)
  */
 export function CopiarTiradores({ tiradores }: { tiradores: Tirador[] }) {
   const [copiado, setCopiado] = useState(false);
 
   async function copiar() {
-    const header = "Nº\tNombre\tDNI\tLicencia";
-    const lineas = tiradores.map(
-      (t, i) =>
-        `${i + 1}\t${t.displayName}\t${t.dni ?? ""}\t${t.licenseNumber ?? ""}`,
-    );
-    const texto = [header, ...lineas].join("\n");
+    const bloques = tiradores.map((t, i) => {
+      const lineas = [
+        `${i + 1}.${t.displayName}`,
+        `   - DNI: ${t.dni ?? ""}`,
+        `   - LIC: ${t.licenseNumber ?? ""}`,
+      ];
+      if (t.category) lineas.push(`   - CAT: ${t.category}`);
+      return lineas.join("\n");
+    });
+    const texto = bloques.join("\n");
 
     try {
       await navigator.clipboard.writeText(texto);

@@ -6,6 +6,7 @@ import { and, eq, like } from "drizzle-orm";
 import { z } from "zod";
 import { requireUser } from "@/auth/helpers";
 import { codigoTirada } from "@/lib/codigo";
+import { esCategoria } from "@/lib/categorias";
 import {
   db,
   tiradas,
@@ -398,17 +399,23 @@ export async function apuntarme(formData: FormData): Promise<void> {
   if (existente.length === 0) {
     // Si la tirada está cerrada, no se admiten nuevos apuntes.
     const [t] = await db
-      .select({ closed: tiradas.closed })
+      .select({ closed: tiradas.closed, type: tiradas.type })
       .from(tiradas)
       .where(eq(tiradas.id, tiradaId))
       .limit(1);
     if (!t || t.closed) {
       redirect(`/tiradas/${tiradaId}`);
     }
+    // En tiradas oficiales se guarda la categoría elegida.
+    const catRaw = String(formData.get("category") ?? "");
+    const category =
+      t.type === "oficial" && esCategoria(catRaw) ? catRaw : null;
+
     await db.insert(scorecards).values({
       tiradaId,
       userId: user.id,
       granularity,
+      category,
     });
   }
 

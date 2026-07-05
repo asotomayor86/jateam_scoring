@@ -110,6 +110,7 @@ export async function getTiradores(tiradaId: string) {
       displayName: profiles.displayName,
       dni: profiles.dni,
       licenseNumber: profiles.licenseNumber,
+      category: scorecards.category,
     })
     .from(scorecards)
     .innerJoin(profiles, eq(scorecards.userId, profiles.id))

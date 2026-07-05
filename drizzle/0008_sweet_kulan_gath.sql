@@ -1,0 +1,1 @@
+ALTER TABLE "scorecards" ADD COLUMN "category" text;

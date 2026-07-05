@@ -20,6 +20,7 @@ import { ConfirmButton } from "@/components/confirm-button";
 import { CopiarTiradores } from "@/components/copiar-tiradores";
 import { formatPunt } from "@/lib/scoring";
 import { etiquetaGranularidad } from "@/lib/granularidad";
+import { CATEGORIAS } from "@/lib/categorias";
 
 export const dynamic = "force-dynamic";
 
@@ -190,6 +191,36 @@ export default async function TiradaDetallePage({
             style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
           >
             <input type="hidden" name="tiradaId" value={id} />
+            {tirada.type === "oficial" ? (
+              <>
+                <label style={{ fontSize: "0.85rem", color: "var(--texto-suave)" }}>
+                  ¿En qué categoría te apuntas?
+                </label>
+                <select
+                  name="category"
+                  required
+                  defaultValue=""
+                  style={{
+                    width: "100%",
+                    padding: "0.6rem 0.7rem",
+                    borderRadius: 8,
+                    border: "1px solid var(--borde)",
+                    background: "var(--superficie-2)",
+                    color: "var(--texto)",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  <option value="" disabled>
+                    Elige categoría…
+                  </option>
+                  {CATEGORIAS.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : null}
             <label
               style={{
                 fontSize: "0.85rem",
