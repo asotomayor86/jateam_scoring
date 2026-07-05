@@ -35,6 +35,7 @@ type SerieInicial = {
   blancoNuevo: boolean;
   exerciseId: string | null;
   rating: string | null;
+  notes: string | null;
 };
 
 type Modo = "tiros" | "total" | "asistido";
@@ -50,6 +51,7 @@ type Fila = {
   blancoNuevo: boolean;
   exerciseId: string;
   rating: string | null;
+  notes: string | null;
   estado: EstadoGuardado;
 };
 
@@ -75,6 +77,7 @@ function filaVacia(): Omit<Fila, "idx" | "kind" | "estado"> {
     blancoNuevo: false,
     exerciseId: "",
     rating: null,
+    notes: null,
   };
 }
 
@@ -90,6 +93,7 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
           ...filaVacia(),
           exerciseId: s.exerciseId,
           rating: s.rating,
+          notes: s.notes,
           estado: "" as const,
         };
       }
@@ -99,6 +103,7 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
         kind: "modulo" as const,
         ...filaVacia(),
         moduleType: s.moduleType as string,
+        notes: s.notes,
         celdas: Array.from({ length: mod.shots }, (_, j) =>
           modo === "tiros" && s.shots && j < s.shots.length
             ? formatPunt(s.shots[j])
@@ -437,6 +442,17 @@ export function LibretaModular({
                   </button>
                 )}
               </div>
+              {fila.notes ? (
+                <p
+                  style={{
+                    margin: "0 0 0.5rem",
+                    fontSize: "0.82rem",
+                    color: "var(--texto-suave)",
+                  }}
+                >
+                  📋 {fila.notes}
+                </p>
+              ) : null}
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 {CALIFICACIONES.map((c) => (
                   <button
@@ -558,6 +574,18 @@ export function LibretaModular({
                 )}
               </div>
             </div>
+
+            {fila.notes ? (
+              <p
+                style={{
+                  margin: "0 0 0.5rem",
+                  fontSize: "0.82rem",
+                  color: "var(--texto-suave)",
+                }}
+              >
+                📋 {fila.notes}
+              </p>
+            ) : null}
 
             {modo === "tiros" ? (
               <div className="serie-grid">
