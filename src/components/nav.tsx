@@ -12,6 +12,7 @@ type Props = {
 };
 
 const enlaces = [
+  { href: "/", label: "Inicio" },
   { href: "/calendario", label: "Calendario" },
   { href: "/tiradas", label: "Tiradas y Entrenamientos" },
   { href: "/yo", label: "Mis tiradas" },

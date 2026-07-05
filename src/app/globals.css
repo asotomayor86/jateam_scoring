@@ -233,57 +233,62 @@ a {
   color: var(--texto);
 }
 
-/* --- Navegación: dos variantes según viewport --- */
-.nav-toggle { display: none; }
-.nav-drawer { display: none; }
-.nav-links { display: flex; gap: 0.5rem; flex: 1; flex-wrap: wrap; }
-
-@media (max-width: 720px) {
-  .nav-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border: 1px solid var(--borde);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--texto);
-    cursor: pointer;
-    font-size: 1.1rem;
-    margin-left: auto;
-  }
-  .nav-links { display: none; }
-  .nav-user { display: none; }
-  .nav-signout { display: none; }
+/* --- Navegación: siempre colapsada en un botón (hamburguesa + drawer),
+   tanto en móvil como en PC. --- */
+.nav-links { display: none; }
+.nav-user { display: none; }
+.nav-signout { display: none; }
+.nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto);
+  cursor: pointer;
+  font-size: 1.1rem;
+  margin-left: auto;
+}
+.nav-drawer {
+  display: none;
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--borde);
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.nav-open .nav-drawer { display: flex; }
+.nav-drawer a {
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  background: var(--superficie-2);
+}
+.nav-drawer a[data-activo="true"] {
+  background: var(--acento-fuerte);
+  color: #1a1205;
+}
+.nav-drawer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+  border-top: 1px solid var(--borde);
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+/* En pantallas anchas, el panel desplegable se muestra como una tarjeta a la
+   derecha en vez de ocupar todo el ancho. */
+@media (min-width: 721px) {
   .nav-drawer {
-    display: none;
-    padding: 0.75rem 1rem 1rem;
-    border-top: 1px solid var(--borde);
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .nav-open .nav-drawer { display: flex; }
-  .nav-drawer a {
-    padding: 0.7rem 0.85rem;
-    border-radius: 10px;
-    font-size: 1rem;
-    background: var(--superficie-2);
-  }
-  .nav-drawer a[data-activo="true"] {
-    background: var(--acento-fuerte);
-    color: #1a1205;
-  }
-  .nav-drawer-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding-top: 0.4rem;
-    margin-top: 0.4rem;
-    border-top: 1px solid var(--borde);
-    color: var(--texto-suave);
-    font-size: 0.9rem;
+    max-width: 320px;
+    margin-left: auto;
+    border: 1px solid var(--borde);
+    border-radius: 0 0 12px 12px;
   }
 }
 
