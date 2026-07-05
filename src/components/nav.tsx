@@ -16,6 +16,7 @@ const enlaces = [
   { href: "/calendario", label: "Calendario" },
   { href: "/tiradas", label: "Tiradas y Entrenamientos" },
   { href: "/yo", label: "Mis tiradas" },
+  { href: "/ejercicios", label: "Ejercicios" },
   { href: "/clubs", label: "Campos" },
   { href: "/comidas", label: "Comidas" },
   { href: "/restaurantes", label: "Restaurantes" },

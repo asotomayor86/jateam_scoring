@@ -282,6 +282,29 @@ export const comidaAttendees = pgTable(
   (t) => [primaryKey({ columns: [t.comidaId, t.userId] })],
 );
 
+/**
+ * Biblioteca de ejercicios de entrenamiento (catálogo curado por el encargado).
+ */
+export const exercises = pgTable("exercises", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: text("code").notNull().unique(), // EJ01
+  title: text("title").notNull(),
+  tipologia: text("tipologia").notNull(),
+  objetivo: text("objetivo"),
+  material: text("material"),
+  ejecucion: text("ejecucion"),
+  freqIniciacion: text("freq_iniciacion"),
+  freqNacional: text("freq_nacional"),
+  errores: text("errores"),
+  progresion: text("progresion"),
+  metrica: text("metrica"),
+  claves: text("claves"),
+  orden: integer("orden").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // --- Tipos inferidos ---------------------------------------------------------
 
 export type TiradaType = (typeof tiradaType.enumValues)[number];
@@ -294,6 +317,7 @@ export type Club = typeof clubs.$inferSelect;
 export type Tirada = typeof tiradas.$inferSelect;
 export type Scorecard = typeof scorecards.$inferSelect;
 export type Serie = typeof series.$inferSelect;
+export type Exercise = typeof exercises.$inferSelect;
 export type Restaurant = typeof restaurants.$inferSelect;
 export type Comida = typeof comidas.$inferSelect;
 export type ComidaAttendee = typeof comidaAttendees.$inferSelect;

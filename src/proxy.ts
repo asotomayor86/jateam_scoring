@@ -27,6 +27,7 @@ export const config = {
     "/calendario/:path*",
     "/comidas/:path*",
     "/restaurantes/:path*",
+    "/ejercicios/:path*",
     "/perfil/:path*",
     "/yo/:path*",
     "/miembros/:path*",
