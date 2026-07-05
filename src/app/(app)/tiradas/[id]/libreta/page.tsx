@@ -5,6 +5,7 @@ import { getTirada, getMiScorecard } from "@/db/queries/tiradas";
 import { getScorecardConSeries } from "@/db/queries/scorecards";
 import { Libreta } from "@/components/libreta";
 import { LibretaAsistida } from "@/components/libreta-asistida";
+import { LibretaModular } from "@/components/libreta-modular";
 import { SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +56,17 @@ export default async function LibretaPage({
         {tirada.caliber ? ` · ${tirada.caliber}` : ""} · {tirada.date}
       </p>
 
-      {hoja.granularity === "asistido" ? (
+      {tirada.modalitySlug === "entrenamiento-modular" ? (
+        <LibretaModular
+          scorecardId={hoja.id}
+          seriesIniciales={hoja.series.map((s) => ({
+            idx: s.idx,
+            moduleType: s.moduleType,
+            shots: s.shots,
+          }))}
+          finalizada={hoja.status === "finalizada"}
+        />
+      ) : hoja.granularity === "asistido" ? (
         <LibretaAsistida
           scorecardId={hoja.id}
           modalidad={{

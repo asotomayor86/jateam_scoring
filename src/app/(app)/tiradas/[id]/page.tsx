@@ -43,6 +43,7 @@ export default async function TiradaDetallePage({
 
   const soyCreador = tirada.createdBy === user.id;
   const puedeGestionarCierre = soyCreador || profile.isAdmin;
+  const esModular = tirada.modalitySlug === "entrenamiento-modular";
 
   return (
     <>
@@ -221,38 +222,50 @@ export default async function TiradaDetallePage({
                 </select>
               </>
             ) : null}
-            <label
-              style={{
-                fontSize: "0.85rem",
-                color: "var(--texto-suave)",
-              }}
-            >
-              ¿Cómo quieres apuntar esta tirada?
-            </label>
-            <select
-              name="granularity"
-              defaultValue={profile.defaultGranularity}
-              style={{
-                width: "100%",
-                padding: "0.6rem 0.7rem",
-                borderRadius: 8,
-                border: "1px solid var(--borde)",
-                background: "var(--superficie-2)",
-                color: "var(--texto)",
-                fontSize: "0.95rem",
-              }}
-            >
-              <option value="tiro">Tiro a tiro</option>
-              <option value="bloque5">Total de bloques de 5</option>
-              <option value="bloque10">Total de bloques de 10</option>
-              <option value="serie">Total por serie</option>
-              <option value="asistido">Asistido competición</option>
-            </select>
-            <span style={{ fontSize: "0.78rem", color: "var(--texto-suave)" }}>
-              Es el modo inicial; podrás cambiarlo en cada serie dentro de la
-              libreta. (Tu preferencia por defecto:{" "}
-              {etiquetaGranularidad(profile.defaultGranularity)}).
-            </span>
+            {esModular ? (
+              <>
+                <input type="hidden" name="granularity" value="tiro" />
+                <span style={{ fontSize: "0.85rem", color: "var(--texto-suave)" }}>
+                  Es un <strong>entrenamiento modular</strong>: los módulos los
+                  añadirás dentro de la libreta.
+                </span>
+              </>
+            ) : (
+              <>
+                <label
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "var(--texto-suave)",
+                  }}
+                >
+                  ¿Cómo quieres apuntar esta tirada?
+                </label>
+                <select
+                  name="granularity"
+                  defaultValue={profile.defaultGranularity}
+                  style={{
+                    width: "100%",
+                    padding: "0.6rem 0.7rem",
+                    borderRadius: 8,
+                    border: "1px solid var(--borde)",
+                    background: "var(--superficie-2)",
+                    color: "var(--texto)",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  <option value="tiro">Tiro a tiro</option>
+                  <option value="bloque5">Total de bloques de 5</option>
+                  <option value="bloque10">Total de bloques de 10</option>
+                  <option value="serie">Total por serie</option>
+                  <option value="asistido">Asistido competición</option>
+                </select>
+                <span style={{ fontSize: "0.78rem", color: "var(--texto-suave)" }}>
+                  Es el modo inicial; podrás cambiarlo en cada serie dentro de la
+                  libreta. (Tu preferencia por defecto:{" "}
+                  {etiquetaGranularidad(profile.defaultGranularity)}).
+                </span>
+              </>
+            )}
             <button type="submit" className="btn btn-primario btn-bloque">
               🎯 Apuntarme a esta tirada
             </button>

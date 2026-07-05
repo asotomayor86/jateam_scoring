@@ -64,6 +64,18 @@ const MODALIDADES = [
     allowsDecimals: false,
     maxPerShot: 10,
   },
+  {
+    // Modalidad especial: la libreta empieza vacía y se van añadiendo módulos.
+    slug: "entrenamiento-modular",
+    name: "Entrenamiento modular",
+    abbr: "MOD",
+    distance: 25,
+    totalShots: 0,
+    seriesCount: 0,
+    defaultSeriesSize: 5,
+    allowsDecimals: false,
+    maxPerShot: 10,
+  },
 ];
 
 async function main() {

@@ -91,10 +91,16 @@ export async function crearTirada(
 
   // Necesitamos las siglas de modalidad y club para el código.
   const [mod] = await db
-    .select({ abbr: modalities.abbr })
+    .select({ abbr: modalities.abbr, slug: modalities.slug })
     .from(modalities)
     .where(eq(modalities.id, datos.modalityId))
     .limit(1);
+  if (mod?.slug === "entrenamiento-modular" && datos.type !== "entrenamiento") {
+    return {
+      ok: false,
+      mensaje: "El entrenamiento modular solo puede ser de tipo Entrenamiento.",
+    };
+  }
   const [club] = await db
     .select({ abbr: clubs.abbr })
     .from(clubs)
@@ -167,10 +173,16 @@ export async function actualizarTirada(
   const datos = parsed.data;
 
   const [mod] = await db
-    .select({ abbr: modalities.abbr })
+    .select({ abbr: modalities.abbr, slug: modalities.slug })
     .from(modalities)
     .where(eq(modalities.id, datos.modalityId))
     .limit(1);
+  if (mod?.slug === "entrenamiento-modular" && datos.type !== "entrenamiento") {
+    return {
+      ok: false,
+      mensaje: "El entrenamiento modular solo puede ser de tipo Entrenamiento.",
+    };
+  }
   const [club] = await db
     .select({ abbr: clubs.abbr })
     .from(clubs)

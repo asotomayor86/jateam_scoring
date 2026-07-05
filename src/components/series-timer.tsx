@@ -95,7 +95,7 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
   const enMarcha = idx >= 0 && idx < plan.steps.length;
   const terminado = idx === plan.steps.length;
   const pasoActual = enMarcha ? plan.steps[idx] : null;
-  const esDisparo = enMarcha && plan.destacarUltimo && idx === plan.steps.length - 1;
+  const esDisparo = enMarcha && !!pasoActual?.destacar;
 
   return (
     <div

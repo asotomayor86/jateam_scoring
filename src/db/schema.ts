@@ -219,6 +219,9 @@ export const series = pgTable(
     // introduce. El subtotal/shotCount de la serie se derivan restando el
     // acumulado de la serie anterior del mismo blanco.
     buckets: jsonb("buckets").$type<number[] | null>(),
+    // Solo modo "entrenamiento modular": tipo de módulo de esta serie
+    // (p. ej. "p150", "v20", "v10", "duelo").
+    moduleType: text("module_type"),
   },
   (t) => [unique().on(t.scorecardId, t.idx)],
 );

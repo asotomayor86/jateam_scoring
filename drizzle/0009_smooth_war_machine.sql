@@ -1,0 +1,1 @@
+ALTER TABLE "series" ADD COLUMN "module_type" text;

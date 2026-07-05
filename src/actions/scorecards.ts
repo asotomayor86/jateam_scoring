@@ -124,6 +124,8 @@ const esquemaSerie = z.object({
   shotCount: z.number().int().min(1).max(50),
   subtotal: z.number().min(0).max(600),
   inner: z.number().int().min(0).max(50),
+  // Solo entrenamiento modular: tipo de módulo de la serie.
+  moduleType: z.string().max(20).nullable().optional(),
 });
 
 /**
@@ -156,6 +158,7 @@ export async function guardarSerie(
         shotCount: d.shotCount,
         subtotal: redondea1(d.subtotal),
         inner: d.inner,
+        moduleType: d.moduleType ?? null,
       })
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
@@ -164,6 +167,7 @@ export async function guardarSerie(
           shotCount: d.shotCount,
           subtotal: redondea1(d.subtotal),
           inner: d.inner,
+          moduleType: d.moduleType ?? null,
         },
       });
   } catch (e) {

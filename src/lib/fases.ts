@@ -26,13 +26,16 @@ export function faseSerie(modalitySlug: string, idx: number): Fase | null {
   return null;
 }
 
-export type PasoTimer = { label: string; seconds: number };
+export type PasoTimer = {
+  label: string;
+  seconds: number;
+  // Paso de "disparo" (se resalta en verde).
+  destacar?: boolean;
+};
 export type PlanTimer = {
   startLabel: string;
   finalLabel: string;
   steps: PasoTimer[];
-  // Estilo del paso de "disparo" (para resaltar ¡Disparen!).
-  destacarUltimo?: boolean;
   // Pitidos en las transiciones (solo en entrenamientos).
   conPitido?: boolean;
 };
@@ -72,12 +75,84 @@ export function planTimer(
       finalLabel: "¡Paren!",
       steps: [
         { label: "Atención", seconds: 7 },
-        { label: "¡Disparen!", seconds: fase.segundos },
+        { label: "¡Disparen!", seconds: fase.segundos, destacar: true },
       ],
-      destacarUltimo: true,
       conPitido: true,
     };
   }
 
   return null;
+}
+
+// --- Entrenamiento modular ---------------------------------------------------
+
+/** Un tipo de módulo del entrenamiento modular (con su cronómetro). */
+export type Modulo = {
+  key: string;
+  label: string;
+  shots: number;
+  plan: PlanTimer;
+};
+
+/** Cronómetro del duelo 7/3: 5 exposiciones (7" preparados, 3" ¡Fuego!). */
+function planDuelo(): PlanTimer {
+  const steps: PasoTimer[] = [];
+  for (let i = 1; i <= 5; i++) {
+    steps.push({ label: `Preparados ${i}`, seconds: 7 });
+    steps.push({ label: `¡Fuego! ${i}`, seconds: 3, destacar: true });
+  }
+  return { startLabel: "Iniciar duelo", finalLabel: "Fin", steps, conPitido: true };
+}
+
+/** Catálogo de módulos del entrenamiento modular. */
+export const MODULOS: Modulo[] = [
+  {
+    key: "p150",
+    label: "Precisión 150″",
+    shots: 5,
+    plan: {
+      startLabel: "Iniciar 150″",
+      finalLabel: "Tiempo cumplido",
+      steps: [{ label: "Tiempo de tiro (150″)", seconds: 150, destacar: true }],
+      conPitido: true,
+    },
+  },
+  {
+    key: "v20",
+    label: "Velocidad 20″",
+    shots: 5,
+    plan: {
+      startLabel: "Iniciar serie",
+      finalLabel: "¡Paren!",
+      steps: [
+        { label: "Atención", seconds: 7 },
+        { label: "¡Disparen! (20″)", seconds: 20, destacar: true },
+      ],
+      conPitido: true,
+    },
+  },
+  {
+    key: "v10",
+    label: "Velocidad 10″",
+    shots: 5,
+    plan: {
+      startLabel: "Iniciar serie",
+      finalLabel: "¡Paren!",
+      steps: [
+        { label: "Atención", seconds: 7 },
+        { label: "¡Disparen! (10″)", seconds: 10, destacar: true },
+      ],
+      conPitido: true,
+    },
+  },
+  {
+    key: "duelo",
+    label: "Duelo 7/3 (×5)",
+    shots: 5,
+    plan: planDuelo(),
+  },
+];
+
+export function getModulo(key: string): Modulo | undefined {
+  return MODULOS.find((m) => m.key === key);
 }
