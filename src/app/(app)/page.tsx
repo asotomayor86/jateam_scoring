@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { requireUser } from "@/auth/helpers";
 import { listTiradas } from "@/db/queries/tiradas";
+import { listComidas } from "@/db/queries/comidas";
 import { TiradaCard } from "@/components/tirada-card";
+import { ComidaCard } from "@/components/comida-card";
 import { Portada } from "@/components/portada";
 import { SeccionTitulo } from "@/components/ui";
+
+type Tiradas = Awaited<ReturnType<typeof listTiradas>>;
+type Comidas = Awaited<ReturnType<typeof listComidas>>;
+type Evento =
+  | { kind: "tirada"; date: string; startTime: string | null; data: Tiradas[number] }
+  | { kind: "comida"; date: string; startTime: string | null; data: Comidas[number] };
 
 export const dynamic = "force-dynamic";
 
@@ -22,19 +30,26 @@ function ahoraMadrid(): string {
   return `${g("year")}-${g("month")}-${g("day")} ${g("hour")}:${g("minute")}`;
 }
 
+const clave = (e: Evento) => `${e.date} ${e.startTime ?? "23:59"}`;
+
 export default async function HomePage() {
   const { profile } = await requireUser();
-  const todas = await listTiradas();
+  const [tiradas, comidas] = await Promise.all([listTiradas(), listComidas()]);
 
-  // Solo tiradas futuras (por hora de inicio; sin hora, hasta el fin del día).
+  const eventos: Evento[] = [
+    ...tiradas.map(
+      (t): Evento => ({ kind: "tirada", date: t.date, startTime: t.startTime, data: t }),
+    ),
+    ...comidas.map(
+      (c): Evento => ({ kind: "comida", date: c.date, startTime: c.startTime, data: c }),
+    ),
+  ];
+
+  // Solo eventos futuros (por hora de inicio; sin hora, hasta el fin del día).
   const now = ahoraMadrid();
-  const proximas = todas
-    .filter((t) => `${t.date} ${t.startTime ?? "23:59"}` >= now)
-    .sort((a, b) =>
-      `${a.date} ${a.startTime ?? "23:59"}`.localeCompare(
-        `${b.date} ${b.startTime ?? "23:59"}`,
-      ),
-    );
+  const proximas = eventos
+    .filter((e) => clave(e) >= now)
+    .sort((a, b) => clave(a).localeCompare(clave(b)));
 
   return (
     <>
@@ -76,22 +91,28 @@ export default async function HomePage() {
       <SeccionTitulo
         extra={
           <Link
-            href="/tiradas"
+            href="/calendario"
             style={{ color: "var(--acento)", fontSize: "0.9rem" }}
           >
-            Ver todas
+            Calendario
           </Link>
         }
       >
-        Próximas tiradas
+        Próximos eventos
       </SeccionTitulo>
 
       {proximas.length === 0 ? (
         <p style={{ color: "var(--texto-suave)" }}>
-          No hay tiradas próximas. Crea una con «Nueva tirada».
+          No hay eventos próximos.
         </p>
       ) : (
-        proximas.map((t) => <TiradaCard key={t.id} {...t} />)
+        proximas.map((e) =>
+          e.kind === "tirada" ? (
+            <TiradaCard key={`t-${e.data.id}`} {...e.data} />
+          ) : (
+            <ComidaCard key={`c-${e.data.id}`} {...e.data} />
+          ),
+        )
       )}
     </>
   );
