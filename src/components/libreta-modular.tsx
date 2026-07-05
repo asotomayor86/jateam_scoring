@@ -22,6 +22,7 @@ import {
 import { MODULOS, getModulo, moduloPlan } from "@/lib/fases";
 import { Card } from "@/components/ui";
 import { SeriesTimer } from "@/components/series-timer";
+import { RatingFace } from "@/components/rating-face";
 
 type Ejercicio = { id: string; code: string; title: string; tipologia: string };
 
@@ -54,9 +55,9 @@ type Fila = {
 
 const MAX_PER_SHOT = 10;
 const CALIFICACIONES = [
-  { valor: "verde", emoji: "🟢", label: "Bien" },
-  { valor: "amarillo", emoji: "🟡", label: "Regular" },
-  { valor: "rojo", emoji: "🔴", label: "Mal" },
+  { valor: "verde" as const, label: "Bien" },
+  { valor: "amarillo" as const, label: "Regular" },
+  { valor: "rojo" as const, label: "Mal" },
 ];
 
 function modoDeGranularidad(g: string): Modo {
@@ -446,6 +447,10 @@ export function LibretaModular({
                     aria-pressed={fila.rating === c.valor}
                     style={{
                       flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.4rem",
                       padding: "0.5rem",
                       borderRadius: 10,
                       border:
@@ -455,11 +460,10 @@ export function LibretaModular({
                       background:
                         fila.rating === c.valor ? "var(--superficie-2)" : "transparent",
                       cursor: finalizada ? "default" : "pointer",
-                      fontSize: "1.1rem",
-                      opacity: fila.rating && fila.rating !== c.valor ? 0.5 : 1,
+                      opacity: fila.rating && fila.rating !== c.valor ? 0.45 : 1,
                     }}
                   >
-                    {c.emoji}{" "}
+                    <RatingFace tipo={c.valor} />
                     <span style={{ fontSize: "0.75rem", color: "var(--texto-suave)" }}>
                       {c.label}
                     </span>
