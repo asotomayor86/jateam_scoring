@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import {
   db,
   tiradas,
@@ -101,6 +101,20 @@ export async function getRanking(tiradaId: string) {
     .innerJoin(profiles, eq(scorecards.userId, profiles.id))
     .where(eq(scorecards.tiradaId, tiradaId))
     .orderBy(desc(scorecards.total), desc(scorecards.innerCount));
+}
+
+/** Relación de tiradores apuntados (nombre, DNI, licencia) para el encargado. */
+export async function getTiradores(tiradaId: string) {
+  return db
+    .select({
+      displayName: profiles.displayName,
+      dni: profiles.dni,
+      licenseNumber: profiles.licenseNumber,
+    })
+    .from(scorecards)
+    .innerJoin(profiles, eq(scorecards.userId, profiles.id))
+    .where(eq(scorecards.tiradaId, tiradaId))
+    .orderBy(asc(profiles.displayName));
 }
 
 /** La hoja del usuario en una tirada (o null si no se ha apuntado). */

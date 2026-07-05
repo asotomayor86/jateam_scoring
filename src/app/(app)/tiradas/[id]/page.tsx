@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/auth/helpers";
-import { getTirada, getRanking, getMiScorecard } from "@/db/queries/tiradas";
+import {
+  getTirada,
+  getRanking,
+  getMiScorecard,
+  getTiradores,
+} from "@/db/queries/tiradas";
 import {
   apuntarme,
   borrarTirada,
@@ -12,6 +17,7 @@ import { borrarHoja, finalizarHoja } from "@/actions/scorecards";
 import { RankingTable } from "@/components/ranking-table";
 import { Card, SeccionTitulo, TipoChip } from "@/components/ui";
 import { ConfirmButton } from "@/components/confirm-button";
+import { CopiarTiradores } from "@/components/copiar-tiradores";
 import { formatPunt } from "@/lib/scoring";
 import { etiquetaGranularidad } from "@/lib/granularidad";
 
@@ -28,9 +34,10 @@ export default async function TiradaDetallePage({
   const tirada = await getTirada(id);
   if (!tirada) notFound();
 
-  const [ranking, miHoja] = await Promise.all([
+  const [ranking, miHoja, tiradores] = await Promise.all([
     getRanking(id),
     getMiScorecard(id, user.id),
+    profile.isAdmin ? getTiradores(id) : Promise.resolve([]),
   ]);
 
   const soyCreador = tirada.createdBy === user.id;
@@ -43,7 +50,15 @@ export default async function TiradaDetallePage({
         {tirada.caliber ? ` · ${tirada.caliber}` : ""}
       </SeccionTitulo>
 
-      <Card style={{ marginBottom: "1rem" }}>
+      <Card
+        style={{
+          marginBottom: "1rem",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "0.6rem",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
         {tirada.name ? (
           <div style={{ fontWeight: 600, marginBottom: "0.2rem" }}>
             {tirada.name}
@@ -97,6 +112,8 @@ export default async function TiradaDetallePage({
             {tirada.notes}
           </p>
         ) : null}
+        </div>
+        {profile.isAdmin ? <CopiarTiradores tiradores={tiradores} /> : null}
       </Card>
 
       {/* Acción del usuario: apuntarse o abrir su libreta. */}
