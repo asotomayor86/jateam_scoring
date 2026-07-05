@@ -252,10 +252,20 @@ a {
   font-size: 1.1rem;
   margin-left: auto;
 }
+/* El panel flota por encima del contenido (overlay), no lo empuja hacia abajo. */
 .nav-drawer {
   display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 30;
   padding: 0.75rem 1rem 1rem;
   border-top: 1px solid var(--borde);
+  background: var(--superficie);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
   flex-direction: column;
   gap: 0.5rem;
 }
@@ -281,12 +291,13 @@ a {
   color: var(--texto-suave);
   font-size: 0.9rem;
 }
-/* En pantallas anchas, el panel desplegable se muestra como una tarjeta a la
-   derecha en vez de ocupar todo el ancho. */
+/* En pantallas anchas, el panel se muestra como una tarjeta alineada a la
+   derecha (bajo la hamburguesa), no a todo el ancho. */
 @media (min-width: 721px) {
   .nav-drawer {
-    max-width: 320px;
-    margin-left: auto;
+    left: auto;
+    right: calc(max(0px, (100% - 960px) / 2) + 1rem);
+    max-width: 300px;
     border: 1px solid var(--borde);
     border-radius: 0 0 12px 12px;
   }
