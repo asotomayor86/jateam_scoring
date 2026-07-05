@@ -51,7 +51,16 @@ export default async function EjercicioPage({
       </div>
 
       <Card>
-        <h2 style={{ margin: "0 0 0.3rem", fontSize: "1.2rem" }}>{e.title}</h2>
+        <h2
+          style={{
+            margin: "0 0 0.3rem",
+            fontSize: "1.4rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {e.title}
+        </h2>
         <span className="chip">{e.tipologia}</span>
 
         <Bloque titulo="Objetivo" texto={e.objetivo} />

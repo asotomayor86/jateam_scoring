@@ -78,11 +78,13 @@ export function ExercisesBrowser({ ejercicios }: { ejercicios: Ej[] }) {
             <Card style={{ marginBottom: "0.6rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700 }}>
+                  <div style={{ fontWeight: 700, fontSize: "1rem" }}>
                     <span style={{ color: "var(--texto-suave)", fontSize: "0.82rem" }}>
                       {e.code}
                     </span>{" "}
-                    {e.title}
+                    <span style={{ textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                      {e.title}
+                    </span>
                   </div>
                   {e.objetivo ? (
                     <div

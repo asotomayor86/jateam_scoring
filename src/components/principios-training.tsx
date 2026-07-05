@@ -187,8 +187,24 @@ export function PrincipiosTraining() {
               key={i}
               style={{ flex: "0 0 100%", scrollSnapAlign: "start", minWidth: 0 }}
             >
-              <strong style={{ fontSize: "1rem" }}>{p.titulo}</strong>
-              <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem", lineHeight: 1.4 }}>
+              <strong
+                style={{
+                  fontSize: "1.15rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.02em",
+                  display: "block",
+                }}
+              >
+                {p.titulo}
+              </strong>
+              <ul
+                style={{
+                  margin: "0.5rem 0 0",
+                  paddingLeft: 0,
+                  listStylePosition: "inside",
+                  lineHeight: 1.45,
+                }}
+              >
                 {p.puntos.map((t, j) => (
                   <li key={j} style={{ padding: "0.2rem 0" }}>
                     {t}
