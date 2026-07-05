@@ -8,7 +8,7 @@ export default async function NuevoEjercicioPage() {
   await requireAdmin();
   return (
     <>
-      <SeccionTitulo>Nuevo ejercicio</SeccionTitulo>
+      <SeccionTitulo grande>Nuevo ejercicio</SeccionTitulo>
       <ExerciseForm />
     </>
   );

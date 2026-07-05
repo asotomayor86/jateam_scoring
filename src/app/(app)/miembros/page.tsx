@@ -13,6 +13,7 @@ export default async function MiembrosPage() {
 
   return (
     <>
+      <SeccionTitulo grande>Miembros</SeccionTitulo>
       <SeccionTitulo>Invitar tirador</SeccionTitulo>
       <Card style={{ marginBottom: "1rem" }}>
         <p

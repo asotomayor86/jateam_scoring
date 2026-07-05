@@ -6,7 +6,7 @@ import { localizacionAuth } from "@/auth/localization";
 export default function CambiarPasswordPage() {
   return (
     <>
-      <SeccionTitulo>Cambiar contraseña</SeccionTitulo>
+      <SeccionTitulo grande>Cambiar contraseña</SeccionTitulo>
       <ChangePasswordCard localization={localizacionAuth} />
     </>
   );

@@ -17,7 +17,7 @@ export default async function NuevaTiradaPage() {
 
   return (
     <>
-      <SeccionTitulo>Nueva tirada</SeccionTitulo>
+      <SeccionTitulo grande>Nueva tirada</SeccionTitulo>
       <p
         style={{
           color: "var(--texto-suave)",

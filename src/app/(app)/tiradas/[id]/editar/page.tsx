@@ -38,7 +38,7 @@ export default async function EditarTiradaPage({
           gap: "0.5rem",
         }}
       >
-        <SeccionTitulo>Editar tirada</SeccionTitulo>
+        <SeccionTitulo grande>Editar tirada</SeccionTitulo>
         <Link
           href={`/tiradas/${id}`}
           style={{ color: "var(--acento)", fontSize: "0.9rem" }}

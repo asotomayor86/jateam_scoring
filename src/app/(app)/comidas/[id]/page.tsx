@@ -43,7 +43,7 @@ export default async function ComidaDetallePage({
 
   return (
     <>
-      <SeccionTitulo>🍽️ {comida.name || "Comida"}</SeccionTitulo>
+      <SeccionTitulo grande>🍽️ {comida.name || "Comida"}</SeccionTitulo>
 
       <Card style={{ marginBottom: "1rem", background: "rgba(56, 132, 255, 0.16)" }}>
         <div style={{ fontWeight: 600 }}>{comida.restaurantName}</div>

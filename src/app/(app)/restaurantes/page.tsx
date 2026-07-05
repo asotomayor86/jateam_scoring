@@ -11,7 +11,7 @@ export default async function RestaurantesPage() {
 
   return (
     <>
-      <SeccionTitulo>Restaurantes</SeccionTitulo>
+      <SeccionTitulo grande>Restaurantes</SeccionTitulo>
       <p
         style={{
           color: "var(--texto-suave)",

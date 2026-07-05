@@ -11,7 +11,7 @@ export default async function ClubsPage() {
 
   return (
     <>
-      <SeccionTitulo>Campos</SeccionTitulo>
+      <SeccionTitulo grande>Campos</SeccionTitulo>
       <p
         style={{
           color: "var(--texto-suave)",

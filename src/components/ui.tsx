@@ -39,9 +39,12 @@ export function Card({
 export function SeccionTitulo({
   children,
   extra,
+  grande = false,
 }: {
   children: ReactNode;
   extra?: ReactNode;
+  /** Título de página: sensiblemente más grande que los de sección. */
+  grande?: boolean;
 }) {
   return (
     <div
@@ -50,10 +53,13 @@ export function SeccionTitulo({
         alignItems: "center",
         justifyContent: "space-between",
         gap: "0.5rem",
-        margin: "1.1rem 0 0.5rem",
+        margin: grande ? "0.5rem 0 0.6rem" : "1.1rem 0 0.5rem",
       }}
     >
-      <h2 className="seccion-titulo" style={{ margin: 0, fontSize: "1.1rem" }}>
+      <h2
+        className="seccion-titulo"
+        style={{ margin: 0, fontSize: grande ? "1.7rem" : "1.1rem" }}
+      >
         {children}
       </h2>
       {extra}

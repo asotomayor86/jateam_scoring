@@ -12,7 +12,7 @@ export default async function NuevaComidaPage() {
 
   return (
     <>
-      <SeccionTitulo>Nueva comida</SeccionTitulo>
+      <SeccionTitulo grande>Nueva comida</SeccionTitulo>
       <CreateComidaForm
         restaurantes={restaurantes.map((r) => ({ id: r.id, name: r.name }))}
         hoy={hoy}

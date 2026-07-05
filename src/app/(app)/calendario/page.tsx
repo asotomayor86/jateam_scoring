@@ -81,6 +81,7 @@ export default async function CalendarioPage({
   return (
     <>
       <SeccionTitulo
+        grande
         extra={
           <div style={{ display: "flex", gap: "0.4rem" }}>
             <Link

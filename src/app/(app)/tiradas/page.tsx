@@ -43,6 +43,7 @@ export default async function TiradasPage({
   return (
     <>
       <SeccionTitulo
+        grande
         extra={
           <Link href="/tiradas/nueva" className="btn btn-primario">
             + Nueva

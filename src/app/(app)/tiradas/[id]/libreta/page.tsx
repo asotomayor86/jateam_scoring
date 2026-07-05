@@ -42,7 +42,7 @@ export default async function LibretaPage({
           gap: "0.5rem",
         }}
       >
-        <SeccionTitulo>Mi libreta</SeccionTitulo>
+        <SeccionTitulo grande>Mi libreta</SeccionTitulo>
         <Link
           href={`/tiradas/${id}`}
           style={{ color: "var(--acento)", fontSize: "0.9rem" }}

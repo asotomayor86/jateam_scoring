@@ -28,7 +28,7 @@ export default async function YoPage() {
 
   return (
     <>
-      <SeccionTitulo>Mis tiradas</SeccionTitulo>
+      <SeccionTitulo grande>Mis tiradas</SeccionTitulo>
       <p style={{ color: "var(--texto-suave)", margin: "0 0 0.8rem" }}>
         {profile.nickname || profile.displayName} · {historial.length} hojas
       </p>

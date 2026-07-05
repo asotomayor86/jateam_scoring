@@ -49,7 +49,7 @@ export default async function TiradaDetallePage({
 
   return (
     <>
-      <SeccionTitulo>
+      <SeccionTitulo grande>
         {tirada.modalityName}
         {tirada.caliber ? ` · ${tirada.caliber}` : ""}
       </SeccionTitulo>

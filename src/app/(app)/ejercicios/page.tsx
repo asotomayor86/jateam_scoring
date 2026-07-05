@@ -14,6 +14,7 @@ export default async function EjerciciosPage() {
   return (
     <>
       <SeccionTitulo
+        grande
         extra={
           profile.isAdmin ? (
             <Link href="/ejercicios/nuevo" className="btn btn-primario">

@@ -13,6 +13,7 @@ export default async function ComidasPage() {
   return (
     <>
       <SeccionTitulo
+        grande
         extra={
           <Link href="/comidas/nueva" className="btn btn-primario">
             + Nueva

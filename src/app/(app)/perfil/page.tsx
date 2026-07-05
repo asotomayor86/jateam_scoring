@@ -10,7 +10,7 @@ export default async function PerfilPage() {
 
   return (
     <>
-      <SeccionTitulo>Mi perfil</SeccionTitulo>
+      <SeccionTitulo grande>Mi perfil</SeccionTitulo>
       <Card style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         <p style={{ margin: 0, color: "var(--texto-suave)", fontSize: "0.9rem" }}>
           Email: <strong style={{ color: "var(--texto)" }}>{user.email}</strong>

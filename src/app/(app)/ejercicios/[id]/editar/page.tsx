@@ -18,7 +18,7 @@ export default async function EditarEjercicioPage({
 
   return (
     <>
-      <SeccionTitulo>Editar {e.code}</SeccionTitulo>
+      <SeccionTitulo grande>Editar {e.code}</SeccionTitulo>
       <ExerciseForm ejercicio={e} />
     </>
   );

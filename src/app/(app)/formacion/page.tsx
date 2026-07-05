@@ -26,7 +26,7 @@ export default async function FormacionPage() {
 
   return (
     <div className="guia">
-      <SeccionTitulo>Formación APP</SeccionTitulo>
+      <SeccionTitulo grande>Formación APP</SeccionTitulo>
       <p style={{ color: "var(--texto-suave)", fontSize: "0.9rem", margin: "0 0 1rem" }}>
         Guía de uso de la aplicación, del nivel básico al avanzado. Despliega cada
         apartado para leer el detalle.

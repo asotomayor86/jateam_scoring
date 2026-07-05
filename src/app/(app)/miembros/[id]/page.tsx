@@ -28,7 +28,7 @@ export default async function MiembroPage({
           gap: "0.5rem",
         }}
       >
-        <SeccionTitulo>Editar miembro</SeccionTitulo>
+        <SeccionTitulo grande>Editar miembro</SeccionTitulo>
         <Link
           href="/miembros"
           style={{ color: "var(--acento)", fontSize: "0.9rem" }}
