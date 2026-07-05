@@ -328,7 +328,7 @@ export function LibretaAsistida({
                     : ""}
             </div>
 
-            {plan && !finalizada ? <SeriesTimer plan={plan} /> : null}
+            {!finalizada ? <SeriesTimer plan={plan} /> : null}
           </Card>
         );
       })}

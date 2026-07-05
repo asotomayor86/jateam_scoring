@@ -59,10 +59,13 @@ export default async function LibretaPage({
       {tirada.modalitySlug === "entrenamiento-modular" ? (
         <LibretaModular
           scorecardId={hoja.id}
+          granularity={hoja.granularity}
           seriesIniciales={hoja.series.map((s) => ({
             idx: s.idx,
             moduleType: s.moduleType,
             shots: s.shots,
+            subtotal: s.subtotal,
+            buckets: s.buckets,
           }))}
           finalizada={hoja.status === "finalizada"}
         />

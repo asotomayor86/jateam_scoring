@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PlanTimer } from "@/lib/fases";
+import type { PlanTimer, PasoTimer } from "@/lib/fases";
 
 /** Pitido corto con Web Audio (se dispara tras un clic, así que está permitido). */
 function beep(largo = false) {
@@ -34,11 +34,11 @@ function mmss(seg: number): string {
 }
 
 /**
- * Temporizador de serie: ejecuta una secuencia de pasos (cuenta atrás) con
- * pitidos en cada transición. Botón de inicio y de reset.
+ * Temporizador de serie. Muestra un botón por opción de arranque (Carguen /
+ * Serie). Al pulsar una, ejecuta su secuencia de pasos con pitidos opcionales.
  */
 export function SeriesTimer({ plan }: { plan: PlanTimer }) {
-  // idx: -1 inactivo, 0..steps.length-1 en marcha, steps.length terminado.
+  const [steps, setSteps] = useState<PasoTimer[] | null>(null); // null = inactivo
   const [idx, setIdx] = useState(-1);
   const [rem, setRem] = useState(0);
   const intervalo = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -51,31 +51,32 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
 
   useEffect(() => () => limpiar(), [limpiar]);
 
-  function iniciar() {
+  function iniciar(pasos: PasoTimer[]) {
     limpiar();
-    const total = plan.steps.reduce((a, s) => a + s.seconds, 0);
+    setSteps(pasos);
+    const total = pasos.reduce((a, s) => a + s.seconds, 0);
     const t0 = Date.now();
     ultimoPaso.current = -1;
     const update = () => {
       const el = (Date.now() - t0) / 1000;
       if (el >= total) {
         limpiar();
-        setIdx(plan.steps.length);
+        setIdx(pasos.length);
         setRem(0);
-        if (ultimoPaso.current !== plan.steps.length) {
-          ultimoPaso.current = plan.steps.length;
+        if (ultimoPaso.current !== pasos.length) {
+          ultimoPaso.current = pasos.length;
           if (plan.conPitido) beep(true);
         }
         return;
       }
       let acc = 0;
       let i = 0;
-      for (; i < plan.steps.length; i++) {
-        if (el < acc + plan.steps[i].seconds) break;
-        acc += plan.steps[i].seconds;
+      for (; i < pasos.length; i++) {
+        if (el < acc + pasos[i].seconds) break;
+        acc += pasos[i].seconds;
       }
       setIdx(i);
-      setRem(Math.ceil(acc + plan.steps[i].seconds - el));
+      setRem(Math.ceil(acc + pasos[i].seconds - el));
       if (i !== ultimoPaso.current) {
         ultimoPaso.current = i;
         if (plan.conPitido) beep(false);
@@ -87,14 +88,15 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
 
   function reset() {
     limpiar();
+    setSteps(null);
     setIdx(-1);
     setRem(0);
     ultimoPaso.current = -1;
   }
 
-  const enMarcha = idx >= 0 && idx < plan.steps.length;
-  const terminado = idx === plan.steps.length;
-  const pasoActual = enMarcha ? plan.steps[idx] : null;
+  const enMarcha = steps !== null && idx >= 0 && idx < steps.length;
+  const terminado = steps !== null && idx === steps.length;
+  const pasoActual = enMarcha ? steps![idx] : null;
   const esDisparo = enMarcha && !!pasoActual?.destacar;
 
   return (
@@ -103,14 +105,22 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
         marginTop: "0.5rem",
         display: "flex",
         alignItems: "center",
-        gap: "0.6rem",
+        gap: "0.5rem",
         flexWrap: "wrap",
       }}
     >
-      {idx === -1 ? (
-        <button type="button" className="btn" onClick={iniciar}>
-          ⏱ {plan.startLabel}
-        </button>
+      {steps === null ? (
+        plan.opciones.map((op) => (
+          <button
+            key={op.startLabel}
+            type="button"
+            className="btn"
+            style={{ fontSize: "0.85rem" }}
+            onClick={() => iniciar(op.steps)}
+          >
+            ⏱ {op.startLabel}
+          </button>
+        ))
       ) : (
         <>
           <span

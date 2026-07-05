@@ -2,8 +2,10 @@
  * Fases de tiro por serie y planes de temporizador, según la modalidad y el
  * tipo de tirada.
  *
- * Pistola Standard (12 series de 5): series 1-4 precisión (150"), 5-8 velocidad
- * (20"), 9-12 velocidad (10").
+ * Cada serie tiene DOS relojes:
+ *  - "Carguen": 1:00 y, al terminar, arranca automáticamente el de la serie.
+ *  - "Serie": empieza con 7" de atención y sigue con el tiempo de la serie.
+ * Si se pulsa la serie directamente, arranca en los 7" de atención.
  */
 
 export type Fase = {
@@ -12,7 +14,7 @@ export type Fase = {
   nombre: string;
 };
 
-/** Fase de una serie (1-based) según la modalidad. `null` si no aplica. */
+/** Fase de una serie (1-based) para la ETIQUETA. `null` si la modalidad no la define. */
 export function faseSerie(modalitySlug: string, idx: number): Fase | null {
   if (modalitySlug === "pistola-standard") {
     if (idx <= 4) return { tipo: "precision", segundos: 150, nombre: "Precisión" };
@@ -20,7 +22,6 @@ export function faseSerie(modalitySlug: string, idx: number): Fase | null {
     return { tipo: "velocidad", segundos: 10, nombre: "Velocidad" };
   }
   if (modalitySlug === "pistola-velocidad") {
-    // Sin desglose oficial definido: por defecto todas a 20". (Ajustable.)
     return { tipo: "velocidad", segundos: 20, nombre: "Velocidad" };
   }
   return null;
@@ -32,56 +33,60 @@ export type PasoTimer = {
   // Paso de "disparo" (se resalta en verde).
   destacar?: boolean;
 };
+
+/** Una opción de arranque del temporizador (un botón). */
+export type Opcion = { startLabel: string; steps: PasoTimer[] };
+
 export type PlanTimer = {
-  startLabel: string;
+  opciones: Opcion[];
   finalLabel: string;
-  steps: PasoTimer[];
   // Pitidos en las transiciones (solo en entrenamientos).
   conPitido?: boolean;
 };
 
 /**
- * Plan de temporizador para una serie. `null` si esa serie no lleva
- * temporizador.
- *
- * - Oficial / semioficial: botón "Carguen" → cuenta de 1:00; en precisión de
- *   Standard, le sigue la cuenta de tiro (150").
- * - Entrenamiento + serie de velocidad: "Iniciar serie" → Atención (7") →
- *   ¡Disparen! (20"/10" según la fase) → ¡Paren!
+ * Construye las dos opciones (Carguen + Serie) a partir de los pasos intrínsecos
+ * de la serie. La serie siempre empieza con 7" de atención.
+ */
+export function opcionesConCarguen(
+  intrinsecos: PasoTimer[],
+  serieLabel = "Serie",
+): Opcion[] {
+  const serie: PasoTimer[] = [{ label: "Atención", seconds: 7 }, ...intrinsecos];
+  return [
+    {
+      startLabel: "Carguen",
+      steps: [{ label: "Carguen", seconds: 60 }, ...serie],
+    },
+    { startLabel: serieLabel, steps: serie },
+  ];
+}
+
+/** Pasos intrínsecos (sin atención ni carguen) de una fase. */
+function intrinsecosDeFase(fase: Fase): PasoTimer[] {
+  if (fase.tipo === "velocidad") {
+    return [{ label: `¡Disparen! (${fase.segundos}″)`, seconds: fase.segundos, destacar: true }];
+  }
+  return [{ label: `Tiempo de tiro (${fase.segundos}″)`, seconds: fase.segundos, destacar: true }];
+}
+
+/**
+ * Plan de temporizador de una serie (siempre existe). Si la modalidad no define
+ * fase, por defecto precisión 150".
  */
 export function planTimer(
   tipoTirada: string,
   modalitySlug: string,
   idx: number,
-): PlanTimer | null {
-  const fase = faseSerie(modalitySlug, idx);
-
-  if (tipoTirada === "oficial" || tipoTirada === "semioficial") {
-    const steps: PasoTimer[] = [{ label: "Carguen", seconds: 60 }];
-    if (fase?.tipo === "precision") {
-      steps.push({ label: "Tiempo de tiro", seconds: fase.segundos });
-    }
-    return {
-      startLabel: "Carguen",
-      finalLabel: "Tiempo cumplido",
-      steps,
-      conPitido: false,
-    };
-  }
-
-  if (tipoTirada === "entrenamiento" && fase?.tipo === "velocidad") {
-    return {
-      startLabel: "Iniciar serie",
-      finalLabel: "¡Paren!",
-      steps: [
-        { label: "Atención", seconds: 7 },
-        { label: "¡Disparen!", seconds: fase.segundos, destacar: true },
-      ],
-      conPitido: true,
-    };
-  }
-
-  return null;
+): PlanTimer {
+  const fase =
+    faseSerie(modalitySlug, idx) ??
+    ({ tipo: "precision", segundos: 150, nombre: "Precisión" } as Fase);
+  return {
+    opciones: opcionesConCarguen(intrinsecosDeFase(fase)),
+    finalLabel: fase.tipo === "velocidad" ? "¡Paren!" : "Tiempo cumplido",
+    conPitido: tipoTirada === "entrenamiento",
+  };
 }
 
 // --- Entrenamiento modular ---------------------------------------------------
@@ -91,17 +96,18 @@ export type Modulo = {
   key: string;
   label: string;
   shots: number;
-  plan: PlanTimer;
+  intrinsecos: PasoTimer[];
+  finalLabel: string;
 };
 
-/** Cronómetro del duelo 7/3: 5 exposiciones (7" preparados, 3" ¡Fuego!). */
-function planDuelo(): PlanTimer {
+/** Pasos del duelo 7/3: 5 exposiciones (7" preparados, 3" ¡Fuego!). */
+function dueloIntrinsecos(): PasoTimer[] {
   const steps: PasoTimer[] = [];
   for (let i = 1; i <= 5; i++) {
     steps.push({ label: `Preparados ${i}`, seconds: 7 });
     steps.push({ label: `¡Fuego! ${i}`, seconds: 3, destacar: true });
   }
-  return { startLabel: "Iniciar duelo", finalLabel: "Fin", steps, conPitido: true };
+  return steps;
 }
 
 /** Catálogo de módulos del entrenamiento modular. */
@@ -110,49 +116,41 @@ export const MODULOS: Modulo[] = [
     key: "p150",
     label: "Precisión 150″",
     shots: 5,
-    plan: {
-      startLabel: "Iniciar 150″",
-      finalLabel: "Tiempo cumplido",
-      steps: [{ label: "Tiempo de tiro (150″)", seconds: 150, destacar: true }],
-      conPitido: true,
-    },
+    intrinsecos: [{ label: "Tiempo de tiro (150″)", seconds: 150, destacar: true }],
+    finalLabel: "Tiempo cumplido",
   },
   {
     key: "v20",
     label: "Velocidad 20″",
     shots: 5,
-    plan: {
-      startLabel: "Iniciar serie",
-      finalLabel: "¡Paren!",
-      steps: [
-        { label: "Atención", seconds: 7 },
-        { label: "¡Disparen! (20″)", seconds: 20, destacar: true },
-      ],
-      conPitido: true,
-    },
+    intrinsecos: [{ label: "¡Disparen! (20″)", seconds: 20, destacar: true }],
+    finalLabel: "¡Paren!",
   },
   {
     key: "v10",
     label: "Velocidad 10″",
     shots: 5,
-    plan: {
-      startLabel: "Iniciar serie",
-      finalLabel: "¡Paren!",
-      steps: [
-        { label: "Atención", seconds: 7 },
-        { label: "¡Disparen! (10″)", seconds: 10, destacar: true },
-      ],
-      conPitido: true,
-    },
+    intrinsecos: [{ label: "¡Disparen! (10″)", seconds: 10, destacar: true }],
+    finalLabel: "¡Paren!",
   },
   {
     key: "duelo",
     label: "Duelo 7/3 (×5)",
     shots: 5,
-    plan: planDuelo(),
+    intrinsecos: dueloIntrinsecos(),
+    finalLabel: "Fin",
   },
 ];
 
 export function getModulo(key: string): Modulo | undefined {
   return MODULOS.find((m) => m.key === key);
+}
+
+/** Plan de temporizador (Carguen + Serie) de un módulo. */
+export function moduloPlan(mod: Modulo): PlanTimer {
+  return {
+    opciones: opcionesConCarguen(mod.intrinsecos),
+    finalLabel: mod.finalLabel,
+    conPitido: true,
+  };
 }
