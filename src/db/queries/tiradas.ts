@@ -94,6 +94,7 @@ export async function getRanking(tiradaId: string) {
       total: scorecards.total,
       innerCount: scorecards.innerCount,
       status: scorecards.status,
+      category: scorecards.category,
       displayName: profiles.displayName,
       nickname: profiles.nickname,
     })

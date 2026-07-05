@@ -6,6 +6,7 @@ type Fila = {
   total: number;
   innerCount: number;
   status: string;
+  category: string | null;
   displayName: string;
   nickname: string | null;
 };
@@ -15,10 +16,12 @@ export function RankingTable({
   filas,
   allowsDecimals,
   currentUserId,
+  mostrarCategoria = false,
 }: {
   filas: Fila[];
   allowsDecimals: boolean;
   currentUserId: string;
+  mostrarCategoria?: boolean;
 }) {
   if (filas.length === 0) {
     return (
@@ -34,6 +37,7 @@ export function RankingTable({
         <tr>
           <th style={{ width: 32 }}>#</th>
           <th>Tirador</th>
+          {mostrarCategoria ? <th>Cat.</th> : null}
           <th className="num">Total</th>
           <th className="num" title="Dieces interiores">
             X
@@ -64,6 +68,11 @@ export function RankingTable({
                   </span>
                 ) : null}
               </td>
+              {mostrarCategoria ? (
+                <td style={{ fontSize: "0.85rem", color: "var(--texto-suave)" }}>
+                  {f.category ?? "—"}
+                </td>
+              ) : null}
               <td className="num" style={{ fontWeight: 700 }}>
                 {formatPunt(f.total, allowsDecimals)}
               </td>

@@ -266,6 +266,7 @@ export default async function TiradaDetallePage({
           filas={ranking}
           allowsDecimals={tirada.allowsDecimals}
           currentUserId={user.id}
+          mostrarCategoria={tirada.type === "oficial"}
         />
       </Card>
 
