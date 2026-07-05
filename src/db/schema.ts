@@ -224,6 +224,12 @@ export const series = pgTable(
     // Solo modo "entrenamiento modular": tipo de módulo de esta serie
     // (p. ej. "p150", "v20", "v10", "duelo").
     moduleType: text("module_type"),
+    // Modular: si esta fila es un EJERCICIO de la biblioteca (no una serie de
+    // disparos), enlaza el ejercicio y guarda su calificación (verde/amarillo/rojo).
+    exerciseId: uuid("exercise_id").references(() => exercises.id, {
+      onDelete: "set null",
+    }),
+    rating: text("rating"),
   },
   (t) => [unique().on(t.scorecardId, t.idx)],
 );

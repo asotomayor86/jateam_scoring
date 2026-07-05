@@ -76,6 +76,17 @@ async function recomputar(
     let total = 0;
     let innerCount = 0;
     for (const f of filas) {
+      // Las filas de "ejercicio" no puntúan ni afectan al blanco.
+      if (f.exerciseId) {
+        if (f.subtotal !== 0 || f.shotCount !== 0 || f.inner !== 0) {
+          await db
+            .update(series)
+            .set({ subtotal: 0, shotCount: 0, inner: 0 })
+            .where(eq(series.id, f.id));
+        }
+        calculadas.push({ idx: f.idx, subtotal: 0, shotCount: 0 });
+        continue;
+      }
       const acumulado = f.buckets ?? CEROS();
       if (f.blancoNuevo) prev = CEROS();
       const incremental = restaRecuentos(acumulado, prev);
@@ -229,6 +240,61 @@ export async function guardarSerieAsistida(
   } catch (e) {
     console.error("guardarSerieAsistida error:", e);
     return { ok: false, mensaje: "No se pudo guardar la serie" };
+  }
+
+  const r = await recomputar(d.scorecardId, hoja.granularity);
+  revalidatePath(`/tiradas/${hoja.tiradaId}`);
+  return { ok: true, ...r };
+}
+
+const esquemaEjercicio = z.object({
+  scorecardId: z.string().uuid(),
+  idx: z.number().int().min(1).max(200),
+  exerciseId: z.string().uuid(),
+  rating: z.enum(["verde", "amarillo", "rojo"]).nullable(),
+});
+
+/**
+ * Añade o actualiza una fila de "ejercicio" (de la biblioteca) en un
+ * entrenamiento modular, con su calificación (verde/amarillo/rojo). No puntúa.
+ */
+export async function guardarEjercicioSerie(
+  input: z.input<typeof esquemaEjercicio>,
+): Promise<ResultadoSerie> {
+  const { user } = await requireUser();
+
+  const parsed = esquemaEjercicio.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, mensaje: parsed.error.issues[0]?.message };
+  }
+  const d = parsed.data;
+
+  const hoja = await hojaEditable(d.scorecardId, user.id);
+  if (!hoja || hoja.status !== "borrador") {
+    return { ok: false, mensaje: "No puedes editar esta hoja" };
+  }
+
+  try {
+    await db
+      .insert(series)
+      .values({
+        scorecardId: d.scorecardId,
+        idx: d.idx,
+        shots: null,
+        shotCount: 0,
+        subtotal: 0,
+        inner: 0,
+        blancoNuevo: false,
+        exerciseId: d.exerciseId,
+        rating: d.rating,
+      })
+      .onConflictDoUpdate({
+        target: [series.scorecardId, series.idx],
+        set: { exerciseId: d.exerciseId, rating: d.rating },
+      });
+  } catch (e) {
+    console.error("guardarEjercicioSerie error:", e);
+    return { ok: false, mensaje: "No se pudo guardar el ejercicio" };
   }
 
   const r = await recomputar(d.scorecardId, hoja.granularity);

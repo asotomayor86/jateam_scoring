@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/auth/helpers";
 import { getTirada, getMiScorecard } from "@/db/queries/tiradas";
 import { getScorecardConSeries } from "@/db/queries/scorecards";
+import { getEjercicios } from "@/db/queries/exercises";
 import { Libreta } from "@/components/libreta";
 import { LibretaAsistida } from "@/components/libreta-asistida";
 import { LibretaModular } from "@/components/libreta-modular";
@@ -27,6 +28,9 @@ export default async function LibretaPage({
 
   const hoja = await getScorecardConSeries(miHoja.id);
   if (!hoja) redirect(`/tiradas/${id}`);
+
+  const esModular = tirada.modalitySlug === "entrenamiento-modular";
+  const ejercicios = esModular ? await getEjercicios() : [];
 
   return (
     <>
@@ -57,10 +61,16 @@ export default async function LibretaPage({
         {tirada.caliber ? ` · ${tirada.caliber}` : ""} · {tirada.date}
       </p>
 
-      {tirada.modalitySlug === "entrenamiento-modular" ? (
+      {esModular ? (
         <LibretaModular
           scorecardId={hoja.id}
           granularity={hoja.granularity}
+          ejercicios={ejercicios.map((e) => ({
+            id: e.id,
+            code: e.code,
+            title: e.title,
+            tipologia: e.tipologia,
+          }))}
           seriesIniciales={hoja.series.map((s) => ({
             idx: s.idx,
             moduleType: s.moduleType,
@@ -68,6 +78,8 @@ export default async function LibretaPage({
             subtotal: s.subtotal,
             buckets: s.buckets,
             blancoNuevo: s.blancoNuevo,
+            exerciseId: s.exerciseId,
+            rating: s.rating,
           }))}
           finalizada={hoja.status === "finalizada"}
         />
