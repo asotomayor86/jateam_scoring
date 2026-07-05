@@ -648,8 +648,13 @@ export function LibretaModular({
                   </option>
                 ))}
               </select>
-              <button type="button" className="btn btn-primario" onClick={anadirModulo}>
-                + Añadir módulo
+              <button
+                type="button"
+                className="btn btn-primario"
+                style={{ width: 168, flexShrink: 0 }}
+                onClick={anadirModulo}
+              >
+                + Añadir serie
               </button>
             </div>
           </Card>
@@ -668,7 +673,12 @@ export function LibretaModular({
                     </option>
                   ))}
                 </select>
-                <button type="button" className="btn" onClick={anadirEjercicio}>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ width: 168, flexShrink: 0 }}
+                  onClick={anadirEjercicio}
+                >
                   + Añadir ejercicio
                 </button>
               </div>
