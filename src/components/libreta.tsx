@@ -336,6 +336,14 @@ export function Libreta({
                 ) : null}
               </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)" }}>
+                  {(fila.modo === "tiros"
+                    ? (c.shots?.length ?? 0)
+                    : fila.totalStr.trim()
+                      ? modalidad.defaultSeriesSize
+                      : 0)}{" "}
+                  tiros
+                </span>
                 <span
                   style={{
                     fontVariantNumeric: "tabular-nums",

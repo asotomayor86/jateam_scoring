@@ -15,6 +15,7 @@ import {
   formatPunt,
   ASISTIDO_VALORES,
   puntosDeRecuento,
+  tirosDeRecuento,
   restaRecuentos,
 } from "@/lib/scoring";
 import { MODULOS, getModulo, moduloPlan } from "@/lib/fases";
@@ -90,7 +91,7 @@ function numsAsistido(fila: Fila): number[] {
 function calcAsistido(filas: Fila[]) {
   let prev = ASISTIDO_VALORES.map(() => 0);
   let total = 0;
-  const porFila = new Map<number, number>();
+  const porFila = new Map<number, { subtotal: number; tiros: number }>();
   for (const f of filas) {
     const acumulado = numsAsistido(f);
     if (f.blancoNuevo) prev = ASISTIDO_VALORES.map(() => 0);
@@ -98,7 +99,7 @@ function calcAsistido(filas: Fila[]) {
     const subtotal = puntosDeRecuento(incremental);
     prev = acumulado;
     total += subtotal;
-    porFila.set(f.idx, subtotal);
+    porFila.set(f.idx, { subtotal, tiros: tirosDeRecuento(incremental) });
   }
   return { porFila, total: redondea1(total) };
 }
@@ -317,10 +318,19 @@ export function LibretaModular({
       {filas.map((fila) => {
         const mod = getModulo(fila.moduleType);
         if (!mod) return null;
-        const sub =
+        const info = modo === "asistido" ? asistido?.porFila.get(fila.idx) : undefined;
+        const sub = modo === "asistido" ? (info?.subtotal ?? 0) : subtotalDe(fila, modo);
+        const nTiros =
           modo === "asistido"
-            ? (asistido?.porFila.get(fila.idx) ?? 0)
-            : subtotalDe(fila, modo);
+            ? (info?.tiros ?? 0)
+            : modo === "total"
+              ? fila.totalStr.trim()
+                ? mod.shots
+                : 0
+              : fila.celdas.reduce(
+                  (n, c) => (parseTiro(c, MAX_PER_SHOT, false) ? n + 1 : n),
+                  0,
+                );
         return (
           <Card key={fila.idx}>
             <div
@@ -337,6 +347,9 @@ export function LibretaModular({
                 {fila.idx}. {mod.label}
               </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)" }}>
+                  {nTiros} tiros
+                </span>
                 <span style={{ fontWeight: 700 }}>{formatPunt(sub)}</span>
                 {modo === "asistido" && !finalizada && (
                   <button
