@@ -187,7 +187,7 @@ export function PrincipiosTraining() {
             key={i}
             style={{ flex: "0 0 100%", scrollSnapAlign: "start", minWidth: 0 }}
           >
-            <Card>
+            <Card style={{ boxShadow: "none" }}>
               <strong style={{ fontSize: "1rem" }}>{p.titulo}</strong>
               <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem", lineHeight: 1.4 }}>
                 {p.puntos.map((t, j) => (
