@@ -22,6 +22,7 @@ export default function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/",
+    "/formacion/:path*",
     "/tiradas/:path*",
     "/clubs/:path*",
     "/calendario/:path*",
