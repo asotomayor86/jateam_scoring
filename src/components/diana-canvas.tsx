@@ -16,6 +16,10 @@ const R = radioExterior(SPEC) + 22;
 const VIEW = R * 2;
 const HIT_MM = 16; // radio (mm) para "agarrar" un impacto existente al pinchar
 const DOT_MM = 6; // radio del punto de impacto
+// Desplazamiento del punto respecto al dedo (fracción del lienzo), para que el
+// dedo no tape el impacto al colocarlo con el móvil. Arriba y a la derecha.
+const OFFSET_FRAC_X = 0.06;
+const OFFSET_FRAC_Y = 0.09;
 
 // Paleta fija de "diana" (se ve igual en claro y oscuro: una diana es una diana).
 const PAPEL = "#e9e4d6";
@@ -53,10 +57,17 @@ export function DianaCanvas({
 
   const stats = estadisticas(impacts);
 
-  function toModel(e: RPtr<SVGSVGElement>) {
+  // conOffset: con el dedo, el punto tapa el impacto; al COLOCAR/arrastrar se
+  // desplaza hacia arriba-derecha respecto al dedo para poder verlo. Para
+  // DETECTAR un impacto ya colocado se usa la posición real del dedo (sin
+  // offset), así "agarrarlo" tocándolo encima sigue siendo natural.
+  function toModel(e: RPtr<SVGSVGElement>, conOffset: boolean) {
     const rect = svgRef.current!.getBoundingClientRect();
-    const fx = (e.clientX - rect.left) / rect.width;
-    const fy = (e.clientY - rect.top) / rect.height;
+    const off = conOffset && e.pointerType === "touch";
+    const dx = off ? rect.width * OFFSET_FRAC_X : 0;
+    const dy = off ? rect.height * OFFSET_FRAC_Y : 0;
+    const fx = (e.clientX + dx - rect.left) / rect.width;
+    const fy = (e.clientY - dy - rect.top) / rect.height;
     const x = clamp(-R + fx * VIEW, -R, R);
     const y = clamp(R - fy * VIEW, -R, R); // eje modelo hacia arriba
     return { x, y };
@@ -79,12 +90,12 @@ export function DianaCanvas({
     if (finalizada) return;
     e.preventDefault();
     svgRef.current?.setPointerCapture(e.pointerId);
-    const p = toModel(e);
-    const hit = nearest(p);
+    const hit = nearest(toModel(e, false)); // detección: posición real del dedo
     if (hit >= 0) {
       setSel(hit);
       drag.current = { i: hit };
     } else {
+      const p = toModel(e, true); // colocación: desplazada arriba-derecha
       const nuevo: Impacto = { x: p.x, y: p.y, s: puntuacionDeImpacto(SPEC, p.x, p.y) };
       const next = [...impacts, nuevo];
       onChange(next, false);
@@ -97,7 +108,7 @@ export function DianaCanvas({
     const d = drag.current;
     if (!d) return;
     e.preventDefault();
-    const p = toModel(e);
+    const p = toModel(e, true);
     const next = impacts.map((im, k) =>
       k === d.i ? { x: p.x, y: p.y, s: puntuacionDeImpacto(SPEC, p.x, p.y) } : im,
     );
