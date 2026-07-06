@@ -79,6 +79,14 @@ export const profiles = pgTable("profiles", {
   defaultGranularity: entryGranularity("default_granularity")
     .notNull()
     .default("tiro"),
+  // Última vez que abrió el chat / la lista de tiradas (para los contadores de
+  // "nuevos" del menú). Arrancan "al día" (default now) para no contar histórico.
+  chatSeenAt: timestamp("chat_seen_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  tiradasSeenAt: timestamp("tiradas_seen_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -349,6 +357,20 @@ export const chatMessages = pgTable("chat_messages", {
     .notNull()
     .defaultNow(),
 });
+
+/** A quién menciona (@) cada mensaje del chat. Base para avisar al mencionado. */
+export const chatMentions = pgTable(
+  "chat_mentions",
+  {
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => chatMessages.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.messageId, t.userId] })],
+);
 
 // --- Tipos inferidos ---------------------------------------------------------
 

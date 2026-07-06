@@ -2,6 +2,18 @@ import "server-only";
 import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
 import { db, chatThreads, chatMessages, profiles } from "@/db";
 
+/** Miembros para el desplegable de menciones (@). */
+export async function getMiembrosMencion() {
+  return db
+    .select({
+      id: profiles.id,
+      displayName: profiles.displayName,
+      nickname: profiles.nickname,
+    })
+    .from(profiles)
+    .orderBy(asc(profiles.displayName));
+}
+
 // Antigüedad máxima que se conserva. Todo lo anterior se oculta al leer y se
 // purga físicamente de forma perezosa.
 const CADUCA = sql`now() - interval '3 months'`;

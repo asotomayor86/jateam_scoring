@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { requireUser } from "@/auth/helpers";
-import { listThreads } from "@/db/queries/chat";
+import { listThreads, getMiembrosMencion } from "@/db/queries/chat";
 import { NuevoHiloForm } from "@/components/nuevo-hilo-form";
 import { ChatRefresh } from "@/components/chat-refresh";
+import { MarcarVisto } from "@/components/marcar-visto";
 import { Card, SeccionTitulo } from "@/components/ui";
 import { haceCuanto } from "@/lib/tiempo";
 
@@ -10,10 +11,12 @@ export const dynamic = "force-dynamic";
 
 export default async function ChatPage() {
   await requireUser();
-  const hilos = await listThreads();
+  const [hilos, miembros] = await Promise.all([listThreads(), getMiembrosMencion()]);
+  const members = miembros.map((m) => ({ id: m.id, label: m.nickname || m.displayName }));
 
   return (
     <>
+      <MarcarVisto seccion="chat" />
       <SeccionTitulo grande extra={<ChatRefresh />}>
         Chat del grupo
       </SeccionTitulo>
@@ -23,7 +26,7 @@ export default async function ChatPage() {
       </p>
 
       <div style={{ marginBottom: "0.9rem" }}>
-        <NuevoHiloForm />
+        <NuevoHiloForm members={members} />
       </div>
 
       {hilos.length === 0 ? (

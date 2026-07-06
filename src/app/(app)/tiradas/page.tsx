@@ -4,6 +4,7 @@ import { listTiradas, type FiltrosTiradas } from "@/db/queries/tiradas";
 import { getModalidades, getClubs } from "@/db/queries/catalog";
 import { TiradaCard } from "@/components/tirada-card";
 import { TiradasFiltros } from "@/components/tiradas-filtros";
+import { MarcarVisto } from "@/components/marcar-visto";
 import { SeccionTitulo } from "@/components/ui";
 import type { TiradaType } from "@/db/schema";
 
@@ -42,6 +43,7 @@ export default async function TiradasPage({
 
   return (
     <>
+      <MarcarVisto seccion="tiradas" />
       <SeccionTitulo
         grande
         extra={

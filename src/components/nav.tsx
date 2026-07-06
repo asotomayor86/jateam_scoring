@@ -9,7 +9,34 @@ import { ThemeToggle } from "@/components/theme-toggle";
 type Props = {
   displayName: string;
   isAdmin: boolean;
+  badges?: { chat: number; tiradas: number };
 };
+
+/** Círculo con el número de "nuevos" (rojo para chat, verde para tiradas). */
+function Badge({ n, color }: { n: number; color: string }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 18,
+        height: 18,
+        padding: "0 5px",
+        marginLeft: 6,
+        borderRadius: 9,
+        background: color,
+        color: "#fff",
+        fontSize: "0.7rem",
+        fontWeight: 700,
+        lineHeight: 1,
+        verticalAlign: "middle",
+      }}
+    >
+      {n > 99 ? "99+" : n}
+    </span>
+  );
+}
 
 const enlaces = [
   { href: "/", label: "Inicio" },
@@ -29,10 +56,19 @@ const enlaces = [
  * Barra de navegación del área privada. En móvil pasa a hamburguesa + drawer
  * (CSS en globals.css). El enlace "Miembros" solo aparece para el encargado.
  */
-export function Nav({ displayName, isAdmin }: Props) {
+export function Nav({ displayName, isAdmin, badges }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const chat = badges?.chat ?? 0;
+  const tir = badges?.tiradas ?? 0;
+  const badgeDe = (href: string) =>
+    href === "/chat" && chat > 0
+      ? { n: chat, color: "#e5484d" }
+      : href === "/tiradas" && tir > 0
+        ? { n: tir, color: "#2fb344" }
+        : null;
 
   useEffect(() => {
     setOpen(false);
@@ -110,6 +146,7 @@ export function Nav({ displayName, isAdmin }: Props) {
         <div className="nav-links">
           {items.map((e) => {
             const activo = esActivo(e.href);
+            const badge = badgeDe(e.href);
             return (
               <Link
                 key={e.href}
@@ -123,6 +160,7 @@ export function Nav({ displayName, isAdmin }: Props) {
                 }}
               >
                 {e.label}
+                {badge ? <Badge n={badge.n} color={badge.color} /> : null}
               </Link>
             );
           })}
@@ -176,11 +214,15 @@ export function Nav({ displayName, isAdmin }: Props) {
 
       {/* Drawer móvil. */}
       <div id="nav-drawer" className="nav-drawer">
-        {items.map((e) => (
-          <Link key={e.href} href={e.href} data-activo={esActivo(e.href)}>
-            {e.label}
-          </Link>
-        ))}
+        {items.map((e) => {
+          const badge = badgeDe(e.href);
+          return (
+            <Link key={e.href} href={e.href} data-activo={esActivo(e.href)}>
+              {e.label}
+              {badge ? <Badge n={badge.n} color={badge.color} /> : null}
+            </Link>
+          );
+        })}
         <div className="nav-drawer-foot">
           <span
             style={{

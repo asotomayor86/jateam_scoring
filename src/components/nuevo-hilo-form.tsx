@@ -3,11 +3,15 @@
 import { useActionState, useState } from "react";
 import { crearHilo, type ResultadoAccion } from "@/actions/chat";
 import { Aviso, Card, estiloCampo } from "@/components/ui";
+import {
+  MentionableTextarea,
+  type MiembroMencion,
+} from "@/components/mentionable-textarea";
 
 const inicial: ResultadoAccion = { ok: false };
 
 /** Caja para abrir un hilo nuevo (plegable, para no ocupar sitio). */
-export function NuevoHiloForm() {
+export function NuevoHiloForm({ members }: { members: MiembroMencion[] }) {
   const [abierto, setAbierto] = useState(false);
   const [estado, accion, enviando] = useActionState(crearHilo, inicial);
 
@@ -31,12 +35,11 @@ export function NuevoHiloForm() {
           autoFocus
           style={estiloCampo}
         />
-        <textarea
+        <MentionableTextarea
           name="body"
-          placeholder="Primer mensaje (opcional)"
-          maxLength={2000}
+          members={members}
+          placeholder="Primer mensaje (opcional, @ para mencionar)"
           rows={3}
-          style={{ ...estiloCampo, resize: "vertical" }}
         />
         {estado.mensaje ? <Aviso tipo="error">{estado.mensaje}</Aviso> : null}
         <div style={{ display: "flex", gap: "0.5rem" }}>

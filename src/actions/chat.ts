@@ -5,10 +5,26 @@ import { redirect } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireUser } from "@/auth/helpers";
-import { db, chatThreads, chatMessages } from "@/db";
+import { db, chatThreads, chatMessages, chatMentions } from "@/db";
 import { purgarChat } from "@/db/queries/chat";
 
 export type ResultadoAccion = { ok: boolean; mensaje?: string };
+
+/** Guarda a quién menciona (@) un mensaje. No falla el envío si algo va mal. */
+async function guardarMenciones(messageId: string, formData: FormData) {
+  try {
+    const ids = JSON.parse(String(formData.get("mentions") ?? "[]"));
+    if (!Array.isArray(ids)) return;
+    const limpios = [...new Set(ids.filter((x) => typeof x === "string" && x))].slice(0, 20);
+    if (limpios.length === 0) return;
+    await db
+      .insert(chatMentions)
+      .values(limpios.map((userId) => ({ messageId, userId })))
+      .onConflictDoNothing();
+  } catch (e) {
+    console.error("guardarMenciones error:", e);
+  }
+}
 
 const esquemaHilo = z.object({
   title: z.string().trim().min(1, "Ponle un título").max(120),
@@ -44,11 +60,11 @@ export async function crearHilo(
       .returning({ id: chatThreads.id });
     nuevoId = fila.id;
     if (parsed.data.body) {
-      await db.insert(chatMessages).values({
-        threadId: nuevoId,
-        userId: user.id,
-        body: parsed.data.body,
-      });
+      const [msg] = await db
+        .insert(chatMessages)
+        .values({ threadId: nuevoId, userId: user.id, body: parsed.data.body })
+        .returning({ id: chatMessages.id });
+      await guardarMenciones(msg.id, formData);
     }
   } catch (e) {
     console.error("crearHilo error:", e);
@@ -88,9 +104,11 @@ export async function responder(
   if (!hilo) return { ok: false, mensaje: "El hilo ya no existe" };
 
   try {
-    await db
+    const [msg] = await db
       .insert(chatMessages)
-      .values({ threadId: d.threadId, userId: user.id, body: d.body });
+      .values({ threadId: d.threadId, userId: user.id, body: d.body })
+      .returning({ id: chatMessages.id });
+    await guardarMenciones(msg.id, formData);
     await db
       .update(chatThreads)
       .set({ lastActivityAt: sql`now()` })

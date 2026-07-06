@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/auth/helpers";
-import { getThread, getMessages } from "@/db/queries/chat";
+import { getThread, getMessages, getMiembrosMencion } from "@/db/queries/chat";
 import { borrarHilo, borrarMensaje } from "@/actions/chat";
 import { ResponderForm } from "@/components/responder-form";
 import { ChatRefresh } from "@/components/chat-refresh";
+import { MarcarVisto } from "@/components/marcar-visto";
 import { TextoConEnlaces } from "@/components/texto-enlaces";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Card, SeccionTitulo } from "@/components/ui";
@@ -22,12 +23,17 @@ export default async function HiloPage({
 
   const hilo = await getThread(id);
   if (!hilo) notFound();
-  const mensajes = await getMessages(id);
+  const [mensajes, miembros] = await Promise.all([
+    getMessages(id),
+    getMiembrosMencion(),
+  ]);
+  const members = miembros.map((m) => ({ id: m.id, label: m.nickname || m.displayName }));
   // Solo el encargado puede borrar hilos.
   const puedeBorrarHilo = profile.isAdmin;
 
   return (
     <>
+      <MarcarVisto seccion="chat" />
       <div
         style={{
           display: "flex",
@@ -116,7 +122,7 @@ export default async function HiloPage({
         )}
       </div>
 
-      <ResponderForm threadId={id} />
+      <ResponderForm threadId={id} members={members} />
 
       {puedeBorrarHilo ? (
         <form action={borrarHilo} style={{ marginTop: "1rem" }}>
