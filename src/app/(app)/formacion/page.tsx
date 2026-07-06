@@ -70,7 +70,13 @@ export default async function FormacionPage() {
           Arriba a la derecha está el <strong>botón de menú</strong> (☰). Al
           pulsarlo se despliega con todas las secciones: Inicio, Formación,
           Calendario, Tiradas y Entrenamientos, Mis tiradas, Ejercicios, Campos,
-          Comidas, Restaurantes, Perfil (y Miembros, solo para el encargado).
+          Comidas, Restaurantes, Chat, Perfil (y Miembros, solo para el encargado).
+        </p>
+        <p>
+          Algunas secciones muestran un <strong>círculo con un número</strong>{" "}
+          cuando hay novedades: <strong>rojo</strong> en Chat (mensajes nuevos) y{" "}
+          <strong>verde</strong> en Tiradas (tiradas/entrenos nuevos). Se pone a
+          cero al abrir la sección.
         </p>
         <p>
           Arriba a la derecha del menú también tienes el botón de{" "}
@@ -142,9 +148,10 @@ export default async function FormacionPage() {
 
       <Tema titulo="Apuntarte y el ranking">
         <p>
-          En el detalle de la tirada pulsa <strong>Apuntarme</strong>. Eliges{" "}
-          <strong>cómo quieres apuntar</strong> (modo de libreta) y, en las
-          oficiales, tu <strong>categoría</strong> (1ª/2ª/3ª/Veterano/Damas).
+          En el detalle de la tirada pulsa <strong>Apuntarme</strong>. En las
+          oficiales eliges tu <strong>categoría</strong> (1ª/2ª/3ª/Veterano/Damas).
+          El <strong>modo de apunte</strong> se elige y se cambia luego{" "}
+          <strong>dentro de la libreta</strong> (ver «La libreta»).
         </p>
         <p>
           El <strong>ranking</strong> ordena por total y desempata por dieces. En
@@ -165,6 +172,13 @@ export default async function FormacionPage() {
             series anteriores del mismo blanco.
           </li>
         </ul>
+        <p>
+          El modo se puede <strong>cambiar dentro de la libreta</strong> mientras
+          no tengas ningún apunte de disparo: arriba aparece un selector{" "}
+          <strong>«Modo de apunte»</strong>. Además, cada serie tiene un{" "}
+          <strong>icono de diana</strong> 🎯 para apuntarla de forma{" "}
+          <strong>gráfica</strong> (ver «Apuntar en la diana»).
+        </p>
         <p>
           Se <strong>guarda solo</strong> mientras escribes. Al acabar,{" "}
           <strong>Finalizar hoja</strong> (puedes reabrirla para corregir).
@@ -240,9 +254,11 @@ export default async function FormacionPage() {
           </li>
         </ul>
         <p>
-          Eliges el <strong>modo de libreta</strong> (tiro a tiro, total o asistido)
-          al apuntarte, igual que en competición. Los ejercicios no puntúan; solo
-          suman las series de disparos.
+          El <strong>modo de libreta</strong> (tiro a tiro, total o asistido) se
+          elige y se cambia <strong>dentro de la libreta</strong> mientras esté
+          vacía. Cada <strong>módulo de disparo</strong> tiene también su{" "}
+          <strong>icono de diana</strong> 🎯. Los ejercicios no puntúan; solo suman
+          las series de disparos.
         </p>
       </Tema>
 
@@ -270,7 +286,112 @@ export default async function FormacionPage() {
           <li><strong>Cerrar hojas</strong> de otros que se hayan quedado sin finalizar, en la tirada.</li>
           <li><strong>Copiar tiradores</strong>: exporta la relación (nº, nombre, DNI, licencia, categoría) al portapapeles.</li>
           <li>Gestionar los catálogos: <strong>campos</strong>, <strong>restaurantes</strong>, <strong>modalidades</strong> y la <strong>biblioteca de ejercicios</strong> (crear/editar/borrar).</li>
+          <li><strong>Chat</strong>: borrar <strong>hilos</strong> (solo el encargado) y borrar <strong>cualquier mensaje</strong>.</li>
         </ul>
+      </Tema>
+
+      {/* ---------------------- NOVEDADES ---------------------- */}
+      <SeccionTitulo>4 · Diana gráfica, chat y avisos</SeccionTitulo>
+
+      <Tema titulo="Apuntar en la diana (modo gráfico)" abierto>
+        <p>
+          En <strong>tiro a tiro</strong>, <strong>asistido</strong> y en las series
+          del <strong>modular</strong>, cada tarjeta tiene un{" "}
+          <strong>icono de diana</strong> 🎯. Al pulsarlo, las casillas de puntos se
+          cambian por una <strong>diana a escala</strong> donde marcas dónde caen los
+          disparos.
+        </p>
+        <ul>
+          <li>
+            <strong>Mantén pulsado</strong> para añadir un impacto; luego{" "}
+            <strong>arrastra en cualquier punto</strong> de la diana para moverlo
+            (así el dedo no lo tapa).
+          </li>
+          <li>
+            La <strong>puntuación sale sola</strong> del anillo donde cae: en cuanto
+            el borde del punto <strong>toca la línea</strong>, ya vale ese anillo.
+          </li>
+          <li>
+            Ves la <strong>agrupación</strong> (círculo azul con su centro), la
+            dispersión y cuánto se desvía del centro.
+          </li>
+          <li>Toca un impacto para <strong>seleccionarlo</strong> y poder borrarlo.</li>
+        </ul>
+        <p>
+          En <strong>asistido</strong>, si la serie no es «blanco nuevo», los
+          impactos de las series anteriores del mismo blanco aparecen en{" "}
+          <strong>gris</strong> (solo referencia) y tú añades los nuevos en rojo.
+        </p>
+        <p>
+          Queda registrada la <strong>posición y la puntuación</strong> de cada
+          disparo para analizar dónde agrupas.
+        </p>
+      </Tema>
+
+      <Tema titulo="Cambiar el modo de apunte">
+        <p>
+          Ya no se elige al apuntarte. <strong>Dentro de la libreta</strong>,
+          mientras no tengas ningún apunte de disparo, aparece arriba un selector{" "}
+          <strong>«Modo de apunte»</strong> para cambiar entre tiro a tiro, bloques,
+          por serie o asistido. En cuanto apuntas la primera serie, desaparece (para
+          no reinterpretar lo ya metido).
+        </p>
+      </Tema>
+
+      <Tema titulo="Chat del grupo">
+        <p>
+          En <strong>Chat</strong> el grupo habla por <strong>hilos</strong>:
+          alguien abre un hilo (título y primer mensaje opcional) y dentro os vais
+          respondiendo.
+        </p>
+        <ul>
+          <li>
+            <strong>↻ Actualizar</strong> y auto-refresco cada pocos segundos; el
+            arrastrar-para-refrescar del móvil también funciona.
+          </li>
+          <li>Los <strong>enlaces</strong> (http) se hacen clicables solos.</li>
+          <li>
+            Cada uno borra <strong>sus</strong> mensajes; el{" "}
+            <strong>encargado</strong> borra cualquiera y es el único que puede
+            borrar hilos.
+          </li>
+          <li>
+            <strong>Retención</strong>: los mensajes de más de{" "}
+            <strong>3 meses</strong> se borran automáticamente.
+          </li>
+        </ul>
+      </Tema>
+
+      <Tema titulo="Mencionar a alguien (@)">
+        <p>
+          Al escribir <strong>@</strong> en un mensaje del chat sale la lista de
+          miembros; elige a quien quieras <strong>nombrar</strong>. Si esa persona
+          tiene las notificaciones activadas, le llega un aviso al móvil.
+        </p>
+      </Tema>
+
+      <Tema titulo="Notificaciones y avisos">
+        <p>Hay dos niveles:</p>
+        <ul>
+          <li>
+            <strong>En la app</strong>: los círculos del menú —{" "}
+            <strong>rojo</strong> en Chat y <strong>verde</strong> en Tiradas — con
+            el número de novedades desde tu última visita.
+          </li>
+          <li>
+            <strong>Al móvil</strong>: aviso aunque tengas la app cerrada cuando te{" "}
+            <strong>mencionan (@)</strong> o se crea una{" "}
+            <strong>tirada/entreno</strong> nueva, con un círculo en el{" "}
+            <strong>icono de la app</strong>.
+          </li>
+        </ul>
+        <p>
+          Para recibir los del móvil: <strong>instala la app</strong> en la pantalla
+          de inicio (en <strong>iPhone es imprescindible</strong>, y ábrela desde ese
+          icono) y en <strong>Perfil → Notificaciones</strong> pulsa{" "}
+          <strong>«Activar notificaciones»</strong> y acepta el permiso. Se activa en
+          cada dispositivo por separado.
+        </p>
       </Tema>
     </div>
   );
