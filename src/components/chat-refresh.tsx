@@ -1,55 +1,27 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-/** Botón "Actualizar" (más intuitivo que arrastrar) con "actualizado hace Xs". */
+/** Botón "Actualizar" (y auto-refresco cada 10 s con la pestaña visible). */
 export function ChatRefresh() {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [last, setLast] = useState<number>(() => Date.now());
-  const [, tick] = useState(0);
 
-  // Refresca la etiqueta "hace Xs" cada 5 s.
-  useEffect(() => {
-    const t = setInterval(() => tick((n) => n + 1), 5000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Auto-refresco cada 25 s, solo con la pestaña visible (no molesta el borrador:
-  // el texto que estés escribiendo se conserva al refrescar).
+  // Auto-refresco cada 10 s, solo con la pestaña visible (el borrador se conserva).
   useEffect(() => {
     const t = setInterval(() => {
       if (document.visibilityState === "visible") {
-        start(() => {
-          router.refresh();
-          setLast(Date.now());
-        });
+        start(() => router.refresh());
       }
     }, 10000);
     return () => clearInterval(t);
   }, [router]);
 
-  function refrescar() {
-    start(() => {
-      router.refresh();
-      setLast(Date.now());
-    });
-  }
-
-  const seg = Math.floor((Date.now() - last) / 1000);
-  const etiqueta = pending
-    ? "actualizando…"
-    : seg < 5
-      ? "actualizado"
-      : seg < 60
-        ? `hace ${seg}s`
-        : `hace ${Math.floor(seg / 60)} min`;
-
   return (
     <button
       type="button"
-      onClick={refrescar}
+      onClick={() => start(() => router.refresh())}
       disabled={pending}
       style={{
         display: "inline-flex",
@@ -68,7 +40,6 @@ export function ChatRefresh() {
         ↻
       </span>
       Actualizar
-      <small style={{ color: "var(--texto-suave)" }}>· {etiqueta}</small>
     </button>
   );
 }
