@@ -29,8 +29,12 @@ export function ResponderForm({ threadId }: { threadId: string }) {
         display: "flex",
         flexDirection: "column",
         gap: "0.4rem",
-        paddingTop: "0.5rem",
-        background: "var(--fondo)",
+        padding: "0.6rem 0",
+        marginTop: "0.3rem",
+        background: "var(--superficie)",
+        backdropFilter: "blur(14px) saturate(140%)",
+        WebkitBackdropFilter: "blur(14px) saturate(140%)",
+        borderTop: "1px solid var(--borde)",
       }}
     >
       <input type="hidden" name="threadId" value={threadId} />

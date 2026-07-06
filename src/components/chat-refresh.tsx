@@ -16,6 +16,20 @@ export function ChatRefresh() {
     return () => clearInterval(t);
   }, []);
 
+  // Auto-refresco cada 25 s, solo con la pestaña visible (no molesta el borrador:
+  // el texto que estés escribiendo se conserva al refrescar).
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        start(() => {
+          router.refresh();
+          setLast(Date.now());
+        });
+      }
+    }, 25000);
+    return () => clearInterval(t);
+  }, [router]);
+
   function refrescar() {
     start(() => {
       router.refresh();
