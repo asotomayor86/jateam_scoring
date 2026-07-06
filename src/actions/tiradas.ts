@@ -13,8 +13,10 @@ import {
   clubs,
   modalities,
   scorecards,
+  profiles,
   type TiradaType,
 } from "@/db";
+import { enviarPush } from "@/lib/push";
 
 export type ResultadoAccion = { ok: boolean; mensaje?: string };
 
@@ -131,6 +133,21 @@ export async function crearTirada(
   } catch (e) {
     console.error("crearTirada error:", e);
     return { ok: false, mensaje: "No se pudo crear la tirada" };
+  }
+
+  // Aviso al grupo (solo si es pública): nueva tirada/entreno.
+  if (datos.isPublic) {
+    const esEntreno = datos.type === "entrenamiento";
+    const miembros = await db.select({ id: profiles.id }).from(profiles);
+    await enviarPush(
+      miembros.map((m) => m.id).filter((id) => id !== user.id),
+      {
+        title: esEntreno ? "Nuevo entrenamiento" : "Nueva tirada",
+        body: datos.name || (esEntreno ? "Se ha creado un entrenamiento" : "Se ha creado una tirada"),
+        url: `/tiradas/${nuevoId}`,
+        tag: `tirada-${nuevoId}`,
+      },
+    );
   }
 
   revalidatePath("/tiradas");

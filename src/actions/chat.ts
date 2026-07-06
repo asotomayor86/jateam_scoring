@@ -7,22 +7,32 @@ import { z } from "zod";
 import { requireUser } from "@/auth/helpers";
 import { db, chatThreads, chatMessages, chatMentions } from "@/db";
 import { purgarChat } from "@/db/queries/chat";
+import { enviarPush } from "@/lib/push";
 
 export type ResultadoAccion = { ok: boolean; mensaje?: string };
 
-/** Guarda a quién menciona (@) un mensaje. No falla el envío si algo va mal. */
-async function guardarMenciones(messageId: string, formData: FormData) {
+function recorta(s: string, n = 120): string {
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
+
+/** Guarda a quién menciona (@) un mensaje y devuelve esos ids. No falla el envío. */
+async function guardarMenciones(
+  messageId: string,
+  formData: FormData,
+): Promise<string[]> {
   try {
     const ids = JSON.parse(String(formData.get("mentions") ?? "[]"));
-    if (!Array.isArray(ids)) return;
+    if (!Array.isArray(ids)) return [];
     const limpios = [...new Set(ids.filter((x) => typeof x === "string" && x))].slice(0, 20);
-    if (limpios.length === 0) return;
+    if (limpios.length === 0) return [];
     await db
       .insert(chatMentions)
       .values(limpios.map((userId) => ({ messageId, userId })))
       .onConflictDoNothing();
+    return limpios;
   } catch (e) {
     console.error("guardarMenciones error:", e);
+    return [];
   }
 }
 
@@ -41,7 +51,8 @@ export async function crearHilo(
   _prev: ResultadoAccion,
   formData: FormData,
 ): Promise<ResultadoAccion> {
-  const { user } = await requireUser();
+  const { user, profile } = await requireUser();
+  const autor = profile.nickname || profile.displayName;
   const parsed = esquemaHilo.safeParse({
     title: formData.get("title"),
     body: formData.get("body"),
@@ -64,7 +75,16 @@ export async function crearHilo(
         .insert(chatMessages)
         .values({ threadId: nuevoId, userId: user.id, body: parsed.data.body })
         .returning({ id: chatMessages.id });
-      await guardarMenciones(msg.id, formData);
+      const mencionados = await guardarMenciones(msg.id, formData);
+      await enviarPush(
+        mencionados.filter((id) => id !== user.id),
+        {
+          title: `${autor} te mencionó`,
+          body: recorta(parsed.data.body),
+          url: `/chat/${nuevoId}`,
+          tag: `chat-${nuevoId}`,
+        },
+      );
     }
   } catch (e) {
     console.error("crearHilo error:", e);
@@ -85,7 +105,8 @@ export async function responder(
   _prev: ResultadoAccion,
   formData: FormData,
 ): Promise<ResultadoAccion> {
-  const { user } = await requireUser();
+  const { user, profile } = await requireUser();
+  const autor = profile.nickname || profile.displayName;
   const parsed = esquemaMensaje.safeParse({
     threadId: formData.get("threadId"),
     body: formData.get("body"),
@@ -108,11 +129,20 @@ export async function responder(
       .insert(chatMessages)
       .values({ threadId: d.threadId, userId: user.id, body: d.body })
       .returning({ id: chatMessages.id });
-    await guardarMenciones(msg.id, formData);
+    const mencionados = await guardarMenciones(msg.id, formData);
     await db
       .update(chatThreads)
       .set({ lastActivityAt: sql`now()` })
       .where(eq(chatThreads.id, d.threadId));
+    await enviarPush(
+      mencionados.filter((id) => id !== user.id),
+      {
+        title: `${autor} te mencionó`,
+        body: recorta(d.body),
+        url: `/chat/${d.threadId}`,
+        tag: `chat-${d.threadId}`,
+      },
+    );
   } catch (e) {
     console.error("responder error:", e);
     return { ok: false, mensaje: "No se pudo enviar" };

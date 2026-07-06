@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/auth/helpers";
 import { ProfileForm } from "@/components/profile-form";
+import { ActivarNotificaciones } from "@/components/activar-notificaciones";
 import { Card, SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,9 @@ export default async function PerfilPage() {
           defaultGranularity={profile.defaultGranularity}
         />
       </Card>
+
+      <SeccionTitulo>Notificaciones</SeccionTitulo>
+      <ActivarNotificaciones />
 
       <SeccionTitulo>Seguridad</SeccionTitulo>
       <Card>

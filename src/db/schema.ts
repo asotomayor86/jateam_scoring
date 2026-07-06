@@ -358,6 +358,20 @@ export const chatMessages = pgTable("chat_messages", {
     .defaultNow(),
 });
 
+/** Suscripciones Web Push por dispositivo (para avisar al móvil). */
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 /** A quién menciona (@) cada mensaje del chat. Base para avisar al mencionado. */
 export const chatMentions = pgTable(
   "chat_mentions",

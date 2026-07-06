@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Nav } from "@/components/nav";
 import { InstallBanner } from "@/components/install-banner";
+import { SwRegister } from "@/components/sw-register";
 import { requireUser } from "@/auth/helpers";
 import { getBadges } from "@/db/queries/badges";
 
@@ -18,6 +19,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
+      <SwRegister total={badges.chat + badges.tiradas} />
       <InstallBanner />
       <Nav
         displayName={profile.nickname || profile.displayName}
