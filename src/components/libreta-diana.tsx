@@ -106,7 +106,7 @@ export function LibretaDiana({
       <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
         Modo <strong>Diana</strong> ({DIANA_NOMBRE}): <strong>mantén pulsado</strong>{" "}
         para añadir un impacto y luego <strong>arrastra en cualquier punto</strong>{" "}
-        para moverlo. La puntuación sale del anillo; puedes corregirla con −/+.
+        para moverlo. La puntuación sale del anillo donde cae.
         {finalizada ? " Hoja finalizada (solo lectura)." : ""}
       </p>
 

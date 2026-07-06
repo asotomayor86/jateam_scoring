@@ -189,14 +189,6 @@ export function DianaCanvas({
     }
   }
 
-  function corregir(delta: number) {
-    if (sel == null) return;
-    const next = impacts.map((im, k) =>
-      k === sel ? { ...im, s: clamp(im.s + delta, 0, SPEC.maxScore) } : im,
-    );
-    onChange(next, true);
-  }
-
   function borrarImpacto() {
     if (sel == null) return;
     const next = impacts.filter((_, k) => k !== sel);
@@ -286,18 +278,6 @@ export function DianaCanvas({
             flexWrap: "wrap",
           }}
         >
-          <span style={{ fontSize: "0.85rem", color: "var(--texto-suave)" }}>
-            Impacto seleccionado:
-          </span>
-          <button type="button" className="btn" style={corrBtn} onClick={() => corregir(-1)}>
-            −
-          </button>
-          <strong style={{ minWidth: 22, textAlign: "center", fontSize: "1.05rem" }}>
-            {impacts[sel].s}
-          </strong>
-          <button type="button" className="btn" style={corrBtn} onClick={() => corregir(1)}>
-            +
-          </button>
           <button
             type="button"
             className="btn"
