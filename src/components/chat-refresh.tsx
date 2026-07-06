@@ -26,7 +26,7 @@ export function ChatRefresh() {
           setLast(Date.now());
         });
       }
-    }, 25000);
+    }, 10000);
     return () => clearInterval(t);
   }, [router]);
 
