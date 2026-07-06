@@ -14,12 +14,23 @@ const SPEC = DIANA_25M;
 // Radio del lienzo (mm): el exterior puntuable + un margen para ver impactos al borde.
 const R = radioExterior(SPEC) + 22;
 const VIEW = R * 2;
-const HIT_MM = 16; // radio (mm) para "agarrar" un impacto existente al pinchar
+const HIT_MM = 18; // radio (mm) para seleccionar un impacto al tocarlo
 const DOT_MM = 6; // radio del punto de impacto
-// Desplazamiento del punto respecto al dedo (fracción del lienzo), para que el
-// dedo no tape el impacto al colocarlo con el móvil. Arriba y a la derecha.
-const OFFSET_FRAC_X = 0.06;
-const OFFSET_FRAC_Y = 0.09;
+const LONG_PRESS_MS = 320; // pulsación larga para crear un impacto
+const MOVE_THRESHOLD_PX = 8; // desplazamiento mínimo para considerarlo arrastre
+
+/** Estado de un gesto en curso sobre la diana. */
+type Gesto = {
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  moved: boolean;
+  mode: "pending" | "creating" | "moving" | "idle";
+  target: number; // índice del impacto que se crea/mueve
+  arr: Impacto[]; // copia de trabajo (independiente del ciclo de render)
+  pos: { x: number; y: number }; // posición acumulada del impacto activo (mm)
+};
 
 // Paleta fija de "diana" (se ve igual en claro y oscuro: una diana es una diana).
 const PAPEL = "#e9e4d6";
@@ -52,31 +63,27 @@ export function DianaCanvas({
   onChange: (next: Impacto[], commit: boolean) => void;
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const drag = useRef<{ i: number } | null>(null);
   const [sel, setSel] = useState<number | null>(null);
+  const selRef = useRef<number | null>(sel);
+  selRef.current = sel;
+  const gesto = useRef<Gesto | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stats = estadisticas(impacts);
 
-  // conOffset: con el dedo, el punto tapa el impacto; al COLOCAR/arrastrar se
-  // desplaza hacia arriba-derecha respecto al dedo para poder verlo. Para
-  // DETECTAR un impacto ya colocado se usa la posición real del dedo (sin
-  // offset), así "agarrarlo" tocándolo encima sigue siendo natural.
-  function toModel(e: RPtr<SVGSVGElement>, conOffset: boolean) {
+  function toModelClient(clientX: number, clientY: number) {
     const rect = svgRef.current!.getBoundingClientRect();
-    const off = conOffset && e.pointerType === "touch";
-    const dx = off ? rect.width * OFFSET_FRAC_X : 0;
-    const dy = off ? rect.height * OFFSET_FRAC_Y : 0;
-    const fx = (e.clientX + dx - rect.left) / rect.width;
-    const fy = (e.clientY - dy - rect.top) / rect.height;
+    const fx = (clientX - rect.left) / rect.width;
+    const fy = (clientY - rect.top) / rect.height;
     const x = clamp(-R + fx * VIEW, -R, R);
     const y = clamp(R - fy * VIEW, -R, R); // eje modelo hacia arriba
     return { x, y };
   }
 
-  function nearest(p: { x: number; y: number }): number {
+  function nearest(p: { x: number; y: number }, arr: Impacto[]): number {
     let best = -1;
     let bestD = HIT_MM;
-    impacts.forEach((im, i) => {
+    arr.forEach((im, i) => {
       const d = Math.hypot(im.x - p.x, im.y - p.y);
       if (d <= bestD) {
         bestD = d;
@@ -86,39 +93,98 @@ export function DianaCanvas({
     return best;
   }
 
+  function limpiaTimer() {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  }
+
   function onPointerDown(e: RPtr<SVGSVGElement>) {
     if (finalizada) return;
     e.preventDefault();
     svgRef.current?.setPointerCapture(e.pointerId);
-    const hit = nearest(toModel(e, false)); // detección: posición real del dedo
-    if (hit >= 0) {
-      setSel(hit);
-      drag.current = { i: hit };
-    } else {
-      const p = toModel(e, true); // colocación: desplazada arriba-derecha
+    limpiaTimer();
+    const arr = impacts.map((i) => ({ ...i }));
+    const target = selRef.current ?? -1;
+    gesto.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      moved: false,
+      mode: "pending",
+      target,
+      arr,
+      pos: target >= 0 && arr[target] ? { x: arr[target].x, y: arr[target].y } : { x: 0, y: 0 },
+    };
+    // Pulsación larga => crear un nuevo impacto donde está el dedo.
+    pressTimer.current = setTimeout(() => {
+      const g = gesto.current;
+      if (!g || g.mode !== "pending" || g.moved) return;
+      const p = toModelClient(g.startX, g.startY);
       const nuevo: Impacto = { x: p.x, y: p.y, s: puntuacionDeImpacto(SPEC, p.x, p.y) };
-      const next = [...impacts, nuevo];
-      onChange(next, false);
-      setSel(next.length - 1);
-      drag.current = { i: next.length - 1 };
-    }
+      g.arr = [...g.arr, nuevo];
+      g.target = g.arr.length - 1;
+      g.pos = { x: p.x, y: p.y };
+      g.mode = "creating";
+      setSel(g.target);
+      onChange(
+        g.arr.map((i) => ({ ...i })),
+        false,
+      );
+    }, LONG_PRESS_MS);
+  }
+
+  function aplicaDelta(g: Gesto, dxScreen: number, dyScreen: number) {
+    const rect = svgRef.current!.getBoundingClientRect();
+    g.pos.x = clamp(g.pos.x + dxScreen * (VIEW / rect.width), -R, R);
+    g.pos.y = clamp(g.pos.y - dyScreen * (VIEW / rect.height), -R, R);
+    const i = g.target;
+    if (i < 0 || i >= g.arr.length) return;
+    g.arr[i] = { x: g.pos.x, y: g.pos.y, s: puntuacionDeImpacto(SPEC, g.pos.x, g.pos.y) };
+    onChange(
+      g.arr.map((im) => ({ ...im })),
+      false,
+    );
   }
 
   function onPointerMove(e: RPtr<SVGSVGElement>) {
-    const d = drag.current;
-    if (!d) return;
+    const g = gesto.current;
+    if (!g) return;
     e.preventDefault();
-    const p = toModel(e, true);
-    const next = impacts.map((im, k) =>
-      k === d.i ? { x: p.x, y: p.y, s: puntuacionDeImpacto(SPEC, p.x, p.y) } : im,
-    );
-    onChange(next, false);
+    const dxScreen = e.clientX - g.lastX;
+    const dyScreen = e.clientY - g.lastY;
+    g.lastX = e.clientX;
+    g.lastY = e.clientY;
+    if (!g.moved && Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > MOVE_THRESHOLD_PX) {
+      g.moved = true;
+      if (g.mode === "pending") {
+        limpiaTimer();
+        // Arrastre corto (sin pulsación larga): mover el impacto seleccionado.
+        g.mode = g.target >= 0 ? "moving" : "idle";
+      }
+    }
+    if (g.mode === "creating" || g.mode === "moving") {
+      aplicaDelta(g, dxScreen, dyScreen);
+    }
   }
 
   function onPointerUp() {
-    if (!drag.current) return;
-    drag.current = null;
-    onChange(impacts, true); // persiste el estado actual
+    limpiaTimer();
+    const g = gesto.current;
+    gesto.current = null;
+    if (!g) return;
+    if (g.mode === "creating" || g.mode === "moving") {
+      onChange(
+        g.arr.map((i) => ({ ...i })),
+        true,
+      );
+    } else if (g.mode === "pending" && !g.moved) {
+      // Toque corto: selecciona el impacto cercano (para luego moverlo).
+      const hit = nearest(toModelClient(g.startX, g.startY), g.arr);
+      if (hit >= 0) setSel(hit);
+    }
   }
 
   function corregir(delta: number) {
@@ -158,9 +224,23 @@ export function DianaCanvas({
       >
         <Anillos />
         {stats && (
-          <g stroke={MPI_COLOR} strokeWidth={2.4} opacity={0.9}>
-            <line x1={stats.mpiX - 10} y1={-stats.mpiY} x2={stats.mpiX + 10} y2={-stats.mpiY} />
-            <line x1={stats.mpiX} y1={-stats.mpiY - 10} x2={stats.mpiX} y2={-stats.mpiY + 10} />
+          <g>
+            {stats.covering > 1 && (
+              <circle
+                cx={stats.mpiX}
+                cy={-stats.mpiY}
+                r={stats.covering}
+                fill="none"
+                stroke={MPI_COLOR}
+                strokeWidth={1.6}
+                strokeDasharray="6 5"
+                opacity={0.55}
+              />
+            )}
+            <g stroke={MPI_COLOR} strokeWidth={2.4} opacity={0.9}>
+              <line x1={stats.mpiX - 10} y1={-stats.mpiY} x2={stats.mpiX + 10} y2={-stats.mpiY} />
+              <line x1={stats.mpiX} y1={-stats.mpiY - 10} x2={stats.mpiX} y2={-stats.mpiY + 10} />
+            </g>
           </g>
         )}
         {impacts.map((im, i) => (
@@ -179,6 +259,20 @@ export function DianaCanvas({
           <ValorFlotante im={impacts[sel]} />
         )}
       </svg>
+
+      {!finalizada && (
+        <p
+          style={{
+            margin: "0.4rem 0 0",
+            fontSize: "0.75rem",
+            color: "var(--texto-suave)",
+            textAlign: "center",
+          }}
+        >
+          Mantén pulsado para añadir · arrastra en cualquier punto para mover el
+          seleccionado
+        </p>
+      )}
 
       {!finalizada && sel != null && impacts[sel] && (
         <div

@@ -84,6 +84,8 @@ export type EstadisticasDiana = {
   spread: number;
   /** Dispersión media respecto al centro de agrupación (mm). */
   dispersion: number;
+  /** Radio que engloba todos los impactos desde el centro de agrupación (mm). */
+  covering: number;
 };
 
 /**
@@ -105,10 +107,16 @@ export function estadisticas(impactos: readonly Impacto[]): EstadisticasDiana | 
       if (d > spread) spread = d;
     }
   }
-  const dispersion =
-    impactos.reduce((a, i) => a + Math.hypot(i.x - mpiX, i.y - mpiY), 0) / n;
+  let dispersion = 0;
+  let covering = 0;
+  for (const i of impactos) {
+    const d = Math.hypot(i.x - mpiX, i.y - mpiY);
+    dispersion += d;
+    if (d > covering) covering = d;
+  }
+  dispersion /= n;
 
-  return { n, mpiX, mpiY, offset, spread, dispersion };
+  return { n, mpiX, mpiY, offset, spread, dispersion, covering };
 }
 
 /** Redondea a un decimal para mostrar (mm). */

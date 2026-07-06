@@ -104,9 +104,9 @@ export function LibretaDiana({
       </div>
 
       <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
-        Modo <strong>Diana</strong> ({DIANA_NOMBRE}): pincha en la diana para marcar
-        cada impacto y <strong>arrastra</strong> para afinar. La puntuación sale del
-        anillo; puedes corregirla a mano tocando un impacto.
+        Modo <strong>Diana</strong> ({DIANA_NOMBRE}): <strong>mantén pulsado</strong>{" "}
+        para añadir un impacto y luego <strong>arrastra en cualquier punto</strong>{" "}
+        para moverlo. La puntuación sale del anillo; puedes corregirla con −/+.
         {finalizada ? " Hoja finalizada (solo lectura)." : ""}
       </p>
 
