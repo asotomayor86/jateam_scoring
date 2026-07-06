@@ -23,7 +23,8 @@ export default async function HiloPage({
   const hilo = await getThread(id);
   if (!hilo) notFound();
   const mensajes = await getMessages(id);
-  const puedeBorrarHilo = hilo.createdBy === user.id || profile.isAdmin;
+  // Solo el encargado puede borrar hilos.
+  const puedeBorrarHilo = profile.isAdmin;
 
   return (
     <>

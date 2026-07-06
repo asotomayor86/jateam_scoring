@@ -106,20 +106,12 @@ export async function responder(
   return { ok: true };
 }
 
-/** Borra un hilo entero (solo autor o encargado). */
+/** Borra un hilo entero. Solo el encargado. */
 export async function borrarHilo(formData: FormData): Promise<void> {
-  const { user, profile } = await requireUser();
+  const { profile } = await requireUser();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  const [hilo] = await db
-    .select({ createdBy: chatThreads.createdBy })
-    .from(chatThreads)
-    .where(eq(chatThreads.id, id))
-    .limit(1);
-  if (!hilo) redirect("/chat");
-  if (hilo.createdBy !== user.id && !profile.isAdmin) {
-    redirect(`/chat/${id}`);
-  }
+  if (!profile.isAdmin) redirect(`/chat/${id}`);
   await db.delete(chatThreads).where(eq(chatThreads.id, id));
   revalidatePath("/chat");
   redirect("/chat");
