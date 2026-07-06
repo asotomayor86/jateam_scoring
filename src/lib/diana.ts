@@ -24,8 +24,10 @@ export type DianaSpec = {
   maxScore: number;
   /** mm: radio de la zona negra (solo visual). */
   blackR: number;
-  /** mm: diámetro del balín/proyectil. La puntuación cuenta por el BORDE del
-   * impacto: si el agujero toca la línea de un anillo, vale ese anillo. */
+  /** mm: diámetro del punto de impacto tal como se dibuja en la diana. La
+   * puntuación cuenta por su BORDE: si el punto toca la línea de un anillo, vale
+   * ese anillo (lo que ves es lo que puntúa). El lienzo dibuja el punto con este
+   * mismo diámetro para que coincidan. */
   caliberMm: number;
   /** ¿puntúa con décimas? (aire). De momento no. */
   decimals: boolean;
@@ -42,7 +44,7 @@ export const DIANA_25M: DianaSpec = {
   innerTenR: 12.5,
   maxScore: 10,
   blackR: 100,
-  caliberMm: 5.6, // .22 LR
+  caliberMm: 12, // diámetro del punto en pantalla = lo que puntúa por su borde
   decimals: false,
 };
 

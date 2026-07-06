@@ -15,7 +15,9 @@ const SPEC = DIANA_25M;
 const R = radioExterior(SPEC) + 22;
 const VIEW = R * 2;
 const HIT_MM = 18; // radio (mm) para seleccionar un impacto al tocarlo
-const DOT_MM = 6; // radio del punto de impacto
+// Radio del punto = mitad del calibre: así el BORDE del punto que se ve es justo
+// el que decide la puntuación (lo que ves es lo que puntúa).
+const DOT_MM = SPEC.caliberMm / 2;
 const LONG_PRESS_MS = 320; // pulsación larga para crear un impacto
 const MOVE_THRESHOLD_PX = 8; // desplazamiento mínimo para considerarlo arrastre
 
