@@ -110,6 +110,7 @@ export default async function LibretaPage({
             idx: s.idx,
             blancoNuevo: s.blancoNuevo,
             buckets: s.buckets,
+            impacts: s.impacts,
           }))}
           finalizada={hoja.status === "finalizada"}
           permiteAjuste={tirada.type !== "entrenamiento"}
@@ -133,6 +134,7 @@ export default async function LibretaPage({
             shotCount: s.shotCount,
             subtotal: s.subtotal,
             inner: s.inner,
+            impacts: s.impacts,
           }))}
           preferTotal={hoja.granularity !== "tiro"}
           totalInicial={hoja.total}

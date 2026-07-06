@@ -9,7 +9,10 @@ import {
   reabrirHoja,
 } from "@/actions/scorecards";
 import { parseTiro, redondea1, formatPunt } from "@/lib/scoring";
+import { DIANA_25M, type Impacto, radio, esDiezInterior } from "@/lib/diana";
 import { Card } from "@/components/ui";
+import { DianaCanvas } from "@/components/diana-canvas";
+import { DianaToggle } from "@/components/diana-toggle";
 import { AjusteFinalField } from "@/components/ajuste-final";
 import { SeriesTimer } from "@/components/series-timer";
 import { faseSerie, planTimer } from "@/lib/fases";
@@ -20,6 +23,7 @@ type SerieInicial = {
   shotCount: number;
   subtotal: number;
   inner: number;
+  impacts: Impacto[] | null;
 };
 
 type Modalidad = {
@@ -30,7 +34,7 @@ type Modalidad = {
   maxPerShot: number;
 };
 
-type ModoFila = "tiros" | "total";
+type ModoFila = "tiros" | "total" | "diana";
 type EstadoGuardado = "" | "guardando" | "guardado" | "error";
 
 type Fila = {
@@ -41,6 +45,8 @@ type Fila = {
   // En modo "total": el total escrito a mano + dieces opcionales.
   totalStr: string;
   innerStr: string;
+  // En modo "diana": impactos colocados en la diana gráfica.
+  impacts: Impacto[];
   estado: EstadoGuardado;
 };
 
@@ -54,11 +60,23 @@ function filasIniciales(
   return Array.from({ length: mod.seriesCount }, (_, i) => {
     const idx = i + 1;
     const s = porIdx.get(idx);
+    // Si la serie tiene impactos guardados, se abre en modo diana.
+    if (s && s.impacts && s.impacts.length > 0) {
+      return {
+        idx,
+        modo: "diana" as const,
+        celdas: Array(mod.defaultSeriesSize).fill(""),
+        totalStr: "",
+        innerStr: "",
+        impacts: s.impacts,
+        estado: "" as const,
+      };
+    }
     if (s && s.shots) {
       const celdas = Array.from({ length: mod.defaultSeriesSize }, (_, j) =>
         s.shots && j < s.shots.length ? formatPunt(s.shots[j], mod.allowsDecimals) : "",
       );
-      return { idx, modo: "tiros" as const, celdas, totalStr: "", innerStr: "", estado: "" as const };
+      return { idx, modo: "tiros" as const, celdas, totalStr: "", innerStr: "", impacts: [], estado: "" as const };
     }
     if (s) {
       return {
@@ -67,6 +85,7 @@ function filasIniciales(
         celdas: Array(mod.defaultSeriesSize).fill(""),
         totalStr: formatPunt(s.subtotal, mod.allowsDecimals),
         innerStr: s.inner ? String(s.inner) : "",
+        impacts: [],
         estado: "" as const,
       };
     }
@@ -76,6 +95,7 @@ function filasIniciales(
       celdas: Array(mod.defaultSeriesSize).fill(""),
       totalStr: "",
       innerStr: "",
+      impacts: [],
       estado: "" as const,
     };
   });
@@ -83,6 +103,18 @@ function filasIniciales(
 
 /** Calcula subtotal, dieces y array de tiros de una fila según su modo. */
 function calcula(fila: Fila, mod: Modalidad) {
+  if (fila.modo === "diana") {
+    const shots = fila.impacts.map((i) => i.s);
+    const inner = fila.impacts.filter((i) =>
+      esDiezInterior(DIANA_25M, radio(i.x, i.y)),
+    ).length;
+    return {
+      shots: shots.length ? shots : null,
+      subtotal: redondea1(shots.reduce((a, b) => a + b, 0)),
+      inner,
+      vacio: shots.length === 0,
+    };
+  }
   if (fila.modo === "tiros") {
     const shots: number[] = [];
     let inner = 0;
@@ -176,7 +208,41 @@ export function Libreta({
               shotCount: modalidad.defaultSeriesSize,
               subtotal: c.subtotal,
               inner: c.inner,
+              impacts: null, // en casillas no hay diana
             });
+        if (r.ok) {
+          if (typeof r.total === "number") setTotal(r.total);
+          if (typeof r.innerCount === "number") setInner(r.innerCount);
+          setEstado(idx, "guardado");
+        } else {
+          setEstado(idx, "error");
+        }
+      } catch {
+        setEstado(idx, "error");
+      }
+    },
+    [modalidad, scorecardId, setEstado],
+  );
+
+  /** Guarda una serie apuntada en la diana: deriva tiros y dieces de los impactos. */
+  const guardarDianaTiro = useCallback(
+    async (idx: number, impacts: Impacto[]) => {
+      setEstado(idx, "guardando");
+      const shots = impacts.map((i) => i.s);
+      const inner = impacts.filter((i) => esDiezInterior(DIANA_25M, radio(i.x, i.y))).length;
+      try {
+        const r =
+          impacts.length === 0
+            ? await borrarSerie({ scorecardId, idx })
+            : await guardarSerie({
+                scorecardId,
+                idx,
+                shots,
+                shotCount: modalidad.defaultSeriesSize,
+                subtotal: redondea1(shots.reduce((a, b) => a + b, 0)),
+                inner,
+                impacts,
+              });
         if (r.ok) {
           if (typeof r.total === "number") setTotal(r.total);
           if (typeof r.innerCount === "number") setInner(r.innerCount);
@@ -229,6 +295,32 @@ export function Libreta({
     setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, modo } : f)));
     // Guardamos el cambio (recalcula con el nuevo modo).
     programar(idx);
+  }
+
+  function actualizaImpactos(idx: number, next: Impacto[], commit: boolean) {
+    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, impacts: next } : f)));
+    if (commit) guardarDianaTiro(idx, next);
+  }
+
+  /** Conmuta una serie entre las casillas y la diana gráfica. */
+  function toggleDiana(idx: number) {
+    const eraDiana = filasRef.current.find((f) => f.idx === idx)?.modo === "diana";
+    setFilas((prev) =>
+      prev.map((f) => {
+        if (f.idx !== idx) return f;
+        if (f.modo === "diana") {
+          // Volver a casillas: se vuelcan los impactos a las celdas.
+          const celdas = Array.from({ length: modalidad.defaultSeriesSize }, (_, j) =>
+            j < f.impacts.length ? formatPunt(f.impacts[j].s, modalidad.allowsDecimals) : "",
+          );
+          return { ...f, modo: "tiros", celdas };
+        }
+        return { ...f, modo: "diana" };
+      }),
+    );
+    // Al SALIR de la diana se persiste (guarda casillas y limpia impactos).
+    // Al ENTRAR no se guarda hasta que se coloca algún impacto.
+    if (eraDiana) programar(idx);
   }
 
   return (
@@ -297,10 +389,12 @@ export function Libreta({
       {filas.map((fila) => {
         const c = calcula(fila, modalidad);
         const completa =
-          fila.modo === "tiros"
-            ? fila.celdas.filter((x) => x.trim() !== "").length ===
-              modalidad.defaultSeriesSize
-            : fila.totalStr.trim() !== "";
+          fila.modo === "diana"
+            ? fila.impacts.length === modalidad.defaultSeriesSize
+            : fila.modo === "tiros"
+              ? fila.celdas.filter((x) => x.trim() !== "").length ===
+                modalidad.defaultSeriesSize
+              : fila.totalStr.trim() !== "";
         const fase = faseSerie(modalitySlug, fila.idx);
         const plan = planTimer(tipo, modalitySlug, fila.idx);
         return (
@@ -337,11 +431,11 @@ export function Libreta({
               </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)" }}>
-                  {(fila.modo === "tiros"
-                    ? (c.shots?.length ?? 0)
-                    : fila.totalStr.trim()
+                  {(fila.modo === "total"
+                    ? fila.totalStr.trim()
                       ? modalidad.defaultSeriesSize
-                      : 0)}{" "}
+                      : 0
+                    : (c.shots?.length ?? 0))}{" "}
                   tiros
                 </span>
                 <span
@@ -354,7 +448,7 @@ export function Libreta({
                 >
                   {formatPunt(c.subtotal, modalidad.allowsDecimals)}
                 </span>
-                {!finalizada && (
+                {!finalizada && fila.modo !== "diana" && (
                   <select
                     aria-label="Modo de apunte"
                     value={fila.modo}
@@ -374,10 +468,22 @@ export function Libreta({
                     <option value="total">Total</option>
                   </select>
                 )}
+                {!finalizada && (
+                  <DianaToggle
+                    activo={fila.modo === "diana"}
+                    onClick={() => toggleDiana(fila.idx)}
+                  />
+                )}
               </div>
             </div>
 
-            {fila.modo === "tiros" ? (
+            {fila.modo === "diana" ? (
+              <DianaCanvas
+                impacts={fila.impacts}
+                finalizada={finalizada}
+                onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
+              />
+            ) : fila.modo === "tiros" ? (
               <div className="serie-grid">
                 {fila.celdas.map((valor, j) => (
                   <input

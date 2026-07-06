@@ -15,7 +15,10 @@ import {
   redondea1,
   formatPunt,
 } from "@/lib/scoring";
+import type { Impacto } from "@/lib/diana";
 import { Card } from "@/components/ui";
+import { DianaCanvas } from "@/components/diana-canvas";
+import { DianaToggle } from "@/components/diana-toggle";
 import { AjusteFinalField } from "@/components/ajuste-final";
 import { SeriesTimer } from "@/components/series-timer";
 import { faseSerie, planTimer } from "@/lib/fases";
@@ -24,6 +27,7 @@ type SerieInicial = {
   idx: number;
   blancoNuevo: boolean;
   buckets: number[] | null;
+  impacts: Impacto[] | null;
 };
 
 type Modalidad = {
@@ -39,10 +43,22 @@ type Fila = {
   idx: number;
   blancoNuevo: boolean;
   counts: string[]; // recuento ACUMULADO escrito por valor (10..0)
+  usaDiana: boolean; // si se apunta con la diana gráfica en vez de las casillas
+  impacts: Impacto[];
   estado: EstadoGuardado;
 };
 
 const CEROS = () => ASISTIDO_VALORES.map(() => "");
+
+/** Recuento por valor (10..0) a partir de los impactos de la diana. */
+function histograma(impacts: Impacto[]): number[] {
+  const h = ASISTIDO_VALORES.map(() => 0);
+  for (const im of impacts) {
+    const j = 10 - im.s; // ASISTIDO_VALORES = [10,9,…,0] ⇒ índice = 10 − valor
+    if (j >= 0 && j < h.length) h[j]++;
+  }
+  return h;
+}
 
 function filasIniciales(series: SerieInicial[], mod: Modalidad): Fila[] {
   const porIdx = new Map(series.map((s) => [s.idx, s]));
@@ -55,6 +71,8 @@ function filasIniciales(series: SerieInicial[], mod: Modalidad): Fila[] {
       counts: s?.buckets
         ? ASISTIDO_VALORES.map((_, j) => String(s.buckets?.[j] ?? 0))
         : CEROS(),
+      usaDiana: !!(s?.impacts && s.impacts.length > 0),
+      impacts: s?.impacts ?? [],
       estado: "" as const,
     };
   });
@@ -134,6 +152,7 @@ export function LibretaAsistida({
           idx,
           blancoNuevo: fila.blancoNuevo,
           buckets: nums(fila),
+          impacts: fila.usaDiana ? fila.impacts : null,
         });
         setEstado(idx, r.ok ? "guardado" : "error");
       } catch {
@@ -142,6 +161,46 @@ export function LibretaAsistida({
     },
     [scorecardId, setEstado],
   );
+
+  /** Guarda un recuento apuntado en la diana: deriva el histograma por valor. */
+  const guardarDianaAsistida = useCallback(
+    async (idx: number, impacts: Impacto[]) => {
+      const fila = filasRef.current.find((f) => f.idx === idx);
+      const blancoNuevo = fila?.blancoNuevo ?? idx === 1;
+      setEstado(idx, "guardando");
+      try {
+        const r = await guardarSerieAsistida({
+          scorecardId,
+          idx,
+          blancoNuevo,
+          buckets: histograma(impacts),
+          impacts,
+        });
+        setEstado(idx, r.ok ? "guardado" : "error");
+      } catch {
+        setEstado(idx, "error");
+      }
+    },
+    [scorecardId, setEstado],
+  );
+
+  function actualizaImpactos(idx: number, next: Impacto[], commit: boolean) {
+    const counts = histograma(next).map(String);
+    setFilas((prev) =>
+      prev.map((f) => (f.idx === idx ? { ...f, impacts: next, counts } : f)),
+    );
+    if (commit) guardarDianaAsistida(idx, next);
+  }
+
+  /** Conmuta una serie entre las casillas de recuento y la diana gráfica. */
+  function toggleDiana(idx: number) {
+    const era = filasRef.current.find((f) => f.idx === idx)?.usaDiana;
+    setFilas((prev) =>
+      prev.map((f) => (f.idx === idx ? { ...f, usaDiana: !f.usaDiana } : f)),
+    );
+    // Al SALIR de la diana se persiste (guarda el recuento y limpia impactos).
+    if (era) programar(idx);
+  }
 
   const programar = useCallback(
     (idx: number) => {
@@ -280,36 +339,50 @@ export function LibretaAsistida({
                 >
                   {fila.blancoNuevo ? "● Blanco nuevo" : "○ Blanco nuevo"}
                 </button>
+                {!finalizada && (
+                  <DianaToggle
+                    activo={fila.usaDiana}
+                    onClick={() => toggleDiana(fila.idx)}
+                  />
+                )}
               </div>
             </div>
 
-            <div className="serie-grid">
-              {ASISTIDO_VALORES.map((valor, j) => (
-                <label
-                  key={valor}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 2,
-                  }}
-                >
-                  <span style={{ fontSize: "0.7rem", color: "var(--texto-suave)" }}>
-                    {valor}
-                  </span>
-                  <input
-                    className="tiro-input"
-                    inputMode="numeric"
-                    maxLength={3}
-                    disabled={finalizada}
-                    value={fila.counts[j]}
-                    placeholder="0"
-                    onChange={(e) => cambiaCount(fila.idx, j, e.target.value)}
-                    onBlur={() => guardar(fila.idx)}
-                  />
-                </label>
-              ))}
-            </div>
+            {fila.usaDiana ? (
+              <DianaCanvas
+                impacts={fila.impacts}
+                finalizada={finalizada}
+                onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
+              />
+            ) : (
+              <div className="serie-grid">
+                {ASISTIDO_VALORES.map((valor, j) => (
+                  <label
+                    key={valor}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <span style={{ fontSize: "0.7rem", color: "var(--texto-suave)" }}>
+                      {valor}
+                    </span>
+                    <input
+                      className="tiro-input"
+                      inputMode="numeric"
+                      maxLength={3}
+                      disabled={finalizada}
+                      value={fila.counts[j]}
+                      placeholder="0"
+                      onChange={(e) => cambiaCount(fila.idx, j, e.target.value)}
+                      onBlur={() => guardar(fila.idx)}
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
 
             <div
               style={{

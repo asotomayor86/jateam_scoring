@@ -129,6 +129,18 @@ async function recomputar(
   return { total, innerCount, series: calculadas };
 }
 
+// Impactos sobre la diana (mm desde el centro + puntuación). Reutilizado por
+// varios modos: cuando una serie se apunta con la diana gráfica.
+const impactosSchema = z
+  .array(
+    z.object({
+      x: z.number().min(-400).max(400),
+      y: z.number().min(-400).max(400),
+      s: z.number().int().min(0).max(10),
+    }),
+  )
+  .max(60);
+
 const esquemaSerie = z.object({
   scorecardId: z.string().uuid(),
   idx: z.number().int().min(1).max(100),
@@ -138,6 +150,8 @@ const esquemaSerie = z.object({
   inner: z.number().int().min(0).max(50),
   // Solo entrenamiento modular: tipo de módulo de la serie.
   moduleType: z.string().max(20).nullable().optional(),
+  // Si la serie se apuntó con la diana gráfica: sus impactos (o null si no).
+  impacts: impactosSchema.nullable().optional(),
 });
 
 /**
@@ -171,6 +185,7 @@ export async function guardarSerie(
         subtotal: redondea1(d.subtotal),
         inner: d.inner,
         moduleType: d.moduleType ?? null,
+        impacts: d.impacts ?? null,
       })
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
@@ -180,6 +195,7 @@ export async function guardarSerie(
           subtotal: redondea1(d.subtotal),
           inner: d.inner,
           moduleType: d.moduleType ?? null,
+          impacts: d.impacts ?? null,
         },
       });
   } catch (e) {
@@ -197,6 +213,8 @@ const esquemaAsistida = z.object({
   idx: z.number().int().min(1).max(100),
   blancoNuevo: z.boolean(),
   buckets: z.array(z.number().int().min(0).max(200)).length(ASISTIDO_VALORES.length),
+  // Si el recuento se apuntó con la diana gráfica: sus impactos (o null si no).
+  impacts: impactosSchema.nullable().optional(),
 });
 
 /**
@@ -233,10 +251,11 @@ export async function guardarSerieAsistida(
         inner: 0,
         blancoNuevo: d.blancoNuevo,
         buckets: d.buckets,
+        impacts: d.impacts ?? null,
       })
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
-        set: { blancoNuevo: d.blancoNuevo, buckets: d.buckets },
+        set: { blancoNuevo: d.blancoNuevo, buckets: d.buckets, impacts: d.impacts ?? null },
       });
   } catch (e) {
     console.error("guardarSerieAsistida error:", e);
@@ -251,15 +270,7 @@ export async function guardarSerieAsistida(
 const esquemaDiana = z.object({
   scorecardId: z.string().uuid(),
   idx: z.number().int().min(1).max(100),
-  impacts: z
-    .array(
-      z.object({
-        x: z.number().min(-400).max(400),
-        y: z.number().min(-400).max(400),
-        s: z.number().int().min(0).max(10),
-      }),
-    )
-    .max(60),
+  impacts: impactosSchema,
   // Solo si la diana es una serie de un entrenamiento modular: tipo de módulo.
   moduleType: z.string().max(20).nullable().optional(),
 });
