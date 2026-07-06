@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireUser } from "@/auth/helpers";
 import {
@@ -43,6 +43,48 @@ async function hojaEditable(scorecardId: string, userId: string) {
 }
 
 const CEROS = () => ASISTIDO_VALORES.map(() => 0);
+
+const esquemaGranularidad = z.object({
+  scorecardId: z.string().uuid(),
+  granularity: z.enum(["tiro", "bloque5", "bloque10", "serie", "asistido"]),
+});
+
+/**
+ * Cambia el modo de apunte (granularidad) de la hoja. Solo se permite mientras
+ * no haya ningún apunte de disparo (las filas de "ejercicio" no cuentan), para
+ * no reinterpretar datos ya introducidos.
+ */
+export async function cambiarGranularidad(
+  input: z.input<typeof esquemaGranularidad>,
+): Promise<{ ok: boolean; mensaje?: string }> {
+  const { user } = await requireUser();
+  const parsed = esquemaGranularidad.safeParse(input);
+  if (!parsed.success) return { ok: false, mensaje: "Modo no válido" };
+  const d = parsed.data;
+
+  const hoja = await hojaEditable(d.scorecardId, user.id);
+  if (!hoja || hoja.status !== "borrador") {
+    return { ok: false, mensaje: "No puedes editar esta hoja" };
+  }
+
+  // Si ya hay alguna serie de disparo (no ejercicio), no se permite cambiar.
+  const conApuntes = await db
+    .select({ id: series.id })
+    .from(series)
+    .where(and(eq(series.scorecardId, d.scorecardId), isNull(series.exerciseId)))
+    .limit(1);
+  if (conApuntes.length > 0) {
+    return { ok: false, mensaje: "Ya hay apuntes; no se puede cambiar el modo" };
+  }
+
+  await db
+    .update(scorecards)
+    .set({ granularity: d.granularity })
+    .where(eq(scorecards.id, d.scorecardId));
+  revalidatePath(`/tiradas/${hoja.tiradaId}/libreta`);
+  revalidatePath(`/tiradas/${hoja.tiradaId}`);
+  return { ok: true };
+}
 
 /**
  * Recalcula la hoja a partir de sus series y actualiza total/dieces.

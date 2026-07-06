@@ -8,6 +8,7 @@ import { Libreta } from "@/components/libreta";
 import { LibretaAsistida } from "@/components/libreta-asistida";
 import { LibretaModular } from "@/components/libreta-modular";
 import { LibretaDiana } from "@/components/libreta-diana";
+import { CambiarGranularidad } from "@/components/cambiar-granularidad";
 import { SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +62,13 @@ export default async function LibretaPage({
         {tirada.modalityName}
         {tirada.caliber ? ` · ${tirada.caliber}` : ""} · {tirada.date}
       </p>
+
+      {hoja.status !== "finalizada" &&
+      hoja.series.filter((s) => !s.exerciseId).length === 0 ? (
+        <div style={{ marginBottom: "0.7rem" }}>
+          <CambiarGranularidad scorecardId={hoja.id} actual={hoja.granularity} />
+        </div>
+      ) : null}
 
       {esModular ? (
         <LibretaModular
