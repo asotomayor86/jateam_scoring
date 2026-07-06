@@ -316,6 +316,40 @@ export const exercises = pgTable("exercises", {
     .defaultNow(),
 });
 
+/**
+ * Chat del grupo por hilos. Un usuario crea un hilo y dentro se responden.
+ * Retención: los mensajes de más de 3 meses se filtran al leer y se purgan de
+ * forma perezosa (al listar/publicar); los hilos sin actividad reciente caducan.
+ */
+export const chatThreads = pgTable("chat_threads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  createdBy: text("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  // Última actividad (creación o último mensaje): ordena y decide la caducidad.
+  lastActivityAt: timestamp("last_activity_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  threadId: uuid("thread_id")
+    .notNull()
+    .references(() => chatThreads.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // --- Tipos inferidos ---------------------------------------------------------
 
 export type TiradaType = (typeof tiradaType.enumValues)[number];

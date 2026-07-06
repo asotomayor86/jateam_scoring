@@ -499,3 +499,13 @@ a {
   font-size: 0.62rem;
   color: var(--texto-suave);
 }
+
+/* Giro del botón de refresco del chat. */
+.girando {
+  animation: girar 0.8s linear infinite;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}

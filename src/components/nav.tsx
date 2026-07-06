@@ -21,6 +21,7 @@ const enlaces = [
   { href: "/clubs", label: "Campos" },
   { href: "/comidas", label: "Comidas" },
   { href: "/restaurantes", label: "Restaurantes" },
+  { href: "/chat", label: "Chat" },
   { href: "/perfil", label: "Perfil" },
 ];
 

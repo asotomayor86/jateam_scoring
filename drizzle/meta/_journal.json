@@ -99,6 +99,13 @@
       "when": 1783359273220,
       "tag": "0013_premium_war_machine",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1783371111508,
+      "tag": "0014_green_stature",
+      "breakpoints": true
     }
   ]
 }
