@@ -163,6 +163,10 @@ export function DianaCanvas({
             strokeWidth={i === sel ? 3 : 1.2}
           />
         ))}
+        {/* Valor flotante del impacto seleccionado / que se está colocando. */}
+        {sel != null && impacts[sel] && (
+          <ValorFlotante im={impacts[sel]} />
+        )}
       </svg>
 
       {!finalizada && sel != null && impacts[sel] && (
@@ -230,6 +234,31 @@ export function DianaCanvas({
         </div>
       )}
     </>
+  );
+}
+
+/** Valor numérico del impacto, flotando a su lado (halo blanco para legibilidad). */
+function ValorFlotante({ im }: { im: Impacto }) {
+  // Si el impacto está pegado al borde derecho, la etiqueta va a su izquierda.
+  const derecha = im.x < R - 70;
+  const x = im.x + (derecha ? DOT_MM + 6 : -(DOT_MM + 6));
+  const y = -im.y - (DOT_MM + 8);
+  return (
+    <text
+      x={x}
+      y={y}
+      fontSize={24}
+      fontWeight={800}
+      textAnchor={derecha ? "start" : "end"}
+      dominantBaseline="central"
+      fill="#111"
+      stroke="#fff"
+      strokeWidth={4.5}
+      paintOrder="stroke"
+      style={{ pointerEvents: "none" }}
+    >
+      {im.s}
+    </text>
   );
 }
 
