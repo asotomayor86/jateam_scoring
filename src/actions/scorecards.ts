@@ -88,6 +88,25 @@ async function recomputar(
         calculadas.push({ idx: f.idx, subtotal: 0, shotCount: 0 });
         continue;
       }
+      // Series apuntadas con la diana: sus buckets son su histograma PROPIO
+      // (incremental). Puntúan directamente, sin restar ni avanzar el acumulado
+      // del blanco (los impactos previos se muestran en gris en el cliente).
+      if (f.impacts && f.impacts.length > 0) {
+        const own = f.buckets ?? CEROS();
+        const subtotal = puntosDeRecuento(own);
+        const shotCount = tirosDeRecuento(own);
+        const inner = own[0] || 0;
+        total += subtotal;
+        innerCount += inner;
+        if (f.subtotal !== subtotal || f.shotCount !== shotCount || f.inner !== inner) {
+          await db
+            .update(series)
+            .set({ subtotal, shotCount, inner })
+            .where(eq(series.id, f.id));
+        }
+        calculadas.push({ idx: f.idx, subtotal, shotCount });
+        continue;
+      }
       const acumulado = f.buckets ?? CEROS();
       if (f.blancoNuevo) prev = CEROS();
       const incremental = restaRecuentos(acumulado, prev);
@@ -215,6 +234,8 @@ const esquemaAsistida = z.object({
   buckets: z.array(z.number().int().min(0).max(200)).length(ASISTIDO_VALORES.length),
   // Si el recuento se apuntó con la diana gráfica: sus impactos (o null si no).
   impacts: impactosSchema.nullable().optional(),
+  // Solo asistido dentro de un modular: tipo de módulo (para conservarlo).
+  moduleType: z.string().max(20).nullable().optional(),
 });
 
 /**
@@ -252,7 +273,9 @@ export async function guardarSerieAsistida(
         blancoNuevo: d.blancoNuevo,
         buckets: d.buckets,
         impacts: d.impacts ?? null,
+        moduleType: d.moduleType ?? null,
       })
+      // No se toca moduleType al actualizar: se fija al crear la fila.
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
         set: { blancoNuevo: d.blancoNuevo, buckets: d.buckets, impacts: d.impacts ?? null },

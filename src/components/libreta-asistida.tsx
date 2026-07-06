@@ -93,6 +93,18 @@ function calculaTodo(filas: Fila[]) {
   let inner = 0;
   const porFila = new Map<number, { subtotal: number; tiros: number }>();
   for (const f of filas) {
+    // Serie con diana: sus impactos son los PROPIOS de esa serie (los previos se
+    // ven en gris). Puntúa su histograma propio, sin restar ni avanzar el
+    // acumulado del blanco.
+    if (f.usaDiana) {
+      const own = histograma(f.impacts);
+      const subtotal = puntosDeRecuento(own);
+      const tiros = tirosDeRecuento(own);
+      total += subtotal;
+      inner += own[0] || 0;
+      porFila.set(f.idx, { subtotal, tiros });
+      continue;
+    }
     const acumulado = nums(f);
     if (f.blancoNuevo) prev = ASISTIDO_VALORES.map(() => 0);
     const incremental = restaRecuentos(acumulado, prev);
@@ -104,6 +116,20 @@ function calculaTodo(filas: Fila[]) {
     porFila.set(f.idx, { subtotal, tiros });
   }
   return { porFila, total, inner };
+}
+
+/** Impactos acumulados del blanco en las series ANTERIORES a `idx` (referencia gris). */
+function fondoDe(filas: Fila[], idx: number): Impacto[] {
+  let inicio = 0;
+  for (let i = 0; i < filas.length; i++) {
+    if (filas[i].blancoNuevo) inicio = i;
+    if (filas[i].idx === idx) {
+      const acc: Impacto[] = [];
+      for (let k = inicio; k < i; k++) acc.push(...filas[k].impacts);
+      return acc;
+    }
+  }
+  return [];
 }
 
 export function LibretaAsistida({
@@ -351,6 +377,7 @@ export function LibretaAsistida({
             {fila.usaDiana ? (
               <DianaCanvas
                 impacts={fila.impacts}
+                background={fondoDe(filas, fila.idx)}
                 finalizada={finalizada}
                 onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
               />

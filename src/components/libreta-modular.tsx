@@ -140,6 +140,30 @@ function numsAsistido(fila: Fila): number[] {
   });
 }
 
+/** Recuento por valor (10..0) a partir de los impactos de la diana. */
+function histograma(impacts: Impacto[]): number[] {
+  const h = ASISTIDO_VALORES.map(() => 0);
+  for (const im of impacts) {
+    const j = 10 - im.s;
+    if (j >= 0 && j < h.length) h[j]++;
+  }
+  return h;
+}
+
+/** Impactos acumulados de los módulos ANTERIORES del mismo blanco (referencia gris). */
+function fondoModular(modulos: Fila[], idx: number): Impacto[] {
+  let inicio = 0;
+  for (let i = 0; i < modulos.length; i++) {
+    if (modulos[i].blancoNuevo) inicio = i;
+    if (modulos[i].idx === idx) {
+      const acc: Impacto[] = [];
+      for (let k = inicio; k < i; k++) acc.push(...modulos[k].impacts);
+      return acc;
+    }
+  }
+  return [];
+}
+
 /** Subtotales asistido con encadenado por "blanco nuevo" (salta ejercicios). */
 function calcAsistido(filas: Fila[]) {
   let prev = ASISTIDO_VALORES.map(() => 0);
@@ -147,6 +171,17 @@ function calcAsistido(filas: Fila[]) {
   const porFila = new Map<number, { subtotal: number; tiros: number }>();
   for (const f of filas) {
     if (f.kind === "ejercicio") continue;
+    // Módulo con diana: puntúa su histograma propio (los previos van en gris),
+    // sin restar ni avanzar el acumulado del blanco.
+    if (f.usaDiana) {
+      const own = histograma(f.impacts);
+      total += puntosDeRecuento(own);
+      porFila.set(f.idx, {
+        subtotal: puntosDeRecuento(own),
+        tiros: tirosDeRecuento(own),
+      });
+      continue;
+    }
     const acumulado = numsAsistido(f);
     if (f.blancoNuevo) prev = ASISTIDO_VALORES.map(() => 0);
     const incremental = restaRecuentos(acumulado, prev);
@@ -297,9 +332,45 @@ export function LibretaModular({
     [scorecardId, setEstado],
   );
 
+  const guardarDianaAsistida = useCallback(
+    async (idx: number, impacts: Impacto[]) => {
+      const fila = filasRef.current.find((f) => f.idx === idx);
+      const moduleType = fila?.kind === "modulo" ? fila.moduleType : null;
+      const blancoNuevo = fila?.blancoNuevo ?? false;
+      setEstado(idx, "guardando");
+      try {
+        const r = await guardarSerieAsistida({
+          scorecardId,
+          idx,
+          blancoNuevo,
+          buckets: histograma(impacts),
+          impacts,
+          moduleType,
+        });
+        setEstado(idx, r.ok ? "guardado" : "error");
+      } catch {
+        setEstado(idx, "error");
+      }
+    },
+    [scorecardId, setEstado],
+  );
+
   function cambiaImpactos(idx: number, next: Impacto[], commit: boolean) {
-    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, impacts: next } : f)));
-    if (commit) guardarDiana(idx, next);
+    setFilas((prev) =>
+      prev.map((f) =>
+        f.idx === idx
+          ? {
+              ...f,
+              impacts: next,
+              ...(modo === "asistido" ? { counts: histograma(next).map(String) } : {}),
+            }
+          : f,
+      ),
+    );
+    if (commit) {
+      if (modo === "asistido") guardarDianaAsistida(idx, next);
+      else guardarDiana(idx, next);
+    }
   }
 
   /** Conmuta un módulo entre las casillas y la diana gráfica. */
@@ -311,6 +382,9 @@ export function LibretaModular({
         if (f.usaDiana) {
           // Salir de la diana: se vuelcan los impactos a las casillas del modo.
           const mod = getModulo(f.moduleType);
+          if (modo === "asistido") {
+            return { ...f, usaDiana: false, counts: histograma(f.impacts).map(String) };
+          }
           if (modo === "total") {
             const tot = f.impacts.reduce((a, i) => a + i.s, 0);
             return { ...f, usaDiana: false, totalStr: f.impacts.length ? formatPunt(tot) : "" };
@@ -389,6 +463,7 @@ export function LibretaModular({
         idx,
         blancoNuevo: esPrimero,
         buckets: ASISTIDO_VALORES.map(() => 0),
+        moduleType: mod.key,
       });
     } else if (modo === "diana") {
       await guardarDianaSerie({ scorecardId, idx, impacts: [], moduleType: mod.key });
@@ -572,8 +647,8 @@ export function LibretaModular({
         if (!mod) return null;
         // Diana para este módulo: por granularidad general o por conmutador propio.
         const dianaFila = modo === "diana" || fila.usaDiana;
-        // El icono solo aparece en modos de casillas de disparo (tiros/total).
-        const puedeDiana = modo === "tiros" || modo === "total";
+        // El icono aparece en cualquier modo de casillas (tiros/total/asistido).
+        const puedeDiana = modo !== "diana";
         const info = modo === "asistido" ? asistido?.porFila.get(fila.idx) : undefined;
         const sub = dianaFila
           ? redondea1(fila.impacts.reduce((a, i) => a + i.s, 0))
@@ -673,6 +748,7 @@ export function LibretaModular({
             {dianaFila ? (
               <DianaCanvas
                 impacts={fila.impacts}
+                background={modo === "asistido" ? fondoModular(modulos, fila.idx) : []}
                 finalizada={finalizada}
                 onChange={(next, commit) => cambiaImpactos(fila.idx, next, commit)}
               />

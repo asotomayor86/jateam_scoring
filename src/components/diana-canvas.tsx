@@ -41,6 +41,7 @@ const LINEA_CLARA = "rgba(255,255,255,0.55)";
 const LINEA_OSCURA = "rgba(0,0,0,0.45)";
 const IMPACTO = "#d1372f";
 const IMPACTO_SEL = "#111";
+const FONDO_IMPACTO = "rgba(140,146,153,0.65)"; // impactos acumulados (gris)
 const MPI_COLOR = "#0ea5b7";
 const MPI_FILL = "rgba(14,165,183,0.18)"; // azul semitransparente del círculo de agrupación
 
@@ -58,10 +59,13 @@ function clamp(v: number, a: number, b: number) {
  */
 export function DianaCanvas({
   impacts,
+  background = [],
   finalizada,
   onChange,
 }: {
   impacts: Impacto[];
+  /** Impactos de referencia (grises, no editables): p. ej. lo acumulado del blanco. */
+  background?: Impacto[];
   finalizada: boolean;
   onChange: (next: Impacto[], commit: boolean) => void;
 }) {
@@ -218,6 +222,19 @@ export function DianaCanvas({
         }}
       >
         <Anillos />
+        {/* Impactos acumulados de series anteriores (referencia, no editables). */}
+        {background.map((im, i) => (
+          <circle
+            key={`bg-${i}`}
+            cx={im.x}
+            cy={-im.y}
+            r={DOT_MM}
+            fill={FONDO_IMPACTO}
+            stroke="rgba(0,0,0,0.25)"
+            strokeWidth={1}
+            style={{ pointerEvents: "none" }}
+          />
+        ))}
         {stats && (
           <g>
             {stats.covering > 1 && (

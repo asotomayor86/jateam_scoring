@@ -425,22 +425,14 @@ export async function apuntarme(formData: FormData): Promise<void> {
         type: tiradas.type,
         isPublic: tiradas.isPublic,
         createdBy: tiradas.createdBy,
-        modalitySlug: modalities.slug,
       })
       .from(tiradas)
-      .innerJoin(modalities, eq(modalities.id, tiradas.modalityId))
       .where(eq(tiradas.id, tiradaId))
       .limit(1);
     // Cerrada o privada de otro: no se admite el apunte.
     if (!t || t.closed || (!t.isPublic && t.createdBy !== user.id)) {
       redirect(`/tiradas/${tiradaId}`);
     }
-    // El "asistido" es un modo de competición; en un entreno modular no aplica
-    // (cada módulo se apunta tiro a tiro, con la diana disponible por módulo).
-    const granularityFinal =
-      t.modalitySlug === "entrenamiento-modular" && granularity === "asistido"
-        ? "tiro"
-        : granularity;
     // En tiradas oficiales se guarda la categoría elegida.
     const catRaw = String(formData.get("category") ?? "");
     const category =
@@ -449,7 +441,7 @@ export async function apuntarme(formData: FormData): Promise<void> {
     await db.insert(scorecards).values({
       tiradaId,
       userId: user.id,
-      granularity: granularityFinal,
+      granularity,
       category,
     });
   }
