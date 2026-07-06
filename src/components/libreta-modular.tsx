@@ -6,10 +6,13 @@ import {
   guardarSerie,
   guardarSerieAsistida,
   guardarEjercicioSerie,
+  guardarDianaSerie,
   borrarSerie,
   finalizarHoja,
   reabrirHoja,
 } from "@/actions/scorecards";
+import type { Impacto } from "@/lib/diana";
+import { DianaCanvas } from "@/components/diana-canvas";
 import {
   parseTiro,
   redondea1,
@@ -36,9 +39,10 @@ type SerieInicial = {
   exerciseId: string | null;
   rating: string | null;
   notes: string | null;
+  impacts: Impacto[] | null;
 };
 
-type Modo = "tiros" | "total" | "asistido";
+type Modo = "tiros" | "total" | "asistido" | "diana";
 type EstadoGuardado = "" | "guardando" | "guardado" | "error";
 
 type Fila = {
@@ -52,6 +56,7 @@ type Fila = {
   exerciseId: string;
   rating: string | null;
   notes: string | null;
+  impacts: Impacto[];
   estado: EstadoGuardado;
 };
 
@@ -64,6 +69,7 @@ const CALIFICACIONES = [
 
 function modoDeGranularidad(g: string): Modo {
   if (g === "asistido") return "asistido";
+  if (g === "diana") return "diana";
   if (g === "tiro") return "tiros";
   return "total";
 }
@@ -78,6 +84,7 @@ function filaVacia(): Omit<Fila, "idx" | "kind" | "estado"> {
     exerciseId: "",
     rating: null,
     notes: null,
+    impacts: [],
   };
 }
 
@@ -114,6 +121,7 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
           modo === "asistido" && s.buckets ? String(s.buckets[j] ?? 0) : "",
         ),
         blancoNuevo: s.blancoNuevo,
+        impacts: s.impacts ?? [],
         estado: "" as const,
       };
     });
@@ -199,7 +207,14 @@ export function LibretaModular({
   const total = asistido
     ? asistido.total
     : redondea1(
-        modulos.reduce((a, f) => a + subtotalDe(f, modo), 0),
+        modulos.reduce(
+          (a, f) =>
+            a +
+            (modo === "diana"
+              ? f.impacts.reduce((x, i) => x + i.s, 0)
+              : subtotalDe(f, modo)),
+          0,
+        ),
       );
 
   const setEstado = useCallback((idx: number, estado: EstadoGuardado) => {
@@ -260,6 +275,26 @@ export function LibretaModular({
     },
     [guardar],
   );
+
+  const guardarDiana = useCallback(
+    async (idx: number, impacts: Impacto[]) => {
+      const fila = filasRef.current.find((f) => f.idx === idx);
+      const moduleType = fila?.kind === "modulo" ? fila.moduleType : null;
+      setEstado(idx, "guardando");
+      try {
+        const r = await guardarDianaSerie({ scorecardId, idx, impacts, moduleType });
+        setEstado(idx, r.ok ? "guardado" : "error");
+      } catch {
+        setEstado(idx, "error");
+      }
+    },
+    [scorecardId, setEstado],
+  );
+
+  function cambiaImpactos(idx: number, next: Impacto[], commit: boolean) {
+    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, impacts: next } : f)));
+    if (commit) guardarDiana(idx, next);
+  }
 
   function cambiaCelda(idx: number, j: number, valor: string) {
     setFilas((prev) =>
@@ -324,6 +359,8 @@ export function LibretaModular({
         blancoNuevo: esPrimero,
         buckets: ASISTIDO_VALORES.map(() => 0),
       });
+    } else if (modo === "diana") {
+      await guardarDianaSerie({ scorecardId, idx, impacts: [], moduleType: mod.key });
     } else {
       await guardarSerie({
         scorecardId,
@@ -503,18 +540,25 @@ export function LibretaModular({
         const mod = getModulo(fila.moduleType);
         if (!mod) return null;
         const info = modo === "asistido" ? asistido?.porFila.get(fila.idx) : undefined;
-        const sub = modo === "asistido" ? (info?.subtotal ?? 0) : subtotalDe(fila, modo);
+        const sub =
+          modo === "diana"
+            ? redondea1(fila.impacts.reduce((a, i) => a + i.s, 0))
+            : modo === "asistido"
+              ? (info?.subtotal ?? 0)
+              : subtotalDe(fila, modo);
         const nTiros =
-          modo === "asistido"
-            ? (info?.tiros ?? 0)
-            : modo === "total"
-              ? fila.totalStr.trim()
-                ? mod.shots
-                : 0
-              : fila.celdas.reduce(
-                  (n, c) => (parseTiro(c, MAX_PER_SHOT, false) ? n + 1 : n),
-                  0,
-                );
+          modo === "diana"
+            ? fila.impacts.length
+            : modo === "asistido"
+              ? (info?.tiros ?? 0)
+              : modo === "total"
+                ? fila.totalStr.trim()
+                  ? mod.shots
+                  : 0
+                : fila.celdas.reduce(
+                    (n, c) => (parseTiro(c, MAX_PER_SHOT, false) ? n + 1 : n),
+                    0,
+                  );
         return (
           <Card key={fila.idx}>
             <div
@@ -587,7 +631,13 @@ export function LibretaModular({
               </p>
             ) : null}
 
-            {modo === "tiros" ? (
+            {modo === "diana" ? (
+              <DianaCanvas
+                impacts={fila.impacts}
+                finalizada={finalizada}
+                onChange={(next, commit) => cambiaImpactos(fila.idx, next, commit)}
+              />
+            ) : modo === "tiros" ? (
               <div className="serie-grid">
                 {fila.celdas.map((valor, j) => (
                   <input

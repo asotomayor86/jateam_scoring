@@ -82,6 +82,7 @@ export default async function LibretaPage({
             exerciseId: s.exerciseId,
             rating: s.rating,
             notes: s.notes,
+            impacts: s.impacts,
           }))}
           finalizada={hoja.status === "finalizada"}
         />

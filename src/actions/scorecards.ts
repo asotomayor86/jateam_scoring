@@ -260,6 +260,8 @@ const esquemaDiana = z.object({
       }),
     )
     .max(60),
+  // Solo si la diana es una serie de un entrenamiento modular: tipo de módulo.
+  moduleType: z.string().max(20).nullable().optional(),
 });
 
 /**
@@ -298,8 +300,10 @@ export async function guardarDianaSerie(
         subtotal,
         inner,
         blancoNuevo: false,
+        moduleType: d.moduleType ?? null,
         impacts: d.impacts,
       })
+      // No se toca moduleType al actualizar: se fija al crear la fila y se conserva.
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
         set: { shots, shotCount: d.impacts.length, subtotal, inner, impacts: d.impacts },
