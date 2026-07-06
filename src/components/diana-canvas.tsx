@@ -42,6 +42,7 @@ const LINEA_OSCURA = "rgba(0,0,0,0.45)";
 const IMPACTO = "#d1372f";
 const IMPACTO_SEL = "#111";
 const MPI_COLOR = "#0ea5b7";
+const MPI_FILL = "rgba(14,165,183,0.18)"; // azul semitransparente del círculo de agrupación
 
 export const DIANA_NOMBRE = SPEC.nombre;
 
@@ -224,11 +225,11 @@ export function DianaCanvas({
                 cx={stats.mpiX}
                 cy={-stats.mpiY}
                 r={stats.covering}
-                fill="none"
+                fill={MPI_FILL}
                 stroke={MPI_COLOR}
                 strokeWidth={1.6}
                 strokeDasharray="6 5"
-                opacity={0.55}
+                strokeOpacity={0.7}
               />
             )}
             <g stroke={MPI_COLOR} strokeWidth={2.4} opacity={0.9}>
