@@ -101,6 +101,7 @@ export function MemberEditForm(m: Props) {
               <option value="bloque10">Total de bloques de 10</option>
               <option value="serie">Total por serie</option>
               <option value="asistido">Asistido competición</option>
+              <option value="diana">Diana (gráfico)</option>
             </select>
           </label>
 

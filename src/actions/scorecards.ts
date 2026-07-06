@@ -12,6 +12,7 @@ import {
   restaRecuentos,
   ASISTIDO_VALORES,
 } from "@/lib/scoring";
+import { DIANA_25M, radio, esDiezInterior } from "@/lib/diana";
 import { db, scorecards, series } from "@/db";
 
 export type SerieCalculada = { idx: number; subtotal: number; shotCount: number };
@@ -239,6 +240,72 @@ export async function guardarSerieAsistida(
       });
   } catch (e) {
     console.error("guardarSerieAsistida error:", e);
+    return { ok: false, mensaje: "No se pudo guardar la serie" };
+  }
+
+  const r = await recomputar(d.scorecardId, hoja.granularity);
+  revalidatePath(`/tiradas/${hoja.tiradaId}`);
+  return { ok: true, ...r };
+}
+
+const esquemaDiana = z.object({
+  scorecardId: z.string().uuid(),
+  idx: z.number().int().min(1).max(100),
+  impacts: z
+    .array(
+      z.object({
+        x: z.number().min(-400).max(400),
+        y: z.number().min(-400).max(400),
+        s: z.number().int().min(0).max(10),
+      }),
+    )
+    .max(60),
+});
+
+/**
+ * Crea o actualiza una serie en modo "diana": guarda los impactos (coordenadas
+ * en mm + puntuación corregida) y deriva subtotal, nº de tiros y dieces
+ * interiores (estos, por geometría, para el desempate). Recalcula la hoja.
+ */
+export async function guardarDianaSerie(
+  input: z.input<typeof esquemaDiana>,
+): Promise<ResultadoSerie> {
+  const { user } = await requireUser();
+
+  const parsed = esquemaDiana.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, mensaje: parsed.error.issues[0]?.message };
+  }
+  const d = parsed.data;
+
+  const hoja = await hojaEditable(d.scorecardId, user.id);
+  if (!hoja || hoja.status !== "borrador") {
+    return { ok: false, mensaje: "No puedes editar esta hoja" };
+  }
+
+  const shots = d.impacts.map((i) => i.s);
+  const subtotal = redondea1(shots.reduce((a, s) => a + s, 0));
+  const inner = d.impacts.filter((i) => esDiezInterior(DIANA_25M, radio(i.x, i.y))).length;
+
+  try {
+    await db
+      .insert(series)
+      .values({
+        scorecardId: d.scorecardId,
+        idx: d.idx,
+        shots,
+        shotCount: d.impacts.length,
+        subtotal,
+        inner,
+        blancoNuevo: false,
+        impacts: d.impacts,
+      })
+      .onConflictDoUpdate({
+        target: [series.scorecardId, series.idx],
+        set: { shots, shotCount: d.impacts.length, subtotal, inner, impacts: d.impacts },
+      });
+  } catch (e) {
+    console.error("guardarDianaSerie error:", e);
     return { ok: false, mensaje: "No se pudo guardar la serie" };
   }
 

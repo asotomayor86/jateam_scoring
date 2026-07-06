@@ -54,6 +54,7 @@ export const entryGranularity = pgEnum("entry_granularity", [
   "bloque10",
   "serie",
   "asistido",
+  "diana",
 ]);
 
 // --- Tablas ------------------------------------------------------------------
@@ -230,6 +231,10 @@ export const series = pgTable(
       onDelete: "set null",
     }),
     rating: text("rating"),
+    // Solo modo "diana": impactos sobre la diana a escala, en mm desde el
+    // centro (x → derecha, y → arriba) con su puntuación derivada del anillo
+    // (corregible). El subtotal/shots/inner se derivan de estos impactos.
+    impacts: jsonb("impacts").$type<{ x: number; y: number; s: number }[] | null>(),
   },
   (t) => [unique().on(t.scorecardId, t.idx)],
 );

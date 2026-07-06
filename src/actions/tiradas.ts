@@ -391,6 +391,7 @@ const GRANULARIDADES = [
   "bloque10",
   "serie",
   "asistido",
+  "diana",
 ] as const;
 
 /** Apunta al usuario actual a una tirada: crea su hoja si no la tiene. */

@@ -13,5 +13,7 @@ export function etiquetaGranularidad(g: EntryGranularity): string {
       return "Total por serie";
     case "asistido":
       return "Asistido competición";
+    case "diana":
+      return "Diana (gráfico)";
   }
 }

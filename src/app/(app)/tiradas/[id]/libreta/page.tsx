@@ -7,6 +7,7 @@ import { getEjercicios } from "@/db/queries/exercises";
 import { Libreta } from "@/components/libreta";
 import { LibretaAsistida } from "@/components/libreta-asistida";
 import { LibretaModular } from "@/components/libreta-modular";
+import { LibretaDiana } from "@/components/libreta-diana";
 import { SeccionTitulo } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,17 @@ export default async function LibretaPage({
             rating: s.rating,
             notes: s.notes,
           }))}
+          finalizada={hoja.status === "finalizada"}
+        />
+      ) : hoja.granularity === "diana" ? (
+        <LibretaDiana
+          scorecardId={hoja.id}
+          seriesIniciales={hoja.series.map((s) => ({
+            idx: s.idx,
+            impacts: s.impacts ?? [],
+          }))}
+          totalInicial={hoja.total}
+          innerInicial={hoja.innerCount}
           finalizada={hoja.status === "finalizada"}
         />
       ) : hoja.granularity === "asistido" ? (

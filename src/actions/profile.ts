@@ -22,6 +22,7 @@ const esquemaPerfil = z.object({
     "bloque10",
     "serie",
     "asistido",
+    "diana",
   ]),
   dni: z
     .string()

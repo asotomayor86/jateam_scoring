@@ -111,7 +111,7 @@ const esquemaPerfilAdmin = z.object({
     .max(24)
     .optional()
     .transform((v) => (v ? v : null)),
-  defaultGranularity: z.enum(["tiro", "bloque5", "bloque10", "serie", "asistido"]),
+  defaultGranularity: z.enum(["tiro", "bloque5", "bloque10", "serie", "asistido", "diana"]),
   dni: z
     .string()
     .trim()
