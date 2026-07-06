@@ -24,6 +24,9 @@ export type DianaSpec = {
   maxScore: number;
   /** mm: radio de la zona negra (solo visual). */
   blackR: number;
+  /** mm: diámetro del balín/proyectil. La puntuación cuenta por el BORDE del
+   * impacto: si el agujero toca la línea de un anillo, vale ese anillo. */
+  caliberMm: number;
   /** ¿puntúa con décimas? (aire). De momento no. */
   decimals: boolean;
 };
@@ -39,6 +42,7 @@ export const DIANA_25M: DianaSpec = {
   innerTenR: 12.5,
   maxScore: 10,
   blackR: 100,
+  caliberMm: 5.6, // .22 LR
   decimals: false,
 };
 
@@ -53,8 +57,18 @@ export function radio(x: number, y: number): number {
 }
 
 /**
+ * Radio "efectivo" para puntuar: el borde del impacto más cercano al centro.
+ * Como la puntuación cuenta por el borde del balín (si toca la línea, vale ese
+ * anillo), se descuenta el radio del proyectil de la distancia al centro.
+ */
+export function radioEfectivo(spec: DianaSpec, r: number): number {
+  return Math.max(0, r - spec.caliberMm / 2);
+}
+
+/**
  * Puntuación de un impacto según el anillo en el que cae (a partir de su radio).
  * Fuera del anillo de valor 1 → 0. En pistola 25 m: r≤25→10, r≤50→9, …, r≤250→1.
+ * El radio que se pasa aquí debe ser ya el radio efectivo (borde del balín).
  */
 export function puntuacionEnRadio(spec: DianaSpec, r: number): number {
   if (r <= 0) return spec.maxScore;
@@ -63,14 +77,14 @@ export function puntuacionEnRadio(spec: DianaSpec, r: number): number {
   return Math.max(0, Math.min(spec.maxScore, score));
 }
 
-/** ¿El impacto es diez interior (X)? Se usa para el desempate. */
+/** ¿El impacto es diez interior (X)? Se usa para el desempate. Cuenta por borde. */
 export function esDiezInterior(spec: DianaSpec, r: number): boolean {
-  return r <= spec.innerTenR;
+  return radioEfectivo(spec, r) <= spec.innerTenR;
 }
 
-/** Puntuación de un impacto a partir de sus coordenadas (mm). */
+/** Puntuación de un impacto a partir de sus coordenadas (mm). Cuenta por borde. */
 export function puntuacionDeImpacto(spec: DianaSpec, x: number, y: number): number {
-  return puntuacionEnRadio(spec, radio(x, y));
+  return puntuacionEnRadio(spec, radioEfectivo(spec, radio(x, y)));
 }
 
 export type EstadisticasDiana = {
