@@ -13,6 +13,7 @@ import {
 } from "@/actions/scorecards";
 import type { Impacto } from "@/lib/diana";
 import { DianaCanvas } from "@/components/diana-canvas";
+import { DianaToggle } from "@/components/diana-toggle";
 import {
   parseTiro,
   redondea1,
@@ -57,6 +58,7 @@ type Fila = {
   rating: string | null;
   notes: string | null;
   impacts: Impacto[];
+  usaDiana: boolean; // conmutador por módulo: apuntar en la diana en vez de casillas
   estado: EstadoGuardado;
 };
 
@@ -85,6 +87,7 @@ function filaVacia(): Omit<Fila, "idx" | "kind" | "estado"> {
     rating: null,
     notes: null,
     impacts: [],
+    usaDiana: false,
   };
 }
 
@@ -122,6 +125,9 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
         ),
         blancoNuevo: s.blancoNuevo,
         impacts: s.impacts ?? [],
+        // Si el módulo tiene impactos y el modo general no es ya "diana", se
+        // abre con la diana activada para esa tarjeta.
+        usaDiana: modo !== "diana" && !!(s.impacts && s.impacts.length > 0),
         estado: "" as const,
       };
     });
@@ -210,7 +216,7 @@ export function LibretaModular({
         modulos.reduce(
           (a, f) =>
             a +
-            (modo === "diana"
+            (modo === "diana" || f.usaDiana
               ? f.impacts.reduce((x, i) => x + i.s, 0)
               : subtotalDe(f, modo)),
           0,
@@ -294,6 +300,31 @@ export function LibretaModular({
   function cambiaImpactos(idx: number, next: Impacto[], commit: boolean) {
     setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, impacts: next } : f)));
     if (commit) guardarDiana(idx, next);
+  }
+
+  /** Conmuta un módulo entre las casillas y la diana gráfica. */
+  function toggleDiana(idx: number) {
+    const era = filasRef.current.find((f) => f.idx === idx)?.usaDiana;
+    setFilas((prev) =>
+      prev.map((f) => {
+        if (f.idx !== idx || f.kind !== "modulo") return f;
+        if (f.usaDiana) {
+          // Salir de la diana: se vuelcan los impactos a las casillas del modo.
+          const mod = getModulo(f.moduleType);
+          if (modo === "total") {
+            const tot = f.impacts.reduce((a, i) => a + i.s, 0);
+            return { ...f, usaDiana: false, totalStr: f.impacts.length ? formatPunt(tot) : "" };
+          }
+          const celdas = Array.from({ length: mod ? mod.shots : f.impacts.length }, (_, j) =>
+            j < f.impacts.length ? formatPunt(f.impacts[j].s) : "",
+          );
+          return { ...f, usaDiana: false, celdas };
+        }
+        return { ...f, usaDiana: true };
+      }),
+    );
+    // Al SALIR de la diana se persiste (guarda casillas y limpia impactos).
+    if (era) programar(idx);
   }
 
   function cambiaCelda(idx: number, j: number, valor: string) {
@@ -539,26 +570,28 @@ export function LibretaModular({
 
         const mod = getModulo(fila.moduleType);
         if (!mod) return null;
+        // Diana para este módulo: por granularidad general o por conmutador propio.
+        const dianaFila = modo === "diana" || fila.usaDiana;
+        // El icono solo aparece en modos de casillas de disparo (tiros/total).
+        const puedeDiana = modo === "tiros" || modo === "total";
         const info = modo === "asistido" ? asistido?.porFila.get(fila.idx) : undefined;
-        const sub =
-          modo === "diana"
-            ? redondea1(fila.impacts.reduce((a, i) => a + i.s, 0))
-            : modo === "asistido"
-              ? (info?.subtotal ?? 0)
-              : subtotalDe(fila, modo);
-        const nTiros =
-          modo === "diana"
-            ? fila.impacts.length
-            : modo === "asistido"
-              ? (info?.tiros ?? 0)
-              : modo === "total"
-                ? fila.totalStr.trim()
-                  ? mod.shots
-                  : 0
-                : fila.celdas.reduce(
-                    (n, c) => (parseTiro(c, MAX_PER_SHOT, false) ? n + 1 : n),
-                    0,
-                  );
+        const sub = dianaFila
+          ? redondea1(fila.impacts.reduce((a, i) => a + i.s, 0))
+          : modo === "asistido"
+            ? (info?.subtotal ?? 0)
+            : subtotalDe(fila, modo);
+        const nTiros = dianaFila
+          ? fila.impacts.length
+          : modo === "asistido"
+            ? (info?.tiros ?? 0)
+            : modo === "total"
+              ? fila.totalStr.trim()
+                ? mod.shots
+                : 0
+              : fila.celdas.reduce(
+                  (n, c) => (parseTiro(c, MAX_PER_SHOT, false) ? n + 1 : n),
+                  0,
+                );
         return (
           <Card key={fila.idx}>
             <div
@@ -579,6 +612,12 @@ export function LibretaModular({
                   {nTiros} tiros
                 </span>
                 <span style={{ fontWeight: 700 }}>{formatPunt(sub)}</span>
+                {puedeDiana && !finalizada && (
+                  <DianaToggle
+                    activo={fila.usaDiana}
+                    onClick={() => toggleDiana(fila.idx)}
+                  />
+                )}
                 {modo === "asistido" && !finalizada && (
                   <button
                     type="button"
@@ -631,7 +670,7 @@ export function LibretaModular({
               </p>
             ) : null}
 
-            {modo === "diana" ? (
+            {dianaFila ? (
               <DianaCanvas
                 impacts={fila.impacts}
                 finalizada={finalizada}

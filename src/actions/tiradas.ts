@@ -391,7 +391,6 @@ const GRANULARIDADES = [
   "bloque10",
   "serie",
   "asistido",
-  "diana",
 ] as const;
 
 /** Apunta al usuario actual a una tirada: crea su hoja si no la tiene. */
@@ -401,10 +400,14 @@ export async function apuntarme(formData: FormData): Promise<void> {
   if (!tiradaId) return;
 
   // Granularidad elegida al apuntarse; si no llega válida, la del perfil.
+  // "diana" ya no es un tipo de apunte (ahora es un conmutador por serie): si
+  // quedara como preferencia heredada, se trata como "tiro".
   const elegida = String(formData.get("granularity") ?? "");
+  const porDefecto =
+    profile.defaultGranularity === "diana" ? "tiro" : profile.defaultGranularity;
   const granularity = (GRANULARIDADES as readonly string[]).includes(elegida)
     ? (elegida as (typeof GRANULARIDADES)[number])
-    : profile.defaultGranularity;
+    : porDefecto;
 
   const existente = await db
     .select({ id: scorecards.id })
