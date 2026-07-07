@@ -7,13 +7,12 @@ import { DianaCanvas } from "@/components/diana-canvas";
 import { Card } from "@/components/ui";
 import { formatPunt } from "@/lib/scoring";
 
-type Fase = "inicio" | "calibrando" | "listo";
+type Fase = "inicio" | "activa";
 type Color = "rojo" | "verde";
 
-// Esquinas de destino en mm de la diana (y hacia arriba). Orden de marcado:
-// superior-izq, superior-dcha, inferior-dcha, inferior-izq. El cuadrado de la
+// Esquinas de destino en mm (y hacia arriba): TL, TR, BR, BL. El cuadrado de la
 // diana reducida circunscribe el anillo 1 (radio 250 mm).
-const R = radioExterior(DIANA_25M); // 250 mm
+const R = radioExterior(DIANA_25M);
 const DST: Punto[] = [
   { x: -R, y: R },
   { x: R, y: R },
@@ -22,11 +21,30 @@ const DST: Punto[] = [
 ];
 const ETIQUETAS = ["arriba-izquierda", "arriba-derecha", "abajo-derecha", "abajo-izquierda"];
 const PROC_W = 480;
+const LONG_PRESS = 320;
+const MOVE_PX = 8;
+const HIT_NORM = 0.07;
+
+function clamp(v: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, v));
+}
+
+type Gesto = {
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  moved: boolean;
+  mode: "pending" | "creating" | "moving" | "idle";
+  target: number;
+  arr: Punto[];
+};
 
 export function LaserTrainer() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const procRef = useRef<HTMLCanvasElement | null>(null);
   const puntoRef = useRef<HTMLDivElement | null>(null);
+  const contRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -37,25 +55,62 @@ export function LaserTrainer() {
   const [color, setColor] = useState<Color>("rojo");
   const [sensibilidad, setSensibilidad] = useState(70);
   const [error, setError] = useState<string | null>(null);
+  const [overlay, setOverlay] = useState<string | null>(null);
+  const [resizeTick, setResizeTick] = useState(0);
 
-  // Refs espejo para el bucle de detección (evita closures obsoletas).
-  const faseR = useRef(fase);
+  // Refs espejo para el bucle y los gestos.
+  const esquinasRef = useRef(esquinas);
+  esquinasRef.current = esquinas;
   const homoR = useRef<number[] | null>(null);
   const escuchandoR = useRef(escuchando);
+  escuchandoR.current = escuchando;
   const colorR = useRef(color);
+  colorR.current = color;
   const umbralR = useRef(130 - sensibilidad);
+  umbralR.current = 130 - sensibilidad;
   const activoR = useRef(false);
   const ultimoR = useRef(0);
-
-  faseR.current = fase;
-  escuchandoR.current = escuchando;
-  colorR.current = color;
-  umbralR.current = 130 - sensibilidad;
+  const gestoR = useRef<Gesto | null>(null);
+  const timerR = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => detener();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const on = () => setResizeTick((t) => t + 1);
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+
+  // Recalcula homografía (para puntuar) y la superposición de la diana.
+  useEffect(() => {
+    if (esquinas.length !== 4) {
+      homoR.current = null;
+      setOverlay(null);
+      return;
+    }
+    homoR.current = calcularHomografia(esquinas, DST);
+    const cont = contRef.current;
+    if (!cont) return;
+    const rect = cont.getBoundingClientRect();
+    const S = 1000;
+    const src: Punto[] = [
+      { x: 0, y: 0 },
+      { x: S, y: 0 },
+      { x: S, y: S },
+      { x: 0, y: S },
+    ];
+    const dst = esquinas.map((c) => ({ x: c.x * rect.width, y: c.y * rect.height }));
+    const H = calcularHomografia(src, dst);
+    if (!H) {
+      setOverlay(null);
+      return;
+    }
+    const [a, b, c, d, e, f, g, h] = H;
+    setOverlay(`matrix3d(${a},${d},0,${g}, ${b},${e},0,${h}, 0,0,1,0, ${c},${f},0,1)`);
+  }, [esquinas, resizeTick]);
 
   async function iniciar() {
     setError(null);
@@ -72,7 +127,7 @@ export function LaserTrainer() {
       }
       setEsquinas([]);
       homoR.current = null;
-      setFase("calibrando");
+      setFase("activa");
       if (rafRef.current == null) rafRef.current = requestAnimationFrame(procesar);
     } catch (e) {
       console.error(e);
@@ -87,6 +142,7 @@ export function LaserTrainer() {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
+    if (timerR.current) clearTimeout(timerR.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setEscuchando(false);
@@ -97,7 +153,7 @@ export function LaserTrainer() {
     const H = homoR.current;
     if (!H) return;
     const p = aplicarHomografia(H, nx, ny);
-    if (Math.hypot(p.x, p.y) > R + 60) return; // fuera de la diana: descarta
+    if (Math.hypot(p.x, p.y) > R + 60) return;
     const s = puntuacionDeImpacto(DIANA_25M, p.x, p.y);
     setImpactos((prev) => [...prev, { x: p.x, y: p.y, s }]);
   }
@@ -133,7 +189,7 @@ export function LaserTrainer() {
           const nx = sumX / count / PROC_W;
           const ny = sumY / count / procH;
           pintarPunto({ x: nx, y: ny });
-          if (escuchandoR.current && faseR.current === "listo" && homoR.current) {
+          if (escuchandoR.current && homoR.current) {
             const ahora = performance.now();
             if (!activoR.current && ahora - ultimoR.current > 250) {
               registrarDisparo(nx, ny);
@@ -150,7 +206,6 @@ export function LaserTrainer() {
     rafRef.current = requestAnimationFrame(procesar);
   }
 
-  // Pinta el punto detectado en vivo moviendo un div (sin re-render de React).
   function pintarPunto(p: { x: number; y: number } | null) {
     const el = puntoRef.current;
     if (!el) return;
@@ -163,39 +218,105 @@ export function LaserTrainer() {
     el.style.top = `${p.y * 100}%`;
   }
 
-  function tocarVideo(e: RPtr<HTMLDivElement>) {
-    if (fase !== "calibrando") return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const nx = (e.clientX - rect.left) / rect.width;
-    const ny = (e.clientY - rect.top) / rect.height;
-    const nuevas = [...esquinas, { x: nx, y: ny }];
-    setEsquinas(nuevas);
-    if (nuevas.length === 4) {
-      const H = calcularHomografia(nuevas, DST);
-      homoR.current = H;
-      if (H) setFase("listo");
-      else {
-        setError("Calibración no válida, marca las 4 esquinas bien separadas.");
-        setEsquinas([]);
+  // ---- Gestos de calibración (pulsación larga = crear; arrastrar = mover) ----
+  function toNorm(clientX: number, clientY: number): Punto {
+    const rect = contRef.current!.getBoundingClientRect();
+    return {
+      x: clamp((clientX - rect.left) / rect.width, 0, 1),
+      y: clamp((clientY - rect.top) / rect.height, 0, 1),
+    };
+  }
+  function cercana(p: Punto, arr: Punto[]): number {
+    let best = -1, bestD = HIT_NORM;
+    arr.forEach((c, i) => {
+      const d = Math.hypot(c.x - p.x, c.y - p.y);
+      if (d <= bestD) {
+        bestD = d;
+        best = i;
+      }
+    });
+    return best;
+  }
+  function limpiaTimer() {
+    if (timerR.current) {
+      clearTimeout(timerR.current);
+      timerR.current = null;
+    }
+  }
+
+  function onDown(e: RPtr<HTMLDivElement>) {
+    if (fase !== "activa") return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    limpiaTimer();
+    const arr = esquinasRef.current.map((c) => ({ ...c }));
+    const p = toNorm(e.clientX, e.clientY);
+    gestoR.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      moved: false,
+      mode: "pending",
+      target: cercana(p, arr),
+      arr,
+    };
+    timerR.current = setTimeout(() => {
+      const g = gestoR.current;
+      if (!g || g.mode !== "pending" || g.moved || g.arr.length >= 4) return;
+      const pp = toNorm(g.startX, g.startY);
+      g.arr = [...g.arr, pp];
+      g.target = g.arr.length - 1;
+      g.mode = "creating";
+      setEsquinas(g.arr.map((c) => ({ ...c })));
+    }, LONG_PRESS);
+  }
+
+  function onMove(e: RPtr<HTMLDivElement>) {
+    const g = gestoR.current;
+    if (!g) return;
+    e.preventDefault();
+    const rect = contRef.current!.getBoundingClientRect();
+    const ddx = (e.clientX - g.lastX) / rect.width;
+    const ddy = (e.clientY - g.lastY) / rect.height;
+    g.lastX = e.clientX;
+    g.lastY = e.clientY;
+    if (!g.moved && Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > MOVE_PX) {
+      g.moved = true;
+      if (g.mode === "pending") {
+        limpiaTimer();
+        g.mode = g.target >= 0 ? "moving" : "idle";
       }
     }
+    if (g.mode === "creating" || g.mode === "moving") {
+      const i = g.target;
+      if (i < 0 || i >= g.arr.length) return;
+      g.arr[i] = { x: clamp(g.arr[i].x + ddx, 0, 1), y: clamp(g.arr[i].y + ddy, 0, 1) };
+      setEsquinas(g.arr.map((c) => ({ ...c })));
+    }
+  }
+
+  function onUp() {
+    limpiaTimer();
+    gestoR.current = null;
   }
 
   function recalibrar() {
     setEscuchando(false);
     setEsquinas([]);
     homoR.current = null;
-    setFase("calibrando");
   }
 
   const subtotal = impactos.reduce((a, i) => a + i.s, 0);
+  const listo = esquinas.length === 4;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
       <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
-        <strong>Prueba conceptual.</strong> Pon el móvil fijo apuntando a tu diana
-        reducida (mejor en penumbra), calíbrala marcando sus 4 esquinas y dispara
-        con un láser de entrenamiento. El sistema marca cada impacto en la diana.
+        <strong>Prueba conceptual.</strong> Móvil fijo apuntando a tu diana reducida
+        (mejor en penumbra). Calíbrala poniendo las 4 esquinas: <strong>mantén
+        pulsado</strong> para crear cada punto y <strong>arrástralo</strong> para
+        afinar. Con los 4 puestos, verás la diana superpuesta para cuadrarla.
       </p>
 
       {error ? (
@@ -208,9 +329,12 @@ export function LaserTrainer() {
         </button>
       ) : null}
 
-      {/* Vídeo + overlay de calibración y punto en vivo. */}
       <div
-        onPointerDown={tocarVideo}
+        ref={contRef}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={onUp}
         style={{
           position: "relative",
           width: "100%",
@@ -221,15 +345,47 @@ export function LaserTrainer() {
           border: "1px solid var(--borde)",
           display: fase === "inicio" ? "none" : "block",
           touchAction: "none",
-          cursor: fase === "calibrando" ? "crosshair" : "default",
+          cursor: "crosshair",
         }}
       >
-        <video
-          ref={videoRef}
-          playsInline
-          muted
-          style={{ width: "100%", display: "block" }}
-        />
+        <video ref={videoRef} playsInline muted style={{ width: "100%", display: "block" }} />
+
+        {/* Diana superpuesta (deformada con la homografía). */}
+        {listo && overlay ? (
+          <svg
+            width={1000}
+            height={1000}
+            viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`}
+            preserveAspectRatio="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              transformOrigin: "0 0",
+              transform: overlay,
+              pointerEvents: "none",
+            }}
+          >
+            {Array.from({ length: 10 }, (_, i) => (i + 1) * DIANA_25M.ringStep).map((rad) => (
+              <circle
+                key={rad}
+                cx={0}
+                cy={0}
+                r={rad}
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth={3}
+                opacity={0.55}
+              />
+            ))}
+            <circle cx={0} cy={0} r={DIANA_25M.innerTenR} fill="none" stroke="#22d3ee" strokeWidth={2} opacity={0.55} />
+            <g stroke="#22d3ee" strokeWidth={2} opacity={0.7}>
+              <line x1={-16} y1={0} x2={16} y2={0} />
+              <line x1={0} y1={-16} x2={0} y2={16} />
+            </g>
+          </svg>
+        ) : null}
+
         {/* Esquinas marcadas. */}
         {esquinas.map((p, i) => (
           <div
@@ -238,8 +394,8 @@ export function LaserTrainer() {
               position: "absolute",
               left: `${p.x * 100}%`,
               top: `${p.y * 100}%`,
-              width: 14,
-              height: 14,
+              width: 16,
+              height: 16,
               transform: "translate(-50%, -50%)",
               borderRadius: "50%",
               background: "var(--acento-fuerte)",
@@ -248,6 +404,7 @@ export function LaserTrainer() {
             }}
           />
         ))}
+
         {/* Punto láser detectado en vivo. */}
         <div
           ref={puntoRef}
@@ -258,21 +415,21 @@ export function LaserTrainer() {
             height: 16,
             transform: "translate(-50%, -50%)",
             borderRadius: "50%",
-            border: "2px solid #22d3ee",
-            boxShadow: "0 0 8px #22d3ee",
+            border: "2px solid #f43f5e",
+            boxShadow: "0 0 8px #f43f5e",
             pointerEvents: "none",
           }}
         />
       </div>
 
-      {fase === "calibrando" ? (
+      {fase === "activa" && !listo ? (
         <p style={{ fontSize: "0.85rem", margin: 0 }}>
-          Toca la esquina <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> de la
-          diana ({esquinas.length}/4).
+          Mantén pulsado para poner la esquina{" "}
+          <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> ({esquinas.length}/4).
         </p>
       ) : null}
 
-      {fase === "listo" ? (
+      {listo ? (
         <Card>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
             <button
@@ -323,23 +480,16 @@ export function LaserTrainer() {
             />
           </label>
           <p style={{ margin: "0.2rem 0 0", fontSize: "0.75rem", color: "var(--texto-suave)" }}>
-            El círculo azul es el punto que detecta. Si parpadea con la luz
-            ambiente, baja la sensibilidad o apaga luces.
+            Puedes seguir moviendo las esquinas para cuadrar la diana azul con la
+            real. El punto rojo es lo que detecta; baja la sensibilidad si pilla
+            brillos.
           </p>
         </Card>
       ) : null}
 
-      {/* Diana con los impactos detectados. */}
       {fase !== "inicio" ? (
         <>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-              fontSize: "0.9rem",
-            }}
-          >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: "0.9rem" }}>
             <span style={{ color: "var(--texto-suave)" }}>
               {impactos.length} disparo{impactos.length === 1 ? "" : "s"}
             </span>
