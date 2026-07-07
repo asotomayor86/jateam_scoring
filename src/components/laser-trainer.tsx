@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type PointerEvent as RPtr } from "react";
 import { calcularHomografia, aplicarHomografia, type Punto } from "@/lib/homografia";
-import { cargarOpenCV } from "@/lib/opencv-loader";
 import { DIANA_25M, type Impacto, puntuacionDeImpacto, radioExterior } from "@/lib/diana";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { Card } from "@/components/ui";
@@ -28,6 +27,77 @@ const HIT_NORM = 0.07;
 
 function clamp(v: number, a: number, b: number) {
   return Math.max(a, Math.min(b, v));
+}
+
+type Elipse = { cx: number; cy: number; A: number; B: number; phi: number };
+
+/**
+ * Ajusta la elipse de la zona negra por momentos de imagen (JS puro, instantáneo).
+ * Devuelve centro, semiejes (px) y orientación, o null si no hay negro suficiente.
+ */
+function fitElipseNegro(data: Uint8ClampedArray, w: number, h: number): Elipse | null {
+  let sx = 0, sy = 0, n = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
+      const idx = i / 4;
+      sx += idx % w;
+      sy += Math.floor(idx / w);
+      n++;
+    }
+  }
+  if (n < w * h * 0.004) return null;
+  const cx1 = sx / n, cy1 = sy / n;
+  const lim = Math.sqrt(n / Math.PI) * 2.2; // ventana para descartar manchas lejanas
+  let Sx = 0, Sy = 0, Sxx = 0, Syy = 0, Sxy = 0, n2 = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
+      const idx = i / 4;
+      const px = idx % w, py = Math.floor(idx / w);
+      if (Math.abs(px - cx1) > lim || Math.abs(py - cy1) > lim) continue;
+      Sx += px; Sy += py; Sxx += px * px; Syy += py * py; Sxy += px * py; n2++;
+    }
+  }
+  if (n2 < 50) return null;
+  const cx = Sx / n2, cy = Sy / n2;
+  const mxx = Sxx / n2 - cx * cx;
+  const myy = Syy / n2 - cy * cy;
+  const mxy = Sxy / n2 - cx * cy;
+  const tr = mxx + myy, det = mxx * myy - mxy * mxy;
+  const disc = Math.sqrt(Math.max(0, (tr * tr) / 4 - det));
+  const l1 = tr / 2 + disc, l2 = Math.max(tr / 2 - disc, 0);
+  return {
+    cx,
+    cy,
+    A: Math.max(2 * Math.sqrt(Math.max(l1, 0)), 1),
+    B: Math.max(2 * Math.sqrt(l2), 1),
+    phi: 0.5 * Math.atan2(2 * mxy, mxx - myy),
+  };
+}
+
+/** De la elipse del negro deduce las 4 esquinas (normalizadas) de la diana. */
+function esquinasDesdeElipse(el: Elipse, w: number, h: number): Punto[] | null {
+  const c = Math.cos(el.phi), s = Math.sin(el.phi);
+  const Rb = DIANA_25M.blackR;
+  const sx = Rb / el.A, sy = Rb / el.B;
+  const M11 = sx * c * c + sy * s * s;
+  const M12 = (sx - sy) * c * s;
+  const M22 = sx * s * s + sy * c * c;
+  const det = M11 * M22 - M12 * M12;
+  if (Math.abs(det) < 1e-9) return null;
+  const iA = M22 / det, iB = -M12 / det, iC = -M12 / det, iD = M11 / det;
+  const Rext = radioExterior(DIANA_25M);
+  const fr = [
+    { x: -Rext, y: -Rext },
+    { x: Rext, y: -Rext },
+    { x: Rext, y: Rext },
+    { x: -Rext, y: Rext },
+  ];
+  const clampN = (v: number) => Math.max(0, Math.min(1, v));
+  const pts = fr.map((t) => ({
+    x: clampN((el.cx + (iA * t.x + iB * t.y)) / w),
+    y: clampN((el.cy + (iC * t.x + iD * t.y)) / h),
+  }));
+  return ordenarQuad(pts);
 }
 
 /** Ordena 4 puntos en TL, TR, BR, BL (por suma/resta de coordenadas). */
@@ -85,7 +155,6 @@ export function LaserTrainer() {
   const [resizeTick, setResizeTick] = useState(0);
   const [espejo, setEspejo] = useState(true);
   const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
-  const [cvEstado, setCvEstado] = useState<string>("");
 
   // Refs espejo para el bucle y los gestos.
   const esquinasRef = useRef(esquinas);
@@ -391,108 +460,10 @@ export function LaserTrainer() {
    * su centro/orientación/escala, coloca las 4 esquinas de la diana. Corrige el
    * centro y la inclinación suave sin marcar a mano; luego se pueden retocar.
    */
-  async function autoOpenCV() {
-    const canvas = procRef.current;
-    if (!canvas || !canvas.width) {
-      setError("Aún no hay imagen; espera un segundo.");
-      return;
-    }
-    setError(null);
-    setCvEstado("Cargando visión…");
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    let cv: any;
-    try {
-      cv = await cargarOpenCV();
-    } catch {
-      setCvEstado("");
-      setError("No se pudo cargar OpenCV (revisa la conexión).");
-      return;
-    }
-    setCvEstado("Analizando…");
-    const W = canvas.width, Hh = canvas.height;
-    let src, gray, bin, contours, hier;
-    try {
-      src = cv.imread(canvas);
-      gray = new cv.Mat();
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-      cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
-      bin = new cv.Mat();
-      cv.threshold(gray, bin, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
-      contours = new cv.MatVector();
-      hier = new cv.Mat();
-      cv.findContours(bin, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-      let best: any = null, bestArea = 0;
-      for (let i = 0; i < contours.size(); i++) {
-        const c = contours.get(i);
-        const a = cv.contourArea(c);
-        if (c.rows >= 5 && a > bestArea) {
-          bestArea = a;
-          if (best) best.delete();
-          best = c;
-        } else {
-          c.delete();
-        }
-      }
-      const minArea = W * Hh * 0.004;
-      if (!best || bestArea < minArea) {
-        if (best) best.delete();
-        setCvEstado("");
-        setError("No detecté la zona negra con claridad (más luz / diana centrada).");
-        return;
-      }
-      const rr = cv.fitEllipse(best);
-      best.delete();
-      const cx = rr.center.x, cy = rr.center.y;
-      const A = rr.size.width / 2, B = rr.size.height / 2;
-      const phi = (rr.angle * Math.PI) / 180;
-
-      // Afín que lleva la elipse (radio negro real) a un círculo, para extrapolar
-      // las esquinas del cuadrado de la diana.
-      const cphi = Math.cos(phi), sphi = Math.sin(phi);
-      const Rb = DIANA_25M.blackR;
-      const sx = Rb / Math.max(A, 1), sy = Rb / Math.max(B, 1);
-      const M11 = sx * cphi * cphi + sy * sphi * sphi;
-      const M12 = (sx - sy) * cphi * sphi;
-      const M22 = sx * sphi * sphi + sy * cphi * cphi;
-      const det = M11 * M22 - M12 * M12;
-      if (Math.abs(det) < 1e-9) {
-        setCvEstado("");
-        setError("Elipse degenerada; prueba de nuevo o marca a mano.");
-        return;
-      }
-      const iA = M22 / det, iB = -M12 / det, iC = -M12 / det, iD = M11 / det;
-      const Rext = radioExterior(DIANA_25M);
-      const fr = [
-        { x: -Rext, y: -Rext },
-        { x: Rext, y: -Rext },
-        { x: Rext, y: Rext },
-        { x: -Rext, y: Rext },
-      ];
-      const pts = fr.map((t) => ({
-        x: clamp((cx + (iA * t.x + iB * t.y)) / W, 0, 1),
-        y: clamp((cy + (iC * t.x + iD * t.y)) / Hh, 0, 1),
-      }));
-      setCentro({ x: 0, y: 0 });
-      setEsquinas(ordenarQuad(pts));
-      setCvEstado("Diana detectada ✓ (retoca las esquinas si hace falta)");
-    } catch (e) {
-      console.error("autoOpenCV", e);
-      setCvEstado("");
-      setError("Falló el análisis de imagen; marca las esquinas a mano.");
-    } finally {
-      src?.delete();
-      gray?.delete();
-      bin?.delete();
-      contours?.delete();
-      hier?.delete();
-    }
-  }
-
   /**
-   * Intenta detectar la diana sola: busca la mancha negra central (la zona de
-   * apunte) y, asumiendo el móvil aproximadamente de frente, deduce las 4
-   * esquinas. Si no la ve con claridad, avisa para calibrar a mano.
+   * Detecta la diana ajustando la elipse de la zona negra (momentos de imagen,
+   * JS puro, instantáneo) y de ahí coloca las 4 esquinas, corrigiendo centro e
+   * inclinación suave. Si no ve la zona negra, avisa para calibrar a mano.
    */
   function autoDetectar() {
     const canvas = procRef.current;
@@ -504,36 +475,19 @@ export function LaserTrainer() {
     if (!ctx) return;
     const w = canvas.width, h = canvas.height;
     const data = ctx.getImageData(0, 0, w, h).data;
-    let sumX = 0, sumY = 0, count = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
-        const idx = i / 4;
-        sumX += idx % w;
-        sumY += Math.floor(idx / w);
-        count++;
-      }
-    }
-    const frac = count / (w * h);
-    if (count < 150 || frac > 0.5) {
-      setError(
-        "No he detectado la diana con claridad. Céntrala con buena luz y reintenta, o pon las 4 esquinas a mano.",
-      );
+    const el = fitElipseNegro(data, w, h);
+    if (!el) {
+      setError("No detecté la zona negra (más luz / diana centrada), o márcala a mano.");
       return;
     }
-    const cx = sumX / count, cy = sumY / count;
-    const radio = Math.sqrt(count / Math.PI); // radio de la zona negra (px)
-    const factor = R / DIANA_25M.blackR; // negra (100 mm) -> media diana (250 mm)
-    const hxn = (radio * factor) / w;
-    const hyn = (radio * factor) / h;
-    const cxn = cx / w, cyn = cy / h;
-    const nuevas = [
-      { x: cxn - hxn, y: cyn - hyn },
-      { x: cxn + hxn, y: cyn - hyn },
-      { x: cxn + hxn, y: cyn + hyn },
-      { x: cxn - hxn, y: cyn + hyn },
-    ].map((p) => ({ x: clamp(p.x, 0, 1), y: clamp(p.y, 0, 1) }));
+    const pts = esquinasDesdeElipse(el, w, h);
+    if (!pts) {
+      setError("No pude ajustar la diana; marca las 4 esquinas a mano.");
+      return;
+    }
     setError(null);
-    setEsquinas(nuevas);
+    setCentro({ x: 0, y: 0 });
+    setEsquinas(pts);
   }
 
   const subtotal = impactos.reduce((a, i) => a + i.s, 0);
@@ -655,17 +609,9 @@ export function LaserTrainer() {
       </div>
 
       {fase === "activa" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-          <button type="button" className="btn btn-primario btn-bloque" onClick={autoOpenCV}>
-            🔬 Auto-calibrar con OpenCV
-          </button>
-          <button type="button" className="btn btn-bloque" onClick={autoDetectar}>
-            🔍 Detección rápida (sin OpenCV)
-          </button>
-          {cvEstado ? (
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--texto-suave)" }}>{cvEstado}</p>
-          ) : null}
-        </div>
+        <button type="button" className="btn btn-primario btn-bloque" onClick={autoDetectar}>
+          🎯 Detectar diana (auto)
+        </button>
       ) : null}
 
       {fase === "activa" && !listo ? (
