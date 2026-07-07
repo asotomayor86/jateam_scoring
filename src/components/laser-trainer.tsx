@@ -32,29 +32,77 @@ function clamp(v: number, a: number, b: number) {
 type Elipse = { cx: number; cy: number; A: number; B: number; phi: number };
 
 /**
- * Ajusta la elipse de la zona negra por momentos de imagen (JS puro, instantáneo).
+ * Ajusta la elipse de la zona negra (JS puro, instantáneo):
+ * 1) considera solo píxeles oscuros DENTRO de la región `roi` (si se da),
+ * 2) aísla el borrón negro más grande con componentes conexas (ignora números y
+ *    líneas de anillos),
+ * 3) rellena los huecos por fila y ajusta la elipse por momentos.
  * Devuelve centro, semiejes (px) y orientación, o null si no hay negro suficiente.
  */
-function fitElipseNegro(data: Uint8ClampedArray, w: number, h: number): Elipse | null {
-  let sx = 0, sy = 0, n = 0;
-  for (let i = 0; i < data.length; i += 4) {
+function fitElipseNegro(
+  data: Uint8ClampedArray,
+  w: number,
+  h: number,
+  roi: Punto[] | null,
+): Elipse | null {
+  const N = w * h;
+  const dark = new Uint8Array(N);
+  let totalDark = 0;
+  for (let p = 0; p < N; p++) {
+    const i = p * 4;
     if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
-      const idx = i / 4;
-      sx += idx % w;
-      sy += Math.floor(idx / w);
-      n++;
+      if (roi) {
+        const x = (p % w) / w, y = ((p / w) | 0) / h;
+        if (!dentroQuad(x, y, roi)) continue;
+      }
+      dark[p] = 1;
+      totalDark++;
     }
   }
-  if (n < w * h * 0.004) return null;
-  const cx1 = sx / n, cy1 = sy / n;
-  const lim = Math.sqrt(n / Math.PI) * 2.2; // ventana para descartar manchas lejanas
+  if (totalDark < N * 0.002) return null;
+
+  // Componentes conexas (4-conexo). Nos quedamos con la de mayor área.
+  const label = new Int32Array(N).fill(-1);
+  const stack = new Int32Array(N);
+  let bestId = -1, bestArea = 0;
+  let idCount = 0;
+  for (let p = 0; p < N; p++) {
+    if (!dark[p] || label[p] !== -1) continue;
+    const id = idCount++;
+    let top = 0;
+    stack[top++] = p;
+    label[p] = id;
+    let area = 0;
+    while (top > 0) {
+      const q = stack[--top];
+      area++;
+      const x = q % w, y = (q / w) | 0;
+      if (x > 0 && dark[q - 1] && label[q - 1] === -1) { label[q - 1] = id; stack[top++] = q - 1; }
+      if (x < w - 1 && dark[q + 1] && label[q + 1] === -1) { label[q + 1] = id; stack[top++] = q + 1; }
+      if (y > 0 && dark[q - w] && label[q - w] === -1) { label[q - w] = id; stack[top++] = q - w; }
+      if (y < h - 1 && dark[q + w] && label[q + w] === -1) { label[q + w] = id; stack[top++] = q + w; }
+    }
+    if (area > bestArea) { bestArea = area; bestId = id; }
+  }
+  if (bestId < 0 || bestArea < N * 0.002) return null;
+
+  // Relleno por fila (tapa los huecos de las líneas/números blancos) + momentos.
+  const rowMin = new Int32Array(h).fill(-1);
+  const rowMax = new Int32Array(h).fill(-1);
+  let ymin = h, ymax = -1;
+  for (let p = 0; p < N; p++) {
+    if (label[p] !== bestId) continue;
+    const x = p % w, y = (p / w) | 0;
+    if (rowMin[y] < 0 || x < rowMin[y]) rowMin[y] = x;
+    if (x > rowMax[y]) rowMax[y] = x;
+    if (y < ymin) ymin = y;
+    if (y > ymax) ymax = y;
+  }
   let Sx = 0, Sy = 0, Sxx = 0, Syy = 0, Sxy = 0, n2 = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
-      const idx = i / 4;
-      const px = idx % w, py = Math.floor(idx / w);
-      if (Math.abs(px - cx1) > lim || Math.abs(py - cy1) > lim) continue;
-      Sx += px; Sy += py; Sxx += px * px; Syy += py * py; Sxy += px * py; n2++;
+  for (let y = ymin; y <= ymax; y++) {
+    if (rowMin[y] < 0) continue;
+    for (let x = rowMin[y]; x <= rowMax[y]; x++) {
+      Sx += x; Sy += y; Sxx += x * x; Syy += y * y; Sxy += x * y; n2++;
     }
   }
   if (n2 < 50) return null;
@@ -475,9 +523,11 @@ export function LaserTrainer() {
     if (!ctx) return;
     const w = canvas.width, h = canvas.height;
     const data = ctx.getImageData(0, 0, w, h).data;
-    const el = fitElipseNegro(data, w, h);
+    // Si ya marcaste las 4 esquinas de la tarjeta, se busca SOLO dentro de ellas.
+    const roi = esquinas.length === 4 ? esquinas : null;
+    const el = fitElipseNegro(data, w, h, roi);
     if (!el) {
-      setError("No detecté la zona negra (más luz / diana centrada), o márcala a mano.");
+      setError("No detecté la zona negra. Marca las 4 esquinas de la tarjeta y reintenta.");
       return;
     }
     const pts = esquinasDesdeElipse(el, w, h);
@@ -496,13 +546,13 @@ export function LaserTrainer() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
       <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
-        <strong>Prueba conceptual.</strong> Móvil fijo apuntando a tu diana reducida
-        (mejor en penumbra). Marca las <strong>4 esquinas de la tarjeta blanca</strong>:
-        <strong> mantén pulsado</strong> para crear cada punto y{" "}
-        <strong>arrástralo</strong> para afinar. Con eso queda corregida la
-        perspectiva (aunque la tarjeta esté algo ladeada) y verás la diana
-        superpuesta para cuadrarla. Los disparos solo se detectan{" "}
-        <strong>dentro de la tarjeta</strong> (ignora reflejos de fuera).
+        <strong>Prueba conceptual.</strong> Móvil fijo apuntando a tu diana (mejor
+        en penumbra). Marca las <strong>4 esquinas de la tarjeta blanca</strong>{" "}
+        (<strong>mantén pulsado</strong> para crear, <strong>arrastra</strong> para
+        mover): definen la <strong>zona</strong> donde buscar. Pulsa entonces{" "}
+        <strong>«Detectar diana»</strong> y ajustará la diana ahí dentro,
+        ignorando el fondo; luego puedes retocar las esquinas. Los disparos solo
+        se detectan dentro de la tarjeta.
       </p>
 
       {error ? (
@@ -618,8 +668,8 @@ export function LaserTrainer() {
         <p style={{ fontSize: "0.85rem", margin: 0 }}>
           <strong>Mantén pulsado</strong> para poner la esquina{" "}
           <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> de la tarjeta ({esquinas.length}/4).
-          El botón «Detectar diana» es un atajo (móvil de frente); marcar las 4
-          esquinas a mano es lo más fiable y corrige la inclinación.
+          Con las 4 puestas, pulsa <strong>«Detectar diana»</strong> para ajustarla
+          dentro de esa zona.
         </p>
       ) : null}
 
