@@ -293,7 +293,7 @@ export default async function FormacionPage() {
       {/* ---------------------- NOVEDADES ---------------------- */}
       <SeccionTitulo>4 · Diana, láser, chat y avisos</SeccionTitulo>
 
-      <Tema titulo="La diana manual (apuntar con el dedo)" abierto>
+      <Tema titulo="Apuntar en la diana (modo gráfico)" abierto>
         <p>
           En <strong>tiro a tiro</strong>, <strong>asistido</strong> y en las series
           del <strong>modular</strong>, cada tarjeta tiene un{" "}
@@ -332,7 +332,7 @@ export default async function FormacionPage() {
         </p>
       </Tema>
 
-      <Tema titulo="Medir con láser (cámara) — solo encargados">
+      <Tema titulo="Apuntar en la diana (modo láser)">
         <p>
           En esas mismas tarjetas, junto al icono de la diana, hay un{" "}
           <strong>icono de cámara</strong> 📷 (con una diana detrás y la lente roja).
