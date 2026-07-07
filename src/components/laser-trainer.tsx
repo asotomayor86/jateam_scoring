@@ -669,9 +669,14 @@ export function LaserTrainer() {
       </div>
 
       {fase === "activa" ? (
-        <button type="button" className="btn btn-primario btn-bloque" onClick={autoDetectar}>
-          🎯 Detectar diana (auto)
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button type="button" className="btn btn-primario" style={{ flex: 3 }} onClick={autoDetectar}>
+            🎯 Detectar diana (auto)
+          </button>
+          <button type="button" className="btn" style={{ flex: 1 }} onClick={recalibrar}>
+            Recalibrar
+          </button>
+        </div>
       ) : null}
 
       {fase === "activa" && !listo ? (
@@ -685,18 +690,16 @@ export function LaserTrainer() {
 
       {listo ? (
         <Card>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
               type="button"
               className={escuchando ? "btn" : "btn btn-primario"}
+              style={{ flex: 3 }}
               onClick={() => setEscuchando((e) => !e)}
             >
               {escuchando ? "⏸ Parar escucha" : "🎯 Escuchar disparos"}
             </button>
-            <button type="button" className="btn" onClick={recalibrar}>
-              Recalibrar
-            </button>
-            <button type="button" className="btn" onClick={() => setImpactos([])}>
+            <button type="button" className="btn" style={{ flex: 2 }} onClick={() => setImpactos([])}>
               Limpiar
             </button>
           </div>

@@ -14,6 +14,7 @@ import {
 import type { Impacto } from "@/lib/diana";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
+import { LaserCamLink } from "@/components/laser-cam-link";
 import {
   parseTiro,
   redondea1,
@@ -217,12 +218,14 @@ export function LibretaModular({
   ejercicios,
   seriesIniciales,
   finalizada,
+  esAdmin,
 }: {
   scorecardId: string;
   granularity: string;
   ejercicios: Ejercicio[];
   seriesIniciales: SerieInicial[];
   finalizada: boolean;
+  esAdmin?: boolean;
 }) {
   const router = useRouter();
   const modo = modoDeGranularidad(granularity);
@@ -730,6 +733,7 @@ export function LibretaModular({
                     ✕
                   </button>
                 )}
+                <LaserCamLink esAdmin={esAdmin} />
               </div>
             </div>
 

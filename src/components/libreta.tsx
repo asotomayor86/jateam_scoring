@@ -13,6 +13,7 @@ import { DIANA_25M, type Impacto, radio, esDiezInterior } from "@/lib/diana";
 import { Card } from "@/components/ui";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
+import { LaserCamLink } from "@/components/laser-cam-link";
 import { AjusteFinalField } from "@/components/ajuste-final";
 import { SeriesTimer } from "@/components/series-timer";
 import { faseSerie, planTimer } from "@/lib/fases";
@@ -156,6 +157,7 @@ export function Libreta({
   ajusteInicial,
   modalitySlug,
   tipo,
+  esAdmin,
 }: {
   scorecardId: string;
   modalidad: Modalidad;
@@ -168,6 +170,7 @@ export function Libreta({
   ajusteInicial: number;
   modalitySlug: string;
   tipo: string;
+  esAdmin?: boolean;
 }) {
   const router = useRouter();
   const [filas, setFilas] = useState<Fila[]>(() =>
@@ -474,6 +477,7 @@ export function Libreta({
                     onClick={() => toggleDiana(fila.idx)}
                   />
                 )}
+                <LaserCamLink esAdmin={esAdmin} />
               </div>
             </div>
 

@@ -81,11 +81,7 @@ export function Nav({ displayName, isAdmin, badges }: Props) {
   }
 
   const items = isAdmin
-    ? [
-        ...enlaces,
-        { href: "/miembros", label: "Miembros" },
-        { href: "/laser", label: "Modo láser (beta)" },
-      ]
+    ? [...enlaces, { href: "/miembros", label: "Miembros" }]
     : enlaces;
 
   const esActivo = (href: string) =>

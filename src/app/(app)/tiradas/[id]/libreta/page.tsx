@@ -18,7 +18,7 @@ export default async function LibretaPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { user } = await requireUser();
+  const { user, profile } = await requireUser();
   const { id } = await params;
 
   const tirada = await getTirada(id);
@@ -93,6 +93,7 @@ export default async function LibretaPage({
             impacts: s.impacts,
           }))}
           finalizada={hoja.status === "finalizada"}
+          esAdmin={profile.isAdmin}
         />
       ) : hoja.granularity === "diana" ? (
         <LibretaDiana
@@ -125,6 +126,7 @@ export default async function LibretaPage({
           ajusteInicial={hoja.adjustment}
           modalitySlug={tirada.modalitySlug}
           tipo={tirada.type}
+          esAdmin={profile.isAdmin}
         />
       ) : (
         <Libreta
@@ -152,6 +154,7 @@ export default async function LibretaPage({
           ajusteInicial={hoja.adjustment}
           modalitySlug={tirada.modalitySlug}
           tipo={tirada.type}
+          esAdmin={profile.isAdmin}
         />
       )}
     </>
