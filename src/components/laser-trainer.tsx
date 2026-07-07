@@ -29,6 +29,19 @@ function clamp(v: number, a: number, b: number) {
   return Math.max(a, Math.min(b, v));
 }
 
+/** ¿Está el punto (normalizado) dentro del cuadrilátero de las 4 esquinas? */
+function dentroQuad(x: number, y: number, q: Punto[]): boolean {
+  let pos = false, neg = false;
+  for (let i = 0; i < 4; i++) {
+    const a = q[i], b = q[(i + 1) % 4];
+    const cross = (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
+    if (cross > 0) pos = true;
+    else if (cross < 0) neg = true;
+    if (pos && neg) return false;
+  }
+  return true;
+}
+
 type Gesto = {
   startX: number;
   startY: number;
@@ -177,6 +190,8 @@ export function LaserTrainer() {
         const data = ctx.getImageData(0, 0, PROC_W, procH).data;
         const verde = colorR.current === "verde";
         const umbral = umbralR.current;
+        // Si está calibrado, solo se busca DENTRO de la tarjeta (ignora lo de fuera).
+        const quad = esquinasRef.current.length === 4 ? esquinasRef.current : null;
         let sumX = 0, sumY = 0, count = 0;
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i], g = data[i + 1], b = data[i + 2];
@@ -184,8 +199,11 @@ export function LaserTrainer() {
           const otros = verde ? (r + b) / 2 : (g + b) / 2;
           if (canal > 110 && canal - otros > umbral) {
             const idx = i / 4;
-            sumX += idx % PROC_W;
-            sumY += Math.floor(idx / PROC_W);
+            const px = idx % PROC_W;
+            const py = Math.floor(idx / PROC_W);
+            if (quad && !dentroQuad(px / PROC_W, py / procH, quad)) continue;
+            sumX += px;
+            sumY += py;
             count++;
           }
         }
@@ -365,9 +383,12 @@ export function LaserTrainer() {
     <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
       <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
         <strong>Prueba conceptual.</strong> Móvil fijo apuntando a tu diana reducida
-        (mejor en penumbra). Calíbrala poniendo las 4 esquinas: <strong>mantén
-        pulsado</strong> para crear cada punto y <strong>arrástralo</strong> para
-        afinar. Con los 4 puestos, verás la diana superpuesta para cuadrarla.
+        (mejor en penumbra). Marca las <strong>4 esquinas de la tarjeta blanca</strong>:
+        <strong> mantén pulsado</strong> para crear cada punto y{" "}
+        <strong>arrástralo</strong> para afinar. Con eso queda corregida la
+        perspectiva (aunque la tarjeta esté algo ladeada) y verás la diana
+        superpuesta para cuadrarla. Los disparos solo se detectan{" "}
+        <strong>dentro de la tarjeta</strong> (ignora reflejos de fuera).
       </p>
 
       {error ? (
@@ -481,9 +502,10 @@ export function LaserTrainer() {
 
       {fase === "activa" && !listo ? (
         <p style={{ fontSize: "0.85rem", margin: 0 }}>
-          Prueba <strong>«Detectar diana»</strong> (móvil de frente y con luz). Si no
-          la pilla, <strong>mantén pulsado</strong> para poner la esquina{" "}
-          <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> ({esquinas.length}/4).
+          <strong>Mantén pulsado</strong> para poner la esquina{" "}
+          <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> de la tarjeta ({esquinas.length}/4).
+          El botón «Detectar diana» es un atajo (móvil de frente); marcar las 4
+          esquinas a mano es lo más fiable y corrige la inclinación.
         </p>
       ) : null}
 
