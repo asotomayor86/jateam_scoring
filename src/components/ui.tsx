@@ -101,7 +101,7 @@ export function TipoChip({ tipo }: { tipo: string }) {
     tipo === "oficial"
       ? "Oficial"
       : tipo === "semioficial"
-        ? "Semioficial"
+        ? "Amistosa"
         : "Entrenamiento";
   return <span className={clase}>{texto}</span>;
 }

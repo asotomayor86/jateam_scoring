@@ -116,7 +116,7 @@ export default async function CalendarioPage({
 
       <div className="cal-leyenda">
         <span><i style={{ background: "rgba(239,90,111,0.9)" }} /> Oficial</span>
-        <span><i style={{ background: "rgba(245,158,11,0.9)" }} /> Semioficial</span>
+        <span><i style={{ background: "rgba(245,158,11,0.9)" }} /> Amistosa</span>
         <span><i style={{ background: "rgba(70,201,139,0.9)" }} /> Entrenamiento</span>
         <span><i style={{ background: "rgba(56,132,255,0.9)" }} /> Comida</span>
       </div>

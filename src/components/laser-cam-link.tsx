@@ -2,18 +2,15 @@
 
 /**
  * Botón de cámara (con una diana detrás y la lente roja) que abre/cierra el
- * medidor láser dentro de la propia tarjeta. Solo para encargados.
+ * medidor láser dentro de la propia tarjeta.
  */
 export function LaserCamLink({
-  esAdmin,
   activo,
   onClick,
 }: {
-  esAdmin?: boolean;
   activo?: boolean;
   onClick?: () => void;
 }) {
-  if (!esAdmin) return null;
   return (
     <button
       type="button"

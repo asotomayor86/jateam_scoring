@@ -149,7 +149,7 @@ export function CreateTiradaForm({
             defaultValue={tirada?.type ?? "entrenamiento"}
           >
             <option value="entrenamiento">Entrenamiento</option>
-            <option value="semioficial">Semioficial</option>
+            <option value="semioficial">Amistosa</option>
             <option value="oficial">Oficial</option>
           </select>
         </div>

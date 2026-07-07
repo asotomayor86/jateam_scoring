@@ -159,7 +159,6 @@ export function Libreta({
   ajusteInicial,
   modalitySlug,
   tipo,
-  esAdmin,
 }: {
   scorecardId: string;
   modalidad: Modalidad;
@@ -172,7 +171,6 @@ export function Libreta({
   ajusteInicial: number;
   modalitySlug: string;
   tipo: string;
-  esAdmin?: boolean;
 }) {
   const router = useRouter();
   const [filas, setFilas] = useState<Fila[]>(() =>
@@ -494,7 +492,6 @@ export function Libreta({
                   />
                 )}
                 <LaserCamLink
-                  esAdmin={esAdmin}
                   activo={laserFila === fila.idx}
                   onClick={() => toggleLaser(fila.idx)}
                 />

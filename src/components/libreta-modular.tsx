@@ -220,14 +220,12 @@ export function LibretaModular({
   ejercicios,
   seriesIniciales,
   finalizada,
-  esAdmin,
 }: {
   scorecardId: string;
   granularity: string;
   ejercicios: Ejercicio[];
   seriesIniciales: SerieInicial[];
   finalizada: boolean;
-  esAdmin?: boolean;
 }) {
   const router = useRouter();
   const modo = modoDeGranularidad(granularity);
@@ -732,7 +730,6 @@ export function LibretaModular({
                   </button>
                 )}
                 <LaserCamLink
-                  esAdmin={esAdmin}
                   activo={laserFila === fila.idx}
                   onClick={() => toggleLaser(fila.idx)}
                 />

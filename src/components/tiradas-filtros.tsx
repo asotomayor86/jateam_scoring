@@ -8,7 +8,7 @@ type Opcion = { id: string; name: string };
 const TIPOS = [
   { value: "", label: "Todos los tipos" },
   { value: "oficial", label: "Oficial" },
-  { value: "semioficial", label: "Semioficial" },
+  { value: "semioficial", label: "Amistosa" },
   { value: "entrenamiento", label: "Entrenamiento" },
 ];
 

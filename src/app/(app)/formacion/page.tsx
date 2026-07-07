@@ -114,7 +114,7 @@ export default async function FormacionPage() {
         </ul>
         <p>
           Cada evento tiene un color: <strong>oficial</strong> (rojo),{" "}
-          <strong>semioficial</strong> (ámbar), <strong>entrenamiento</strong>{" "}
+          <strong>amistosa</strong> (ámbar), <strong>entrenamiento</strong>{" "}
           (verde) y <strong>comida</strong> (azul). «Pasado» se calcula por la
           hora de inicio real.
         </p>
@@ -126,7 +126,7 @@ export default async function FormacionPage() {
       <Tema titulo="Tipos de tirada">
         <ul>
           <li><strong>Entrenamiento</strong>: práctica personal o de grupo.</li>
-          <li><strong>Semioficial</strong>: tirada «seria» entre nosotros.</li>
+          <li><strong>Amistosa</strong>: tirada «seria» entre nosotros.</li>
           <li><strong>Oficial</strong>: competición; al apuntarte eliges categoría.</li>
         </ul>
       </Tema>
@@ -187,7 +187,7 @@ export default async function FormacionPage() {
 
       <Tema titulo="Puntuación final del árbitro (oficiales)">
         <p>
-          En tiradas oficiales y semioficiales, al pie de la libreta puedes meter la{" "}
+          En tiradas oficiales y amistosas, al pie de la libreta puedes meter la{" "}
           <strong>puntuación final</strong> que dio el árbitro; el sistema guarda la
           diferencia respecto a tu conteo y esa es la que cuenta en el ranking.
         </p>
@@ -340,7 +340,7 @@ export default async function FormacionPage() {
           <strong>diana reducida</strong> impresa y disparas con un{" "}
           <strong>láser de entrenamiento</strong>; el sistema detecta dónde da cada
           disparo y lo apunta en la serie. De momento es una{" "}
-          <strong>prueba (solo encargados)</strong>.
+          <strong>prueba (beta)</strong>.
         </p>
         <p>Al pulsar la cámara se abre dentro de la propia tarjeta. Pasos:</p>
         <ul>

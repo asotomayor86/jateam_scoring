@@ -45,6 +45,8 @@ export default async function TiradaDetallePage({
 
   const soyCreador = tirada.createdBy === user.id;
   const puedeGestionarCierre = soyCreador || profile.isAdmin;
+  // "entrenamiento" o "tirada" para las etiquetas de los botones de gestión.
+  const sustantivo = tirada.type === "entrenamiento" ? "entrenamiento" : "tirada";
 
   return (
     <>
@@ -291,7 +293,7 @@ export default async function TiradaDetallePage({
           className="btn btn-bloque"
           style={{ marginTop: "1.5rem" }}
         >
-          ✏️ Editar tirada
+          ✏️ Editar {sustantivo}
         </Link>
       ) : null}
 
@@ -304,12 +306,12 @@ export default async function TiradaDetallePage({
           <ConfirmButton
             message={
               tirada.closed
-                ? "¿Reabrir la tirada para que se pueda volver a apuntar gente?"
-                : "¿Cerrar la tirada? No podrá apuntarse nadie nuevo."
+                ? `¿Reabrir ${sustantivo === "entrenamiento" ? "el entrenamiento" : "la tirada"} para que se pueda volver a apuntar gente?`
+                : `¿Cerrar ${sustantivo === "entrenamiento" ? "el entrenamiento" : "la tirada"}? No podrá apuntarse nadie nuevo.`
             }
             className="btn btn-bloque"
           >
-            {tirada.closed ? "Reabrir tirada" : "Cerrar tirada"}
+            {tirada.closed ? `Reabrir ${sustantivo}` : `Cerrar ${sustantivo}`}
           </ConfirmButton>
         </form>
       ) : null}
@@ -318,11 +320,11 @@ export default async function TiradaDetallePage({
         <form action={borrarTirada} style={{ marginTop: "0.6rem" }}>
           <input type="hidden" name="id" value={id} />
           <ConfirmButton
-            message="¿Borrar la tirada entera? Se eliminarán todas las hojas y resultados. Esto no se puede deshacer."
+            message={`¿Borrar ${sustantivo === "entrenamiento" ? "el entrenamiento entero" : "la tirada entera"}? Se eliminarán todas las hojas y resultados. Esto no se puede deshacer.`}
             className="btn"
             style={{ color: "var(--rojo)", width: "100%" }}
           >
-            Borrar tirada
+            Borrar {sustantivo}
           </ConfirmButton>
         </form>
       ) : null}
