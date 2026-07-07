@@ -148,6 +148,56 @@ function esquinasDesdeElipse(el: Elipse, w: number, h: number): Punto[] | null {
   return ordenarQuad(pts);
 }
 
+/**
+ * Deduce las 4 esquinas de la diana usando la PERSPECTIVA de la tarjeta (las 4
+ * esquinas marcadas) para el keystone, y la elipse del negro solo para el centro
+ * y la escala. Corrige la desviación del anillo exterior (no extrapola en plano).
+ */
+function esquinasPorTarjeta(
+  el: Elipse,
+  card: Punto[],
+  w: number,
+  h: number,
+): Punto[] | null {
+  const orden = ordenarQuad(card); // TL, TR, BR, BL
+  const UNIT: Punto[] = [
+    { x: -1, y: -1 },
+    { x: 1, y: -1 },
+    { x: 1, y: 1 },
+    { x: -1, y: 1 },
+  ];
+  const Hcard = calcularHomografia(orden, UNIT); // imagen(norm) -> tarjeta frontal
+  const Hinv = calcularHomografia(UNIT, orden); // tarjeta -> imagen(norm)
+  if (!Hcard || !Hinv) return null;
+
+  const Cc = aplicarHomografia(Hcard, el.cx / w, el.cy / h);
+  const c = Math.cos(el.phi), s = Math.sin(el.phi);
+  let Rc = 0;
+  const K = 16;
+  for (let k = 0; k < K; k++) {
+    const t = (2 * Math.PI * k) / K;
+    const ex = el.cx + el.A * Math.cos(t) * c - el.B * Math.sin(t) * s;
+    const ey = el.cy + el.A * Math.cos(t) * s + el.B * Math.sin(t) * c;
+    const cp = aplicarHomografia(Hcard, ex / w, ey / h);
+    Rc += Math.hypot(cp.x - Cc.x, cp.y - Cc.y);
+  }
+  Rc /= K;
+  if (Rc < 1e-6) return null;
+
+  const f = (radioExterior(DIANA_25M) / DIANA_25M.blackR) * Rc; // 2.5·Rc
+  const signos: Punto[] = [
+    { x: -1, y: -1 },
+    { x: 1, y: -1 },
+    { x: 1, y: 1 },
+    { x: -1, y: 1 },
+  ];
+  const pts = signos.map((sg) => {
+    const ip = aplicarHomografia(Hinv, Cc.x + sg.x * f, Cc.y + sg.y * f);
+    return { x: Math.max(0, Math.min(1, ip.x)), y: Math.max(0, Math.min(1, ip.y)) };
+  });
+  return ordenarQuad(pts);
+}
+
 /** Ordena 4 puntos en TL, TR, BR, BL (por suma/resta de coordenadas). */
 function ordenarQuad(pts: Punto[]): Punto[] {
   let tl = pts[0], tr = pts[0], br = pts[0], bl = pts[0];
@@ -523,14 +573,15 @@ export function LaserTrainer() {
     if (!ctx) return;
     const w = canvas.width, h = canvas.height;
     const data = ctx.getImageData(0, 0, w, h).data;
-    // Si ya marcaste las 4 esquinas de la tarjeta, se busca SOLO dentro de ellas.
+    // Si ya marcaste las 4 esquinas de la tarjeta, se busca SOLO dentro de ellas
+    // y se usa su perspectiva para el keystone (mejor en el anillo exterior).
     const roi = esquinas.length === 4 ? esquinas : null;
     const el = fitElipseNegro(data, w, h, roi);
     if (!el) {
       setError("No detecté la zona negra. Marca las 4 esquinas de la tarjeta y reintenta.");
       return;
     }
-    const pts = esquinasDesdeElipse(el, w, h);
+    const pts = roi ? esquinasPorTarjeta(el, roi, w, h) : esquinasDesdeElipse(el, w, h);
     if (!pts) {
       setError("No pude ajustar la diana; marca las 4 esquinas a mano.");
       return;
