@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent as RPtr } from "react";
 import { calcularHomografia, aplicarHomografia, type Punto } from "@/lib/homografia";
+import { cargarOpenCV } from "@/lib/opencv-loader";
 import { DIANA_25M, type Impacto, puntuacionDeImpacto, radioExterior } from "@/lib/diana";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { Card } from "@/components/ui";
@@ -27,6 +28,18 @@ const HIT_NORM = 0.07;
 
 function clamp(v: number, a: number, b: number) {
   return Math.max(a, Math.min(b, v));
+}
+
+/** Ordena 4 puntos en TL, TR, BR, BL (por suma/resta de coordenadas). */
+function ordenarQuad(pts: Punto[]): Punto[] {
+  let tl = pts[0], tr = pts[0], br = pts[0], bl = pts[0];
+  for (const p of pts) {
+    if (p.x + p.y < tl.x + tl.y) tl = p;
+    if (p.x + p.y > br.x + br.y) br = p;
+    if (p.x - p.y > tr.x - tr.y) tr = p;
+    if (p.x - p.y < bl.x - bl.y) bl = p;
+  }
+  return [tl, tr, br, bl];
 }
 
 /** ¿Está el punto (normalizado) dentro del cuadrilátero de las 4 esquinas? */
@@ -72,6 +85,7 @@ export function LaserTrainer() {
   const [resizeTick, setResizeTick] = useState(0);
   const [espejo, setEspejo] = useState(true);
   const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
+  const [cvEstado, setCvEstado] = useState<string>("");
 
   // Refs espejo para el bucle y los gestos.
   const esquinasRef = useRef(esquinas);
@@ -373,6 +387,109 @@ export function LaserTrainer() {
   }
 
   /**
+   * Auto-calibración con OpenCV (v1): ajusta la elipse de la zona negra y, con
+   * su centro/orientación/escala, coloca las 4 esquinas de la diana. Corrige el
+   * centro y la inclinación suave sin marcar a mano; luego se pueden retocar.
+   */
+  async function autoOpenCV() {
+    const canvas = procRef.current;
+    if (!canvas || !canvas.width) {
+      setError("Aún no hay imagen; espera un segundo.");
+      return;
+    }
+    setError(null);
+    setCvEstado("Cargando visión…");
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    let cv: any;
+    try {
+      cv = await cargarOpenCV();
+    } catch {
+      setCvEstado("");
+      setError("No se pudo cargar OpenCV (revisa la conexión).");
+      return;
+    }
+    setCvEstado("Analizando…");
+    const W = canvas.width, Hh = canvas.height;
+    let src, gray, bin, contours, hier;
+    try {
+      src = cv.imread(canvas);
+      gray = new cv.Mat();
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+      cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
+      bin = new cv.Mat();
+      cv.threshold(gray, bin, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+      contours = new cv.MatVector();
+      hier = new cv.Mat();
+      cv.findContours(bin, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+      let best: any = null, bestArea = 0;
+      for (let i = 0; i < contours.size(); i++) {
+        const c = contours.get(i);
+        const a = cv.contourArea(c);
+        if (c.rows >= 5 && a > bestArea) {
+          bestArea = a;
+          if (best) best.delete();
+          best = c;
+        } else {
+          c.delete();
+        }
+      }
+      const minArea = W * Hh * 0.004;
+      if (!best || bestArea < minArea) {
+        if (best) best.delete();
+        setCvEstado("");
+        setError("No detecté la zona negra con claridad (más luz / diana centrada).");
+        return;
+      }
+      const rr = cv.fitEllipse(best);
+      best.delete();
+      const cx = rr.center.x, cy = rr.center.y;
+      const A = rr.size.width / 2, B = rr.size.height / 2;
+      const phi = (rr.angle * Math.PI) / 180;
+
+      // Afín que lleva la elipse (radio negro real) a un círculo, para extrapolar
+      // las esquinas del cuadrado de la diana.
+      const cphi = Math.cos(phi), sphi = Math.sin(phi);
+      const Rb = DIANA_25M.blackR;
+      const sx = Rb / Math.max(A, 1), sy = Rb / Math.max(B, 1);
+      const M11 = sx * cphi * cphi + sy * sphi * sphi;
+      const M12 = (sx - sy) * cphi * sphi;
+      const M22 = sx * sphi * sphi + sy * cphi * cphi;
+      const det = M11 * M22 - M12 * M12;
+      if (Math.abs(det) < 1e-9) {
+        setCvEstado("");
+        setError("Elipse degenerada; prueba de nuevo o marca a mano.");
+        return;
+      }
+      const iA = M22 / det, iB = -M12 / det, iC = -M12 / det, iD = M11 / det;
+      const Rext = radioExterior(DIANA_25M);
+      const fr = [
+        { x: -Rext, y: -Rext },
+        { x: Rext, y: -Rext },
+        { x: Rext, y: Rext },
+        { x: -Rext, y: Rext },
+      ];
+      const pts = fr.map((t) => ({
+        x: clamp((cx + (iA * t.x + iB * t.y)) / W, 0, 1),
+        y: clamp((cy + (iC * t.x + iD * t.y)) / Hh, 0, 1),
+      }));
+      setCentro({ x: 0, y: 0 });
+      setEsquinas(ordenarQuad(pts));
+      setCvEstado("Diana detectada ✓ (retoca las esquinas si hace falta)");
+    } catch (e) {
+      console.error("autoOpenCV", e);
+      setCvEstado("");
+      setError("Falló el análisis de imagen; marca las esquinas a mano.");
+    } finally {
+      src?.delete();
+      gray?.delete();
+      bin?.delete();
+      contours?.delete();
+      hier?.delete();
+    }
+  }
+
+  /**
    * Intenta detectar la diana sola: busca la mancha negra central (la zona de
    * apunte) y, asumiendo el móvil aproximadamente de frente, deduce las 4
    * esquinas. Si no la ve con claridad, avisa para calibrar a mano.
@@ -538,9 +655,17 @@ export function LaserTrainer() {
       </div>
 
       {fase === "activa" ? (
-        <button type="button" className="btn btn-bloque" onClick={autoDetectar}>
-          🔍 Detectar diana automáticamente
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          <button type="button" className="btn btn-primario btn-bloque" onClick={autoOpenCV}>
+            🔬 Auto-calibrar con OpenCV
+          </button>
+          <button type="button" className="btn btn-bloque" onClick={autoDetectar}>
+            🔍 Detección rápida (sin OpenCV)
+          </button>
+          {cvEstado ? (
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--texto-suave)" }}>{cvEstado}</p>
+          ) : null}
+        </div>
       ) : null}
 
       {fase === "activa" && !listo ? (
