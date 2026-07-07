@@ -274,6 +274,12 @@ a {
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
   flex-direction: column;
   gap: 0.5rem;
+  /* Si el menú supera el alto de la pantalla, que se pueda desplazar. */
+  max-height: calc(100vh - 4rem);
+  max-height: calc(100dvh - 4rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .nav-open .nav-drawer { display: flex; }
 /* Botones: opacos y en mayúscula. */
