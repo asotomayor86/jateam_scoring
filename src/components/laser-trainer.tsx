@@ -251,7 +251,6 @@ export function LaserTrainer() {
   const [error, setError] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<string | null>(null);
   const [resizeTick, setResizeTick] = useState(0);
-  const [espejo, setEspejo] = useState(true);
   const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
 
   // Refs espejo para el bucle y los gestos.
@@ -266,8 +265,6 @@ export function LaserTrainer() {
   umbralR.current = 130 - sensibilidad;
   const activoR = useRef(false);
   const ultimoR = useRef(0);
-  const espejoR = useRef(espejo);
-  espejoR.current = espejo;
   const centroR = useRef(centro);
   centroR.current = centro;
   const gestoR = useRef<Gesto | null>(null);
@@ -353,10 +350,9 @@ export function LaserTrainer() {
     const H = homoR.current;
     if (!H) return;
     const p = aplicarHomografia(H, nx, ny);
-    // Recentrado por el centro real de la diana (ajuste fino) y espejo horizontal.
-    let x = p.x - centroR.current.x;
+    // Recentrado por el centro real (ajuste fino) + espejo horizontal (siempre).
+    const x = -(p.x - centroR.current.x);
     const y = p.y - centroR.current.y;
-    if (espejoR.current) x = -x;
     if (Math.hypot(x, y) > R + 60) return;
     const s = puntuacionDeImpacto(DIANA_25M, x, y);
     setImpactos((prev) => [...prev, { x, y, s }]);
@@ -765,19 +761,6 @@ export function LaserTrainer() {
               </button>
             ))}
           </div>
-
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              marginTop: "0.6rem",
-              fontSize: "0.85rem",
-            }}
-          >
-            <input type="checkbox" checked={espejo} onChange={(e) => setEspejo(e.target.checked)} />
-            Espejo horizontal (si los disparos salen al lado contrario)
-          </label>
 
           <label style={{ display: "block", marginTop: "0.6rem", fontSize: "0.8rem", color: "var(--texto-suave)" }}>
             Sensibilidad: {sensibilidad}
