@@ -71,6 +71,7 @@ export function LaserTrainer() {
   const [overlay, setOverlay] = useState<string | null>(null);
   const [resizeTick, setResizeTick] = useState(0);
   const [espejo, setEspejo] = useState(true);
+  const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
 
   // Refs espejo para el bucle y los gestos.
   const esquinasRef = useRef(esquinas);
@@ -86,6 +87,8 @@ export function LaserTrainer() {
   const ultimoR = useRef(0);
   const espejoR = useRef(espejo);
   espejoR.current = espejo;
+  const centroR = useRef(centro);
+  centroR.current = centro;
   const gestoR = useRef<Gesto | null>(null);
   const timerR = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -169,10 +172,13 @@ export function LaserTrainer() {
     const H = homoR.current;
     if (!H) return;
     const p = aplicarHomografia(H, nx, ny);
-    const x = espejoR.current ? -p.x : p.x; // espejo horizontal
-    if (Math.hypot(x, p.y) > R + 60) return;
-    const s = puntuacionDeImpacto(DIANA_25M, x, p.y);
-    setImpactos((prev) => [...prev, { x, y: p.y, s }]);
+    // Recentrado por el centro real de la diana (ajuste fino) y espejo horizontal.
+    let x = p.x - centroR.current.x;
+    const y = p.y - centroR.current.y;
+    if (espejoR.current) x = -x;
+    if (Math.hypot(x, y) > R + 60) return;
+    const s = puntuacionDeImpacto(DIANA_25M, x, y);
+    setImpactos((prev) => [...prev, { x, y, s }]);
   }
 
   function procesar() {
@@ -326,7 +332,44 @@ export function LaserTrainer() {
   function recalibrar() {
     setEscuchando(false);
     setEsquinas([]);
+    setCentro({ x: 0, y: 0 });
     homoR.current = null;
+  }
+
+  /**
+   * Ajuste fino: detecta el centro real de la diana (la mancha negra) dentro de
+   * la tarjeta y lo usa para recentrar el mapeo (compensa esquinas imperfectas o
+   * rings descentrados). No corrige abultamientos (eso sería un modelo no plano).
+   */
+  function ajusteFino() {
+    const canvas = procRef.current;
+    const H = homoR.current;
+    if (!canvas || !canvas.width || !H || esquinas.length !== 4) {
+      setError("Calibra primero las 4 esquinas.");
+      return;
+    }
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+    const w = canvas.width, h = canvas.height;
+    const data = ctx.getImageData(0, 0, w, h).data;
+    let sumX = 0, sumY = 0, count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
+        const idx = i / 4;
+        const px = idx % w, py = Math.floor(idx / w);
+        if (!dentroQuad(px / w, py / h, esquinas)) continue;
+        sumX += px;
+        sumY += py;
+        count++;
+      }
+    }
+    if (count < 100) {
+      setError("No veo la zona negra para el ajuste fino (más luz / diana centrada).");
+      return;
+    }
+    const p = aplicarHomografia(H, sumX / count / w, sumY / count / h);
+    setError(null);
+    setCentro({ x: p.x, y: p.y });
   }
 
   /**
@@ -518,6 +561,9 @@ export function LaserTrainer() {
               onClick={() => setEscuchando((e) => !e)}
             >
               {escuchando ? "⏸ Parar escucha" : "🎯 Escuchar disparos"}
+            </button>
+            <button type="button" className="btn" onClick={ajusteFino}>
+              🎯 Ajuste fino
             </button>
             <button type="button" className="btn" onClick={recalibrar}>
               Recalibrar
