@@ -291,7 +291,7 @@ export default async function FormacionPage() {
       </Tema>
 
       {/* ---------------------- NOVEDADES ---------------------- */}
-      <SeccionTitulo>4 · Diana, láser, chat y avisos</SeccionTitulo>
+      <SeccionTitulo>4 · Diana y láser</SeccionTitulo>
 
       <Tema titulo="Apuntar en la diana (modo gráfico)" abierto>
         <p>
@@ -382,6 +382,8 @@ export default async function FormacionPage() {
           no reinterpretar lo ya metido).
         </p>
       </Tema>
+
+      <SeccionTitulo>5 · Chat y notificaciones</SeccionTitulo>
 
       <Tema titulo="Chat del grupo">
         <p>
