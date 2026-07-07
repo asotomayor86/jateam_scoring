@@ -148,50 +148,40 @@ function esquinasDesdeElipse(el: Elipse, w: number, h: number): Punto[] | null {
   return ordenarQuad(pts);
 }
 
-/** Corrección radial (abombado): r_real = a·r + b·r². Identidad = {a:1,b:0}. */
-type Correccion = { a: number; b: number };
-
-/** Brillo (canal rojo) en una posición normalizada de la imagen. */
-function muestrea(data: Uint8ClampedArray, w: number, h: number, ix: number, iy: number): number {
-  const px = Math.round(ix * w), py = Math.round(iy * h);
-  if (px < 0 || py < 0 || px >= w || py >= h) return 255;
-  return data[(py * w + px) * 4];
-}
-
 /**
- * Calibra por la tarjeta: usa la PERSPECTIVA de las 4 esquinas para el keystone y
- * la elipse del negro para centro/escala; deduce las 4 esquinas de la diana y,
- * escaneando el ANILLO EXTERIOR, calcula una corrección radial para el abombado.
+ * Deduce las 4 esquinas de la diana usando la PERSPECTIVA de la tarjeta (las 4
+ * esquinas marcadas) para el keystone, y la elipse del negro solo para el centro
+ * y la escala. Corrige la desviación del anillo exterior (no extrapola en plano).
  */
-function calibrarPorTarjeta(
+function esquinasPorTarjeta(
   el: Elipse,
   card: Punto[],
-  data: Uint8ClampedArray,
   w: number,
   h: number,
-): { pts: Punto[]; corr: Correccion } | null {
-  const orden = ordenarQuad(card);
+): Punto[] | null {
+  const orden = ordenarQuad(card); // TL, TR, BR, BL
   const UNIT: Punto[] = [
     { x: -1, y: -1 },
     { x: 1, y: -1 },
     { x: 1, y: 1 },
     { x: -1, y: 1 },
   ];
-  const Hcard = calcularHomografia(orden, UNIT);
-  const Hinv = calcularHomografia(UNIT, orden);
+  const Hcard = calcularHomografia(orden, UNIT); // imagen(norm) -> tarjeta frontal
+  const Hinv = calcularHomografia(UNIT, orden); // tarjeta -> imagen(norm)
   if (!Hcard || !Hinv) return null;
 
   const Cc = aplicarHomografia(Hcard, el.cx / w, el.cy / h);
   const c = Math.cos(el.phi), s = Math.sin(el.phi);
   let Rc = 0;
-  for (let k = 0; k < 16; k++) {
-    const t = (Math.PI * k) / 8;
+  const K = 16;
+  for (let k = 0; k < K; k++) {
+    const t = (2 * Math.PI * k) / K;
     const ex = el.cx + el.A * Math.cos(t) * c - el.B * Math.sin(t) * s;
     const ey = el.cy + el.A * Math.cos(t) * s + el.B * Math.sin(t) * c;
     const cp = aplicarHomografia(Hcard, ex / w, ey / h);
     Rc += Math.hypot(cp.x - Cc.x, cp.y - Cc.y);
   }
-  Rc /= 16;
+  Rc /= K;
   if (Rc < 1e-6) return null;
 
   const f = (radioExterior(DIANA_25M) / DIANA_25M.blackR) * Rc; // 2.5·Rc
@@ -205,39 +195,7 @@ function calibrarPorTarjeta(
     const ip = aplicarHomografia(Hinv, Cc.x + sg.x * f, Cc.y + sg.y * f);
     return { x: Math.max(0, Math.min(1, ip.x)), y: Math.max(0, Math.min(1, ip.y)) };
   });
-
-  // --- Anillo exterior: escaneo radial en el espacio rectificado de la tarjeta.
-  let corr: Correccion = { a: 1, b: 0 };
-  const rs: number[] = [];
-  const K2 = 72;
-  for (let k = 0; k < K2; k++) {
-    const th = (2 * Math.PI * k) / K2, cc = Math.cos(th), ss = Math.sin(th);
-    let mejor = -1, inDark = false, start = 0;
-    for (let rho = 1.15 * Rc; rho <= 3.2 * Rc; rho += 0.03 * Rc) {
-      const ip = aplicarHomografia(Hinv, Cc.x + rho * cc, Cc.y + rho * ss);
-      const dark = muestrea(data, w, h, ip.x, ip.y) < 100;
-      if (dark && !inDark) { inDark = true; start = rho; }
-      else if (!dark && inDark) { inDark = false; if (rho - start < 0.28 * Rc) mejor = (start + rho) / 2; }
-    }
-    if (mejor > 0) rs.push(mejor);
-  }
-  if (rs.length >= K2 * 0.4) {
-    rs.sort((a, b) => a - b);
-    const R1card = rs[Math.floor(rs.length / 2)];
-    const r1mm = (R1card * DIANA_25M.blackR) / Rc; // dónde cae el anillo 1 en el modelo plano
-    if (r1mm > 120 && r1mm < 380 && Math.abs(r1mm - 250) > 4) {
-      // g(100)=100 (negro exacto), g(r1mm)=250 (anillo 1 medido)
-      const det = 100 * r1mm * r1mm - 10000 * r1mm;
-      if (Math.abs(det) > 1e-6) {
-        corr = {
-          a: (100 * r1mm * r1mm - 10000 * 250) / det,
-          b: (100 * 250 - 100 * r1mm) / det,
-        };
-      }
-    }
-  }
-
-  return { pts: ordenarQuad(pts), corr };
+  return ordenarQuad(pts);
 }
 
 /** Ordena 4 puntos en TL, TR, BR, BL (por suma/resta de coordenadas). */
@@ -294,7 +252,6 @@ export function LaserTrainer() {
   const [overlay, setOverlay] = useState<string | null>(null);
   const [resizeTick, setResizeTick] = useState(0);
   const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
-  const [corr, setCorr] = useState<Correccion>({ a: 1, b: 0 });
 
   // Refs espejo para el bucle y los gestos.
   const esquinasRef = useRef(esquinas);
@@ -310,8 +267,6 @@ export function LaserTrainer() {
   const ultimoR = useRef(0);
   const centroR = useRef(centro);
   centroR.current = centro;
-  const corrR = useRef(corr);
-  corrR.current = corr;
   const gestoR = useRef<Gesto | null>(null);
   const timerR = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -395,18 +350,9 @@ export function LaserTrainer() {
     const H = homoR.current;
     if (!H) return;
     const p = aplicarHomografia(H, nx, ny);
-    // Corrección radial (abombado).
-    let mx = p.x, my = p.y;
-    const r = Math.hypot(p.x, p.y);
-    if (r > 1) {
-      const rc = corrR.current.a * r + corrR.current.b * r * r;
-      const k = Math.max(0.6, Math.min(1.5, rc / r));
-      mx = p.x * k;
-      my = p.y * k;
-    }
     // Recentrado por el centro real (ajuste fino) + espejo horizontal (siempre).
-    const x = -(mx - centroR.current.x);
-    const y = my - centroR.current.y;
+    const x = -(p.x - centroR.current.x);
+    const y = p.y - centroR.current.y;
     if (Math.hypot(x, y) > R + 60) return;
     const s = puntuacionDeImpacto(DIANA_25M, x, y);
     setImpactos((prev) => [...prev, { x, y, s }]);
@@ -564,7 +510,6 @@ export function LaserTrainer() {
     setEscuchando(false);
     setEsquinas([]);
     setCentro({ x: 0, y: 0 });
-    setCorr({ a: 1, b: 0 });
     homoR.current = null;
   }
 
@@ -624,34 +569,22 @@ export function LaserTrainer() {
     if (!ctx) return;
     const w = canvas.width, h = canvas.height;
     const data = ctx.getImageData(0, 0, w, h).data;
-    // Si ya marcaste las 4 esquinas de la tarjeta, se busca SOLO dentro de ellas,
-    // se usa su perspectiva (keystone) y se corrige el abombado con el anillo 1.
+    // Si ya marcaste las 4 esquinas de la tarjeta, se busca SOLO dentro de ellas
+    // y se usa su perspectiva para el keystone (mejor en el anillo exterior).
     const roi = esquinas.length === 4 ? esquinas : null;
     const el = fitElipseNegro(data, w, h, roi);
     if (!el) {
       setError("No detecté la zona negra. Marca las 4 esquinas de la tarjeta y reintenta.");
       return;
     }
-    setCentro({ x: 0, y: 0 });
-    if (roi) {
-      const res = calibrarPorTarjeta(el, roi, data, w, h);
-      if (!res) {
-        setError("No pude ajustar la diana; retoca las esquinas a mano.");
-        return;
-      }
-      setError(null);
-      setCorr(res.corr);
-      setEsquinas(res.pts);
-    } else {
-      const pts = esquinasDesdeElipse(el, w, h);
-      if (!pts) {
-        setError("No pude ajustar la diana; marca las 4 esquinas a mano.");
-        return;
-      }
-      setError(null);
-      setCorr({ a: 1, b: 0 });
-      setEsquinas(pts);
+    const pts = roi ? esquinasPorTarjeta(el, roi, w, h) : esquinasDesdeElipse(el, w, h);
+    if (!pts) {
+      setError("No pude ajustar la diana; marca las 4 esquinas a mano.");
+      return;
     }
+    setError(null);
+    setCentro({ x: 0, y: 0 });
+    setEsquinas(pts);
   }
 
   const subtotal = impactos.reduce((a, i) => a + i.s, 0);
