@@ -291,15 +291,15 @@ export default async function FormacionPage() {
       </Tema>
 
       {/* ---------------------- NOVEDADES ---------------------- */}
-      <SeccionTitulo>4 · Diana gráfica, chat y avisos</SeccionTitulo>
+      <SeccionTitulo>4 · Diana, láser, chat y avisos</SeccionTitulo>
 
-      <Tema titulo="Apuntar en la diana (modo gráfico)" abierto>
+      <Tema titulo="La diana manual (apuntar con el dedo)" abierto>
         <p>
           En <strong>tiro a tiro</strong>, <strong>asistido</strong> y en las series
           del <strong>modular</strong>, cada tarjeta tiene un{" "}
           <strong>icono de diana</strong> 🎯. Al pulsarlo, las casillas de puntos se
-          cambian por una <strong>diana a escala</strong> donde marcas dónde caen los
-          disparos.
+          cambian por una <strong>diana a escala</strong> donde marcas <em>con el
+          dedo</em> dónde cae cada disparo.
         </p>
         <ul>
           <li>
@@ -316,6 +316,10 @@ export default async function FormacionPage() {
             dispersión y cuánto se desvía del centro.
           </li>
           <li>Toca un impacto para <strong>seleccionarlo</strong> y poder borrarlo.</li>
+          <li>
+            Debajo de la diana están los <strong>cajetines de los disparos</strong>,
+            que se van rellenando con la puntuación de cada uno.
+          </li>
         </ul>
         <p>
           En <strong>asistido</strong>, si la serie no es «blanco nuevo», los
@@ -325,6 +329,47 @@ export default async function FormacionPage() {
         <p>
           Queda registrada la <strong>posición y la puntuación</strong> de cada
           disparo para analizar dónde agrupas.
+        </p>
+      </Tema>
+
+      <Tema titulo="Medir con láser (cámara) — solo encargados">
+        <p>
+          En esas mismas tarjetas, junto al icono de la diana, hay un{" "}
+          <strong>icono de cámara</strong> 📷 (con una diana detrás y la lente roja).
+          Es una herramienta para entrenar en casa: apuntas el móvil a una{" "}
+          <strong>diana reducida</strong> impresa y disparas con un{" "}
+          <strong>láser de entrenamiento</strong>; el sistema detecta dónde da cada
+          disparo y lo apunta en la serie. De momento es una{" "}
+          <strong>prueba (solo encargados)</strong>.
+        </p>
+        <p>Al pulsar la cámara se abre dentro de la propia tarjeta. Pasos:</p>
+        <ul>
+          <li>
+            <strong>Iniciar cámara</strong> y da permiso (mejor en penumbra, con el
+            móvil fijo en un soporte de frente a la diana).
+          </li>
+          <li>
+            Marca las <strong>4 esquinas de la tarjeta</strong> (mantén pulsado para
+            crear cada punto, arrastra para afinar). Con <strong>dos dedos</strong>{" "}
+            puedes hacer <strong>zoom</strong>.
+          </li>
+          <li>
+            Pulsa <strong>«Detectar diana»</strong>: ajusta la diana dentro de esa
+            zona (corrige el centro y la inclinación).
+          </li>
+          <li>
+            Pulsa <strong>«Escuchar disparos»</strong> y dispara: cada punto láser se
+            marca en la diana y en los cajetines de la serie.
+          </li>
+          <li>
+            <strong>«Ocultar cámara»</strong> cierra el visor para dejar más sitio; el
+            icono de la cámara vuelve a abrirlo.
+          </li>
+        </ul>
+        <p>
+          Requiere una diana reducida a escala (p. ej. la de 25 m al 28 % se dispara
+          a unos 7 m) y buena luz. El <strong>zoom</strong> depende del móvil (en
+          Android suele ir; en iPhone puede no estar disponible).
         </p>
       </Tema>
 

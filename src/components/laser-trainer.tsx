@@ -286,6 +286,8 @@ export function LaserTrainer({
   const pinchR = useRef<{ dist: number; zoom: number } | null>(null);
   const zoomCapR = useRef<{ min: number; max: number } | null>(null);
   const zoomActualR = useRef(1);
+  const zoomPendienteR = useRef<number | null>(null);
+  const zoomBusyR = useRef(false);
 
   useEffect(() => {
     return () => detener();
@@ -378,6 +380,8 @@ export function LaserTrainer({
     punterosR.current.clear();
     pinchR.current = null;
     zoomCapR.current = null;
+    zoomPendienteR.current = null;
+    zoomBusyR.current = false;
     setEscuchando(false);
     setFase("inicio");
   }
@@ -488,6 +492,28 @@ export function LaserTrainer({
     }
   }
 
+  // Aplica el zoom de uno en uno (converge al último valor, sin encolar).
+  function aplicarSiguienteZoom() {
+    const t = trackR.current;
+    const z = zoomPendienteR.current;
+    if (!t || z == null) {
+      zoomBusyR.current = false;
+      return;
+    }
+    zoomPendienteR.current = null;
+    zoomBusyR.current = true;
+    t.applyConstraints({ advanced: [{ zoom: z }] } as unknown as MediaTrackConstraints)
+      .catch(() => {})
+      .finally(() => {
+        zoomBusyR.current = false;
+        if (zoomPendienteR.current != null) aplicarSiguienteZoom();
+      });
+  }
+  function empujarZoom(z: number) {
+    zoomPendienteR.current = z;
+    if (!zoomBusyR.current) aplicarSiguienteZoom();
+  }
+
   function onDown(e: RPtr<HTMLDivElement>) {
     if (fase !== "activa") return;
     e.preventDefault();
@@ -543,9 +569,7 @@ export function LaserTrainer({
         const { min, max } = zoomCapR.current;
         const z = Math.max(min, Math.min(max, pinchR.current.zoom * (dist / pinchR.current.dist)));
         zoomActualR.current = z;
-        trackR.current
-          .applyConstraints({ advanced: [{ zoom: z }] } as unknown as MediaTrackConstraints)
-          .catch(() => {});
+        empujarZoom(z);
       }
       return;
     }
