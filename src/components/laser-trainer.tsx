@@ -569,7 +569,14 @@ export function LaserTrainer({
   const listo = esquinas.length === 4;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.7rem",
+        ...(embebido ? { margin: "0.7rem 0 1rem" } : {}),
+      }}
+    >
       {!compacto ? (
         <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
           <strong>Prueba conceptual.</strong> Móvil fijo apuntando a tu diana (mejor
@@ -707,27 +714,26 @@ export function LaserTrainer({
 
       {listo ? (
         <Card>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <button
               type="button"
-              className={escuchando ? "btn" : "btn btn-primario"}
-              style={{ flex: 3 }}
+              className={escuchando ? "btn btn-bloque" : "btn btn-primario btn-bloque"}
               onClick={() => setEscuchando((e) => !e)}
             >
               {escuchando ? "⏸ Parar escucha" : "🎯 Escuchar disparos"}
             </button>
-            <button type="button" className="btn" onClick={() => setVerCamara((v) => !v)}>
-              {verCamara ? "🙈 Ocultar cámara" : "📷 Ver cámara"}
+            <button
+              type="button"
+              className="btn btn-bloque"
+              onClick={embebido ? onCerrar : () => setVerCamara((v) => !v)}
+            >
+              {embebido || verCamara ? "🙈 Ocultar cámara" : "📷 Ver cámara"}
             </button>
-            {embebido ? (
-              <button type="button" className="btn" onClick={onCerrar} style={{ color: "var(--rojo)" }}>
-                Cerrar
-              </button>
-            ) : (
-              <button type="button" className="btn" onClick={() => setImpactos([])}>
+            {!embebido ? (
+              <button type="button" className="btn btn-bloque" onClick={() => setImpactos([])}>
                 Limpiar
               </button>
-            )}
+            ) : null}
           </div>
 
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginTop: "0.6rem", flexWrap: "wrap" }}>
