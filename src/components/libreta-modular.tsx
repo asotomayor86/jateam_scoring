@@ -15,6 +15,8 @@ import type { Impacto } from "@/lib/diana";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
 import { LaserCamLink } from "@/components/laser-cam-link";
+import { LaserTrainer } from "@/components/laser-trainer";
+import { ImpactosBoxes } from "@/components/impactos-boxes";
 import {
   parseTiro,
   redondea1,
@@ -238,9 +240,23 @@ export function LibretaModular({
   );
   const [tipoNuevo, setTipoNuevo] = useState(MODULOS[0].key);
   const [ejNuevo, setEjNuevo] = useState(ejercicios[0]?.id ?? "");
+  const [laserFila, setLaserFila] = useState<number | null>(null);
   const filasRef = useRef(filas);
   filasRef.current = filas;
   const timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+
+  function toggleLaser(idx: number) {
+    if (laserFila === idx) {
+      setLaserFila(null);
+      return;
+    }
+    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, usaDiana: true } : f)));
+    setLaserFila(idx);
+  }
+  function anadirImpactoLaser(idx: number, imp: Impacto) {
+    const f = filasRef.current.find((x) => x.idx === idx);
+    cambiaImpactos(idx, [...(f?.impacts ?? []), imp], true);
+  }
 
   const modulos = filas.filter((f) => f.kind === "modulo");
   const numEj = filas.length - modulos.length;
@@ -715,6 +731,11 @@ export function LibretaModular({
                     {fila.blancoNuevo ? "● Blanco nuevo" : "○ Blanco nuevo"}
                   </button>
                 )}
+                <LaserCamLink
+                  esAdmin={esAdmin}
+                  activo={laserFila === fila.idx}
+                  onClick={() => toggleLaser(fila.idx)}
+                />
                 {!finalizada && (
                   <button
                     type="button"
@@ -733,7 +754,6 @@ export function LibretaModular({
                     ✕
                   </button>
                 )}
-                <LaserCamLink esAdmin={esAdmin} />
               </div>
             </div>
 
@@ -750,12 +770,22 @@ export function LibretaModular({
             ) : null}
 
             {dianaFila ? (
-              <DianaCanvas
-                impacts={fila.impacts}
-                background={modo === "asistido" ? fondoModular(modulos, fila.idx) : []}
-                finalizada={finalizada}
-                onChange={(next, commit) => cambiaImpactos(fila.idx, next, commit)}
-              />
+              <>
+                {laserFila === fila.idx ? (
+                  <LaserTrainer
+                    compacto
+                    onCerrar={() => setLaserFila(null)}
+                    onImpacto={(imp) => anadirImpactoLaser(fila.idx, imp)}
+                  />
+                ) : null}
+                <DianaCanvas
+                  impacts={fila.impacts}
+                  background={modo === "asistido" ? fondoModular(modulos, fila.idx) : []}
+                  finalizada={finalizada}
+                  onChange={(next, commit) => cambiaImpactos(fila.idx, next, commit)}
+                />
+                <ImpactosBoxes impacts={fila.impacts} />
+              </>
             ) : modo === "tiros" ? (
               <div className="serie-grid">
                 {fila.celdas.map((valor, j) => (

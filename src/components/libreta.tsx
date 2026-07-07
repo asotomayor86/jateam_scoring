@@ -14,6 +14,8 @@ import { Card } from "@/components/ui";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
 import { LaserCamLink } from "@/components/laser-cam-link";
+import { LaserTrainer } from "@/components/laser-trainer";
+import { ImpactosBoxes } from "@/components/impactos-boxes";
 import { AjusteFinalField } from "@/components/ajuste-final";
 import { SeriesTimer } from "@/components/series-timer";
 import { faseSerie, planTimer } from "@/lib/fases";
@@ -179,8 +181,22 @@ export function Libreta({
   const [total, setTotal] = useState(totalInicial);
   const [inner, setInner] = useState(innerInicial);
   const [ajuste, setAjuste] = useState(ajusteInicial);
+  const [laserFila, setLaserFila] = useState<number | null>(null);
   const filasRef = useRef(filas);
   filasRef.current = filas;
+
+  function toggleLaser(idx: number) {
+    if (laserFila === idx) {
+      setLaserFila(null);
+      return;
+    }
+    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, modo: "diana" } : f)));
+    setLaserFila(idx);
+  }
+  function anadirImpactoLaser(idx: number, imp: Impacto) {
+    const f = filasRef.current.find((x) => x.idx === idx);
+    actualizaImpactos(idx, [...(f?.impacts ?? []), imp], true);
+  }
   const timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const maxTotal = useMemo(
@@ -477,16 +493,30 @@ export function Libreta({
                     onClick={() => toggleDiana(fila.idx)}
                   />
                 )}
-                <LaserCamLink esAdmin={esAdmin} />
+                <LaserCamLink
+                  esAdmin={esAdmin}
+                  activo={laserFila === fila.idx}
+                  onClick={() => toggleLaser(fila.idx)}
+                />
               </div>
             </div>
 
             {fila.modo === "diana" ? (
-              <DianaCanvas
-                impacts={fila.impacts}
-                finalizada={finalizada}
-                onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
-              />
+              <>
+                {laserFila === fila.idx ? (
+                  <LaserTrainer
+                    compacto
+                    onCerrar={() => setLaserFila(null)}
+                    onImpacto={(imp) => anadirImpactoLaser(fila.idx, imp)}
+                  />
+                ) : null}
+                <DianaCanvas
+                  impacts={fila.impacts}
+                  finalizada={finalizada}
+                  onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
+                />
+                <ImpactosBoxes impacts={fila.impacts} />
+              </>
             ) : fila.modo === "tiros" ? (
               <div className="serie-grid">
                 {fila.celdas.map((valor, j) => (

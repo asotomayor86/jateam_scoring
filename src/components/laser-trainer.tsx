@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent as RPtr } from "react";
 import { calcularHomografia, aplicarHomografia, type Punto } from "@/lib/homografia";
 import { DIANA_25M, type Impacto, puntuacionDeImpacto, radioExterior } from "@/lib/diana";
 import { DianaCanvas } from "@/components/diana-canvas";
+import { ImpactosBoxes } from "@/components/impactos-boxes";
 import { Card } from "@/components/ui";
 import { formatPunt } from "@/lib/scoring";
 
@@ -234,7 +235,16 @@ type Gesto = {
   arr: Punto[];
 };
 
-export function LaserTrainer() {
+export function LaserTrainer({
+  onImpacto,
+  compacto,
+  onCerrar,
+}: {
+  onImpacto?: (imp: Impacto) => void;
+  compacto?: boolean;
+  onCerrar?: () => void;
+} = {}) {
+  const embebido = onImpacto != null;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const procRef = useRef<HTMLCanvasElement | null>(null);
   const puntoRef = useRef<HTMLDivElement | null>(null);
@@ -252,6 +262,7 @@ export function LaserTrainer() {
   const [overlay, setOverlay] = useState<string | null>(null);
   const [resizeTick, setResizeTick] = useState(0);
   const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
+  const [verCamara, setVerCamara] = useState(true);
 
   // Refs espejo para el bucle y los gestos.
   const esquinasRef = useRef(esquinas);
@@ -354,6 +365,10 @@ export function LaserTrainer() {
     const y = p.y - centroR.current.y;
     if (Math.hypot(x, y) > R + 60) return;
     const s = puntuacionDeImpacto(DIANA_25M, x, y);
+    if (onImpacto) {
+      onImpacto({ x, y, s });
+      return;
+    }
     setImpactos((prev) => [...prev, { x, y, s }]);
   }
 
@@ -554,16 +569,18 @@ export function LaserTrainer() {
   const listo = esquinas.length === 4;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-      <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
-        <strong>Prueba conceptual.</strong> Móvil fijo apuntando a tu diana (mejor
-        en penumbra). Marca las <strong>4 esquinas de la tarjeta blanca</strong>{" "}
-        (<strong>mantén pulsado</strong> para crear, <strong>arrastra</strong> para
-        mover): definen la <strong>zona</strong> donde buscar. Pulsa entonces{" "}
-        <strong>«Detectar diana»</strong> y ajustará la diana ahí dentro,
-        ignorando el fondo; luego puedes retocar las esquinas. Los disparos solo
-        se detectan dentro de la tarjeta.
-      </p>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
+      {!compacto ? (
+        <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: 0 }}>
+          <strong>Prueba conceptual.</strong> Móvil fijo apuntando a tu diana (mejor
+          en penumbra). Marca las <strong>4 esquinas de la tarjeta blanca</strong>{" "}
+          (<strong>mantén pulsado</strong> para crear, <strong>arrastra</strong> para
+          mover): definen la <strong>zona</strong> donde buscar. Pulsa entonces{" "}
+          <strong>«Detectar diana»</strong> y ajustará la diana ahí dentro,
+          ignorando el fondo; luego puedes retocar las esquinas. Los disparos solo
+          se detectan dentro de la tarjeta.
+        </p>
+      ) : null}
 
       {error ? (
         <p style={{ color: "var(--rojo)", fontSize: "0.85rem", margin: 0 }}>{error}</p>
@@ -584,12 +601,12 @@ export function LaserTrainer() {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: 520,
+          maxWidth: compacto ? 380 : 520,
           margin: "0 auto",
           borderRadius: 12,
           overflow: "hidden",
           border: "1px solid var(--borde)",
-          display: fase === "inicio" ? "none" : "block",
+          display: fase === "inicio" || !verCamara ? "none" : "block",
           touchAction: "none",
           cursor: "crosshair",
         }}
@@ -690,7 +707,7 @@ export function LaserTrainer() {
 
       {listo ? (
         <Card>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             <button
               type="button"
               className={escuchando ? "btn" : "btn btn-primario"}
@@ -699,9 +716,18 @@ export function LaserTrainer() {
             >
               {escuchando ? "⏸ Parar escucha" : "🎯 Escuchar disparos"}
             </button>
-            <button type="button" className="btn" style={{ flex: 2 }} onClick={() => setImpactos([])}>
-              Limpiar
+            <button type="button" className="btn" onClick={() => setVerCamara((v) => !v)}>
+              {verCamara ? "🙈 Ocultar cámara" : "📷 Ver cámara"}
             </button>
+            {embebido ? (
+              <button type="button" className="btn" onClick={onCerrar} style={{ color: "var(--rojo)" }}>
+                Cerrar
+              </button>
+            ) : (
+              <button type="button" className="btn" onClick={() => setImpactos([])}>
+                Limpiar
+              </button>
+            )}
           </div>
 
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginTop: "0.6rem", flexWrap: "wrap" }}>
@@ -741,7 +767,7 @@ export function LaserTrainer() {
         </Card>
       ) : null}
 
-      {fase !== "inicio" ? (
+      {!embebido && fase !== "inicio" ? (
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: "0.9rem" }}>
             <span style={{ color: "var(--texto-suave)" }}>
@@ -750,6 +776,7 @@ export function LaserTrainer() {
             <strong style={{ fontSize: "1.3rem" }}>{formatPunt(subtotal)}</strong>
           </div>
           <DianaCanvas impacts={impactos} finalizada onChange={() => {}} />
+          <ImpactosBoxes impacts={impactos} />
         </>
       ) : null}
 
