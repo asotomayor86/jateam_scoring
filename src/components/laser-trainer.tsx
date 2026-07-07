@@ -57,6 +57,7 @@ export function LaserTrainer() {
   const [error, setError] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<string | null>(null);
   const [resizeTick, setResizeTick] = useState(0);
+  const [espejo, setEspejo] = useState(true);
 
   // Refs espejo para el bucle y los gestos.
   const esquinasRef = useRef(esquinas);
@@ -70,6 +71,8 @@ export function LaserTrainer() {
   umbralR.current = 130 - sensibilidad;
   const activoR = useRef(false);
   const ultimoR = useRef(0);
+  const espejoR = useRef(espejo);
+  espejoR.current = espejo;
   const gestoR = useRef<Gesto | null>(null);
   const timerR = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -153,9 +156,10 @@ export function LaserTrainer() {
     const H = homoR.current;
     if (!H) return;
     const p = aplicarHomografia(H, nx, ny);
-    if (Math.hypot(p.x, p.y) > R + 60) return;
-    const s = puntuacionDeImpacto(DIANA_25M, p.x, p.y);
-    setImpactos((prev) => [...prev, { x: p.x, y: p.y, s }]);
+    const x = espejoR.current ? -p.x : p.x; // espejo horizontal
+    if (Math.hypot(x, p.y) > R + 60) return;
+    const s = puntuacionDeImpacto(DIANA_25M, x, p.y);
+    setImpactos((prev) => [...prev, { x, y: p.y, s }]);
   }
 
   function procesar() {
@@ -307,6 +311,53 @@ export function LaserTrainer() {
     homoR.current = null;
   }
 
+  /**
+   * Intenta detectar la diana sola: busca la mancha negra central (la zona de
+   * apunte) y, asumiendo el móvil aproximadamente de frente, deduce las 4
+   * esquinas. Si no la ve con claridad, avisa para calibrar a mano.
+   */
+  function autoDetectar() {
+    const canvas = procRef.current;
+    if (!canvas || !canvas.width) {
+      setError("Aún no hay imagen; espera un segundo y reintenta.");
+      return;
+    }
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+    const w = canvas.width, h = canvas.height;
+    const data = ctx.getImageData(0, 0, w, h).data;
+    let sumX = 0, sumY = 0, count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
+        const idx = i / 4;
+        sumX += idx % w;
+        sumY += Math.floor(idx / w);
+        count++;
+      }
+    }
+    const frac = count / (w * h);
+    if (count < 150 || frac > 0.5) {
+      setError(
+        "No he detectado la diana con claridad. Céntrala con buena luz y reintenta, o pon las 4 esquinas a mano.",
+      );
+      return;
+    }
+    const cx = sumX / count, cy = sumY / count;
+    const radio = Math.sqrt(count / Math.PI); // radio de la zona negra (px)
+    const factor = R / DIANA_25M.blackR; // negra (100 mm) -> media diana (250 mm)
+    const hxn = (radio * factor) / w;
+    const hyn = (radio * factor) / h;
+    const cxn = cx / w, cyn = cy / h;
+    const nuevas = [
+      { x: cxn - hxn, y: cyn - hyn },
+      { x: cxn + hxn, y: cyn - hyn },
+      { x: cxn + hxn, y: cyn + hyn },
+      { x: cxn - hxn, y: cyn + hyn },
+    ].map((p) => ({ x: clamp(p.x, 0, 1), y: clamp(p.y, 0, 1) }));
+    setError(null);
+    setEsquinas(nuevas);
+  }
+
   const subtotal = impactos.reduce((a, i) => a + i.s, 0);
   const listo = esquinas.length === 4;
 
@@ -422,9 +473,16 @@ export function LaserTrainer() {
         />
       </div>
 
+      {fase === "activa" ? (
+        <button type="button" className="btn btn-bloque" onClick={autoDetectar}>
+          🔍 Detectar diana automáticamente
+        </button>
+      ) : null}
+
       {fase === "activa" && !listo ? (
         <p style={{ fontSize: "0.85rem", margin: 0 }}>
-          Mantén pulsado para poner la esquina{" "}
+          Prueba <strong>«Detectar diana»</strong> (móvil de frente y con luz). Si no
+          la pilla, <strong>mantén pulsado</strong> para poner la esquina{" "}
           <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> ({esquinas.length}/4).
         </p>
       ) : null}
@@ -467,6 +525,19 @@ export function LaserTrainer() {
               </button>
             ))}
           </div>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              marginTop: "0.6rem",
+              fontSize: "0.85rem",
+            }}
+          >
+            <input type="checkbox" checked={espejo} onChange={(e) => setEspejo(e.target.checked)} />
+            Espejo horizontal (si los disparos salen al lado contrario)
+          </label>
 
           <label style={{ display: "block", marginTop: "0.6rem", fontSize: "0.8rem", color: "var(--texto-suave)" }}>
             Sensibilidad: {sensibilidad}
