@@ -280,6 +280,12 @@ export function LaserTrainer({
   centroR.current = centro;
   const gestoR = useRef<Gesto | null>(null);
   const timerR = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Zoom por pinza (zoom real de la cámara donde el navegador lo permite).
+  const trackR = useRef<MediaStreamTrack | null>(null);
+  const punterosR = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchR = useRef<{ dist: number; zoom: number } | null>(null);
+  const zoomCapR = useRef<{ min: number; max: number } | null>(null);
+  const zoomActualR = useRef(1);
 
   useEffect(() => {
     return () => detener();
@@ -333,6 +339,21 @@ export function LaserTrainer({
         v.srcObject = stream;
         await v.play();
       }
+      // Capacidad de zoom de la cámara (para la pinza).
+      const track = stream.getVideoTracks()[0];
+      trackR.current = track;
+      try {
+        const caps = (track.getCapabilities?.() ?? {}) as { zoom?: { min: number; max: number } };
+        if (caps.zoom && typeof caps.zoom.min === "number") {
+          zoomCapR.current = { min: caps.zoom.min, max: caps.zoom.max };
+          const st = (track.getSettings?.() ?? {}) as { zoom?: number };
+          zoomActualR.current = typeof st.zoom === "number" ? st.zoom : caps.zoom.min;
+        } else {
+          zoomCapR.current = null;
+        }
+      } catch {
+        zoomCapR.current = null;
+      }
       setEsquinas([]);
       homoR.current = null;
       setFase("activa");
@@ -353,6 +374,10 @@ export function LaserTrainer({
     if (timerR.current) clearTimeout(timerR.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    trackR.current = null;
+    punterosR.current.clear();
+    pinchR.current = null;
+    zoomCapR.current = null;
     setEscuchando(false);
     setFase("inicio");
   }
@@ -467,6 +492,20 @@ export function LaserTrainer({
     if (fase !== "activa") return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
+    punterosR.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    // Dos dedos: pinza para hacer zoom (cancela el gesto de esquinas).
+    if (punterosR.current.size >= 2) {
+      limpiaTimer();
+      gestoR.current = null;
+      if (zoomCapR.current) {
+        const pts = [...punterosR.current.values()];
+        pinchR.current = {
+          dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1,
+          zoom: zoomActualR.current,
+        };
+      }
+      return;
+    }
     limpiaTimer();
     const arr = esquinasRef.current.map((c) => ({ ...c }));
     const p = toNorm(e.clientX, e.clientY);
@@ -492,6 +531,24 @@ export function LaserTrainer({
   }
 
   function onMove(e: RPtr<HTMLDivElement>) {
+    if (punterosR.current.has(e.pointerId)) {
+      punterosR.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+    // Pinza activa: ajusta el zoom de la cámara.
+    if (punterosR.current.size >= 2) {
+      e.preventDefault();
+      if (pinchR.current && zoomCapR.current && trackR.current) {
+        const pts = [...punterosR.current.values()];
+        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        const { min, max } = zoomCapR.current;
+        const z = Math.max(min, Math.min(max, pinchR.current.zoom * (dist / pinchR.current.dist)));
+        zoomActualR.current = z;
+        trackR.current
+          .applyConstraints({ advanced: [{ zoom: z }] } as unknown as MediaTrackConstraints)
+          .catch(() => {});
+      }
+      return;
+    }
     const g = gestoR.current;
     if (!g) return;
     e.preventDefault();
@@ -515,7 +572,9 @@ export function LaserTrainer({
     }
   }
 
-  function onUp() {
+  function onUp(e?: RPtr<HTMLDivElement>) {
+    if (e) punterosR.current.delete(e.pointerId);
+    if (punterosR.current.size < 2) pinchR.current = null;
     limpiaTimer();
     gestoR.current = null;
   }
@@ -707,8 +766,8 @@ export function LaserTrainer({
         <p style={{ fontSize: "0.85rem", margin: 0 }}>
           <strong>Mantén pulsado</strong> para poner la esquina{" "}
           <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> de la tarjeta ({esquinas.length}/4).
-          Con las 4 puestas, pulsa <strong>«Detectar diana»</strong> para ajustarla
-          dentro de esa zona.
+          Con <strong>dos dedos</strong> haces zoom. Con las 4 esquinas puestas,
+          pulsa <strong>«Detectar diana»</strong> para ajustarla dentro de esa zona.
         </p>
       ) : null}
 
