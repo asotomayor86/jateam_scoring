@@ -350,8 +350,7 @@ export function LaserTrainer() {
     const H = homoR.current;
     if (!H) return;
     const p = aplicarHomografia(H, nx, ny);
-    // Recentrado por el centro real (ajuste fino) + espejo horizontal (siempre).
-    const x = -(p.x - centroR.current.x);
+    const x = p.x - centroR.current.x;
     const y = p.y - centroR.current.y;
     if (Math.hypot(x, y) > R + 60) return;
     const s = puntuacionDeImpacto(DIANA_25M, x, y);
@@ -511,42 +510,6 @@ export function LaserTrainer() {
     setEsquinas([]);
     setCentro({ x: 0, y: 0 });
     homoR.current = null;
-  }
-
-  /**
-   * Ajuste fino: detecta el centro real de la diana (la mancha negra) dentro de
-   * la tarjeta y lo usa para recentrar el mapeo (compensa esquinas imperfectas o
-   * rings descentrados). No corrige abultamientos (eso sería un modelo no plano).
-   */
-  function ajusteFino() {
-    const canvas = procRef.current;
-    const H = homoR.current;
-    if (!canvas || !canvas.width || !H || esquinas.length !== 4) {
-      setError("Calibra primero las 4 esquinas.");
-      return;
-    }
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
-    const w = canvas.width, h = canvas.height;
-    const data = ctx.getImageData(0, 0, w, h).data;
-    let sumX = 0, sumY = 0, count = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) {
-        const idx = i / 4;
-        const px = idx % w, py = Math.floor(idx / w);
-        if (!dentroQuad(px / w, py / h, esquinas)) continue;
-        sumX += px;
-        sumY += py;
-        count++;
-      }
-    }
-    if (count < 100) {
-      setError("No veo la zona negra para el ajuste fino (más luz / diana centrada).");
-      return;
-    }
-    const p = aplicarHomografia(H, sumX / count / w, sumY / count / h);
-    setError(null);
-    setCentro({ x: p.x, y: p.y });
   }
 
   /**
@@ -730,17 +693,11 @@ export function LaserTrainer() {
             >
               {escuchando ? "⏸ Parar escucha" : "🎯 Escuchar disparos"}
             </button>
-            <button type="button" className="btn" onClick={ajusteFino}>
-              🎯 Ajuste fino
-            </button>
             <button type="button" className="btn" onClick={recalibrar}>
               Recalibrar
             </button>
             <button type="button" className="btn" onClick={() => setImpactos([])}>
               Limpiar
-            </button>
-            <button type="button" className="btn" onClick={detener} style={{ color: "var(--rojo)" }}>
-              Detener cámara
             </button>
           </div>
 
