@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db, scorecards, series, tiradas, modalities } from "@/db";
 
 /**
@@ -25,7 +25,9 @@ export async function getResultados(userId: string) {
     .from(scorecards)
     .innerJoin(tiradas, eq(scorecards.tiradaId, tiradas.id))
     .innerJoin(modalities, eq(tiradas.modalityId, modalities.id))
-    .where(eq(scorecards.userId, userId))
+    // Solo cuenta lo cerrado: una tirada/entrenamiento abierto aún no da
+    // resultados fiables.
+    .where(and(eq(scorecards.userId, userId), eq(tiradas.closed, true)))
     .orderBy(desc(tiradas.date), desc(scorecards.createdAt));
 
   if (hojas.length === 0) return { hojas, series: [] as SerieResultado[] };
