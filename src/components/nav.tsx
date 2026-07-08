@@ -43,7 +43,7 @@ const enlaces = [
   { href: "/formacion", label: "Formación APP" },
   { href: "/calendario", label: "Calendario" },
   { href: "/tiradas", label: "Tiradas y Entrenamientos" },
-  { href: "/yo", label: "Mis tiradas" },
+  { href: "/yo", label: "Mis resultados" },
   { href: "/ejercicios", label: "Ejercicios" },
   { href: "/clubs", label: "Campos" },
   { href: "/comidas", label: "Comidas" },

@@ -69,7 +69,7 @@ export default async function FormacionPage() {
         <p>
           Arriba a la derecha está el <strong>botón de menú</strong> (☰). Al
           pulsarlo se despliega con todas las secciones: Inicio, Formación,
-          Calendario, Tiradas y Entrenamientos, Mis tiradas, Ejercicios, Campos,
+          Calendario, Tiradas y Entrenamientos, Mis resultados, Ejercicios, Campos,
           Comidas, Restaurantes, Chat, Perfil (y Miembros, solo para el encargado).
         </p>
         <p>
@@ -193,11 +193,25 @@ export default async function FormacionPage() {
         </p>
       </Tema>
 
-      <Tema titulo="Mis tiradas">
+      <Tema titulo="Mis resultados">
         <p>
-          En <strong>Mis tiradas</strong> tienes tu histórico y tus{" "}
-          <strong>mejores marcas</strong> por modalidad.
+          En <strong>Mis resultados</strong> tienes tu análisis personal, con dos
+          pestañas:
         </p>
+        <ul>
+          <li>
+            <strong>Tiradas</strong> (oficiales y amistosas): mejores marcas, media
+            y X por modalidad, evolución de la marca e histórico.
+          </li>
+          <li>
+            <strong>Entrenamientos</strong>: análisis por tipo de ejercicio
+            (Precisión, Velocidad 20″/10″, Duelo) con <strong>media por tiro</strong>,{" "}
+            <strong>desviación</strong> y reparto de valores. Donde hay diana o láser,
+            además <strong>agrupación</strong> y <strong>deriva</strong> sobre una
+            diana con la nube de impactos. También los <strong>ejercicios</strong>{" "}
+            practicados con su valoración 🟢🟡🔴.
+          </li>
+        </ul>
       </Tema>
 
       <Tema titulo="Comidas, campos y restaurantes">
