@@ -44,25 +44,44 @@ const PATRONES: Record<SonidoPaso, Nota[]> = {
 // que sature al empujar tanto nivel).
 const VOLUMEN = 1.7;
 
+/** Muestras de audio grabadas por tipo de aviso (si existen). Se intentan primero
+ *  y, si el navegador no las puede decodificar (p. ej. Ogg en iOS), se cae al
+ *  pitido sintético. */
+const MUESTRAS: Partial<Record<SonidoPaso, string>> = {
+  carguen: "/carguen.ogg",
+};
+
+function nuevoCtx(): AudioContext | null {
+  const Ctx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  return Ctx ? new Ctx() : null;
+}
+
+/**
+ * Cadena de salida común: → compresor (limita picos al empujar mucho nivel) →
+ * makeup (sube el volumen ya comprimido, cerca del máximo sin saturar) → destino.
+ * Devuelve el nodo de entrada al que conectar las fuentes.
+ */
+function crearCadena(ctx: AudioContext, makeupGain: number): AudioNode {
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -24;
+  comp.ratio.value = 20;
+  comp.attack.value = 0.002;
+  comp.release.value = 0.15;
+  const makeup = ctx.createGain();
+  makeup.gain.value = makeupGain;
+  comp.connect(makeup);
+  makeup.connect(ctx.destination);
+  return comp;
+}
+
 /** Reproduce un patrón de notas con Web Audio (permitido tras un clic previo). */
 function reproducir(notas: Nota[]) {
   try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    const ctx = new Ctx();
-    // Cadena: notas → compresor (limita picos al empujar mucho nivel) → makeup
-    // (sube el volumen ya comprimido, cerca del máximo sin saturar).
-    const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -24;
-    comp.ratio.value = 20;
-    comp.attack.value = 0.002;
-    comp.release.value = 0.15;
-    const makeup = ctx.createGain();
-    makeup.gain.value = 3.2;
-    comp.connect(makeup);
-    makeup.connect(ctx.destination);
+    const ctx = nuevoCtx();
+    if (!ctx) return;
+    const comp = crearCadena(ctx, 3.2);
     let t = ctx.currentTime;
     for (const n of notas) {
       const osc = ctx.createOscillator();
@@ -87,9 +106,48 @@ function reproducir(notas: Nota[]) {
   }
 }
 
+// Muestras que ya fallaron al decodificarse: no reintentarlas, ir directas al
+// pitido sintético.
+const muestraFallida = new Set<string>();
+
+/**
+ * Reproduce una muestra grabada. Si no se puede decodificar (formato no
+ * soportado, p. ej. Ogg en iOS) o falla la carga, ejecuta `fallback`.
+ */
+function reproducirMuestra(url: string, fallback: () => void) {
+  if (muestraFallida.has(url)) {
+    fallback();
+    return;
+  }
+  const ctx = nuevoCtx();
+  if (!ctx) {
+    fallback();
+    return;
+  }
+  const entrada = crearCadena(ctx, 2.4);
+  fetch(url)
+    .then((r) => r.arrayBuffer())
+    .then((b) => ctx.decodeAudioData(b))
+    .then((buf) => {
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(entrada);
+      src.start();
+      src.onended = () => ctx.close().catch(() => {});
+    })
+    .catch(() => {
+      muestraFallida.add(url);
+      ctx.close().catch(() => {});
+      fallback();
+    });
+}
+
 /** Reproduce el sonido de un tipo de aviso (si existe). */
 function sonar(tipo?: SonidoPaso) {
-  if (tipo) reproducir(PATRONES[tipo]);
+  if (!tipo) return;
+  const url = MUESTRAS[tipo];
+  if (url) reproducirMuestra(url, () => reproducir(PATRONES[tipo]));
+  else reproducir(PATRONES[tipo]);
 }
 
 function mmss(seg: number): string {
