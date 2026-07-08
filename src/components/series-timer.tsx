@@ -9,16 +9,15 @@ type Nota = { f: number; dur: number; hueco?: number; tipo?: OscillatorType };
 /**
  * Patrones sonoros por tipo de aviso. La idea es que cada uno tenga una cadencia
  * y un tono reconocibles de oído, sin mirar la pantalla:
- *  - carguen: dos golpes graves imitando "caaar-guen" (largo-corto, descendente).
+ *  - carguen: dos golpes graves imitando "caaaaaar-guen" (1ª sílaba muy larga, baja).
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
  *  - disparen: un pitido agudo y brillante (empiezan los disparos).
  *  - stop: un tono grave y largo, descendente (alto / fin).
- *  - preparados: un aviso corto y neutro (duelo).
  */
 const PATRONES: Record<SonidoPaso, Nota[]> = {
   carguen: [
-    { f: 523, dur: 0.34, hueco: 0.06 }, // "caaar" (largo)
-    { f: 415, dur: 0.2 }, //               "guen"  (corto, baja)
+    { f: 523, dur: 0.85, hueco: 0.06 }, // "caaaaaar" (muy largo)
+    { f: 415, dur: 0.2 }, //               "guen"     (corto, baja)
   ],
   atencion: [
     { f: 587, dur: 0.26, hueco: 0.06 }, // "aaa" (largo)
@@ -30,8 +29,10 @@ const PATRONES: Record<SonidoPaso, Nota[]> = {
     { f: 311, dur: 0.14, hueco: 0.03 },
     { f: 165, dur: 0.5 }, // grave y largo
   ],
-  preparados: [{ f: 660, dur: 0.12 }],
 };
+
+// Volumen alto para oírlo en el campo de tiro (junto con el compresor de abajo).
+const VOLUMEN = 0.9;
 
 /** Reproduce un patrón de notas con Web Audio (permitido tras un clic previo). */
 function reproducir(notas: Nota[]) {
@@ -41,6 +42,13 @@ function reproducir(notas: Nota[]) {
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     const ctx = new Ctx();
+    // Compresor: permite subir mucho el nivel sin que sature/chasquee.
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.ratio.value = 12;
+    comp.attack.value = 0.002;
+    comp.release.value = 0.15;
+    comp.connect(ctx.destination);
     let t = ctx.currentTime;
     for (const n of notas) {
       const osc = ctx.createOscillator();
@@ -48,9 +56,10 @@ function reproducir(notas: Nota[]) {
       osc.type = n.tipo ?? "sine";
       osc.frequency.value = n.f;
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(comp);
       gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.3, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(VOLUMEN, t + 0.012);
+      gain.gain.setValueAtTime(VOLUMEN, t + n.dur - 0.04);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + n.dur);
       osc.start(t);
       osc.stop(t + n.dur + 0.03);

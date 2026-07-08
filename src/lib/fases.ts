@@ -33,15 +33,12 @@ export function faseSerie(modalitySlug: string, idx: number): Fase | null {
  *  - "carguen": imita la cadencia "caaar-guen".
  *  - "atencion": imita la cadencia "aaa-ten-ción".
  *  - "disparen": comienzo de disparos, agudo.
- *  - "preparados": aviso neutro (duelo).
  *  - "stop": fin/alto, grave.
+ *
+ * En el duelo, el "preparados" de cada exposición es una atención más (mismo
+ * sonido); no hay un sonido "preparados" propio.
  */
-export type SonidoPaso =
-  | "carguen"
-  | "atencion"
-  | "disparen"
-  | "preparados"
-  | "stop";
+export type SonidoPaso = "carguen" | "atencion" | "disparen" | "stop";
 
 export type PasoTimer = {
   label: string;
@@ -69,11 +66,13 @@ export type PlanTimer = {
 export function opcionesConCarguen(
   intrinsecos: PasoTimer[],
   serieLabel = "Serie",
+  // Los intrínsecos ya empiezan con su propia atención (p. ej. el duelo): no
+  // anteponer otra.
+  conAtencion = true,
 ): Opcion[] {
-  const serie: PasoTimer[] = [
-    { label: "Atención", seconds: 7, sonido: "atencion" },
-    ...intrinsecos,
-  ];
+  const serie: PasoTimer[] = conAtencion
+    ? [{ label: "Atención", seconds: 7, sonido: "atencion" }, ...intrinsecos]
+    : [...intrinsecos];
   return [
     {
       startLabel: "Carguen",
@@ -119,13 +118,15 @@ export type Modulo = {
   shots: number;
   intrinsecos: PasoTimer[];
   finalLabel: string;
+  // Los intrínsecos ya empiezan con su propia atención (duelo): no anteponer otra.
+  sinAtencionInicial?: boolean;
 };
 
-/** Pasos del duelo 7/3: 5 exposiciones (7" preparados, 3" ¡Fuego!). */
+/** Pasos del duelo 7/3: 5 exposiciones (7" de atención, 3" ¡Fuego!). */
 function dueloIntrinsecos(): PasoTimer[] {
   const steps: PasoTimer[] = [];
   for (let i = 1; i <= 5; i++) {
-    steps.push({ label: `Preparados ${i}`, seconds: 7, sonido: "preparados" });
+    steps.push({ label: `Atención ${i}`, seconds: 7, sonido: "atencion" });
     steps.push({ label: `¡Fuego! ${i}`, seconds: 3, destacar: true, sonido: "disparen" });
   }
   return steps;
@@ -160,6 +161,7 @@ export const MODULOS: Modulo[] = [
     shots: 5,
     intrinsecos: dueloIntrinsecos(),
     finalLabel: "Fin",
+    sinAtencionInicial: true,
   },
 ];
 
@@ -170,7 +172,7 @@ export function getModulo(key: string): Modulo | undefined {
 /** Plan de temporizador (Carguen + Serie) de un módulo. */
 export function moduloPlan(mod: Modulo): PlanTimer {
   return {
-    opciones: opcionesConCarguen(mod.intrinsecos),
+    opciones: opcionesConCarguen(mod.intrinsecos, "Serie", !mod.sinAtencionInicial),
     finalLabel: mod.finalLabel,
     conPitido: true,
   };
