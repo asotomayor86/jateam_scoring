@@ -12,9 +12,9 @@ type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: Oscill
 /**
  * Patrones sonoros por tipo de aviso. La idea es que cada uno tenga una cadencia
  * y un tono reconocibles de oído, sin mirar la pantalla:
- *  - carguen: calcado de la grabación real "caaaar-guééen": grave y sostenido
- *    largo (0,9 s) + subida acentuada al final. Onda triangular (cálida, sin el
- *    zumbido de la sierra) en un registro grave pero audible en el móvil.
+ *  - carguen: "caaaar-guééen" con el mismo color de tono que la atención (senoidal,
+ *    registro parecido) pero cadencia propia: una nota larga sostenida (0,9 s) +
+ *    subida corta y acentuada al final.
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
  *  - disparen: un pitido agudo y brillante (empiezan los disparos).
  *  - alto: alto el fuego entre exposiciones del duelo (grave, medio).
@@ -22,8 +22,8 @@ type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: Oscill
  */
 const PATRONES: Record<SonidoPaso, Nota[]> = {
   carguen: [
-    { f: 131, f2: 139, dur: 0.9, hueco: 0.07, tipo: "triangle" }, // "caaaar" (grave, sostenida)
-    { f: 139, f2: 196, dur: 0.24, tipo: "triangle" }, //            "guééen" (sube, acentuada)
+    { f: 494, f2: 523, dur: 0.9, hueco: 0.07 }, // "caaaar" (sostenida, tono tipo atención)
+    { f: 523, f2: 698, dur: 0.24 }, //            "guééen" (sube y se acentúa)
   ],
   atencion: [
     { f: 587, dur: 0.26, hueco: 0.06 }, // "aaa" (largo)
