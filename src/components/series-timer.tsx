@@ -5,9 +5,17 @@ import type { PlanTimer, PasoTimer, SonidoPaso } from "@/lib/fases";
 
 /**
  * Una nota de un patrón sonoro. Si se indica `f2`, el tono desliza de `f` a `f2`
- * a lo largo de la nota (para acentuar/subir al final, p. ej. "guééen").
+ * a lo largo de la nota (para subir al final, p. ej. "guééen"). `vol` (0-1) escala
+ * el volumen de esa nota respecto al resto (para acentuar una sílaba).
  */
-type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: OscillatorType };
+type Nota = {
+  f: number;
+  f2?: number;
+  dur: number;
+  hueco?: number;
+  tipo?: OscillatorType;
+  vol?: number;
+};
 
 /**
  * Patrones sonoros por tipo de aviso. La idea es que cada uno tenga una cadencia
@@ -16,7 +24,8 @@ type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: Oscill
  *    registro parecido) pero cadencia propia: una nota larga sostenida (0,9 s) +
  *    subida corta y acentuada al final.
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
- *  - disparen: un pitido agudo y brillante (empiezan los disparos).
+ *  - disparen: calcado de la grabación "¡Fuego!": dos sílabas cortas "fue-go" con
+ *    el acento (más volumen) en la segunda. Onda triangular para que corte.
  *  - alto: alto el fuego entre exposiciones del duelo (grave, medio).
  *  - fin: final de la serie (grave y bastante más largo que el alto).
  */
@@ -30,7 +39,10 @@ const PATRONES: Record<SonidoPaso, Nota[]> = {
     { f: 587, dur: 0.12, hueco: 0.05 }, // "ten" (corto)
     { f: 740, dur: 0.22 }, //              "ción" (sube)
   ],
-  disparen: [{ f: 1245, dur: 0.16, tipo: "triangle" }], // agudo
+  disparen: [
+    { f: 466, dur: 0.15, hueco: 0.03, tipo: "triangle", vol: 0.78 }, // "fue"
+    { f: 494, f2: 466, dur: 0.24, tipo: "triangle", vol: 1 }, //        "go" (acentuada)
+  ],
   alto: [
     { f: 311, dur: 0.14, hueco: 0.03 },
     { f: 165, dur: 0.5 }, // grave y medio
@@ -86,9 +98,10 @@ function reproducir(notas: Nota[]) {
       if (n.f2) osc.frequency.linearRampToValueAtTime(n.f2, t + n.dur);
       osc.connect(gain);
       gain.connect(comp);
+      const pico = VOLUMEN * (n.vol ?? 1);
       gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(VOLUMEN, t + 0.012);
-      gain.gain.setValueAtTime(VOLUMEN, t + n.dur - 0.04);
+      gain.gain.exponentialRampToValueAtTime(pico, t + 0.012);
+      gain.gain.setValueAtTime(pico, t + n.dur - 0.04);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + n.dur);
       osc.start(t);
       osc.stop(t + n.dur + 0.03);
