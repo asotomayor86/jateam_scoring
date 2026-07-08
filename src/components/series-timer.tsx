@@ -24,8 +24,8 @@ type Nota = {
  *    registro parecido) pero cadencia propia: una nota larga sostenida (0,9 s) +
  *    subida corta y acentuada al final.
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
- *  - disparen: calcado de la grabación "¡Fuego!": dos sílabas cortas "fue-go" con
- *    el acento (más volumen) en la segunda. Onda triangular para que corte.
+ *  - disparen: "¡FUEGOOO!" como una sola sílaba sostenida con un pequeño deje
+ *    (caída de tono) al final. Onda triangular para que corte.
  *  - alto: alto el fuego entre exposiciones del duelo (grave, medio).
  *  - fin: final de la serie (grave y bastante más largo que el alto).
  */
@@ -40,8 +40,8 @@ const PATRONES: Record<SonidoPaso, Nota[]> = {
     { f: 740, dur: 0.22 }, //              "ción" (sube)
   ],
   disparen: [
-    { f: 466, dur: 0.15, hueco: 0.03, tipo: "triangle", vol: 0.78 }, // "fue"
-    { f: 494, f2: 466, dur: 0.24, tipo: "triangle", vol: 1 }, //        "go" (acentuada)
+    // Una sola sílaba sostenida "FUEGOOO" con un ligero deje (baja al final).
+    { f: 494, f2: 440, dur: 0.42, tipo: "triangle" },
   ],
   alto: [
     { f: 311, dur: 0.14, hueco: 0.03 },
