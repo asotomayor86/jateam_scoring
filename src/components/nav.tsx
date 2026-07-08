@@ -100,6 +100,10 @@ export function Nav({ displayName, isAdmin, badges }: Props) {
         position: "sticky",
         top: 0,
         zIndex: 10,
+        // iOS: deja libre la barra de estado / Dynamic Island (safe area). El
+        // banner de instalación ya lo hace, pero en la app instalada no aparece,
+        // así que el header pegajoso debe reservar ese hueco él mismo.
+        paddingTop: "env(safe-area-inset-top)",
       }}
     >
       <nav

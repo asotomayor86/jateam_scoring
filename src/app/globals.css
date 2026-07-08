@@ -108,7 +108,10 @@ a {
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
-  padding: 1rem;
+  /* Respeta las safe areas laterales (notch en horizontal) sin reducir el
+     margen normal de 1rem. */
+  padding: 1rem max(1rem, env(safe-area-inset-right)) 1rem
+    max(1rem, env(safe-area-inset-left));
 }
 
 /* Panel "glass" reutilizable (lo usan Card y la barra de navegación). */
