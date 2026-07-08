@@ -1,30 +1,71 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PlanTimer, PasoTimer } from "@/lib/fases";
+import type { PlanTimer, PasoTimer, SonidoPaso } from "@/lib/fases";
 
-/** Pitido corto con Web Audio (se dispara tras un clic, así que está permitido). */
-function beep(largo = false) {
+/** Una nota de un patrón sonoro. */
+type Nota = { f: number; dur: number; hueco?: number; tipo?: OscillatorType };
+
+/**
+ * Patrones sonoros por tipo de aviso. La idea es que cada uno tenga una cadencia
+ * y un tono reconocibles de oído, sin mirar la pantalla:
+ *  - carguen: dos golpes graves imitando "caaar-guen" (largo-corto, descendente).
+ *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
+ *  - disparen: un pitido agudo y brillante (empiezan los disparos).
+ *  - stop: un tono grave y largo, descendente (alto / fin).
+ *  - preparados: un aviso corto y neutro (duelo).
+ */
+const PATRONES: Record<SonidoPaso, Nota[]> = {
+  carguen: [
+    { f: 523, dur: 0.34, hueco: 0.06 }, // "caaar" (largo)
+    { f: 415, dur: 0.2 }, //               "guen"  (corto, baja)
+  ],
+  atencion: [
+    { f: 587, dur: 0.26, hueco: 0.06 }, // "aaa" (largo)
+    { f: 587, dur: 0.12, hueco: 0.05 }, // "ten" (corto)
+    { f: 740, dur: 0.22 }, //              "ción" (sube)
+  ],
+  disparen: [{ f: 1245, dur: 0.16, tipo: "triangle" }], // agudo
+  stop: [
+    { f: 311, dur: 0.14, hueco: 0.03 },
+    { f: 165, dur: 0.5 }, // grave y largo
+  ],
+  preparados: [{ f: 660, dur: 0.12 }],
+};
+
+/** Reproduce un patrón de notas con Web Audio (permitido tras un clic previo). */
+function reproducir(notas: Nota[]) {
   try {
     const Ctx =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = largo ? 880 : 660;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    osc.start();
-    const dur = largo ? 0.6 : 0.15;
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-    osc.stop(ctx.currentTime + dur);
-    osc.onended = () => ctx.close();
+    let t = ctx.currentTime;
+    for (const n of notas) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = n.tipo ?? "sine";
+      osc.frequency.value = n.f;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.3, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + n.dur);
+      osc.start(t);
+      osc.stop(t + n.dur + 0.03);
+      t += n.dur + (n.hueco ?? 0.05);
+    }
+    const fin = t;
+    setTimeout(() => ctx.close().catch(() => {}), (fin - ctx.currentTime) * 1000 + 150);
   } catch {
     /* sin audio */
   }
+}
+
+/** Reproduce el sonido de un tipo de aviso (si existe). */
+function sonar(tipo?: SonidoPaso) {
+  if (tipo) reproducir(PATRONES[tipo]);
 }
 
 function mmss(seg: number): string {
@@ -65,7 +106,7 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
         setRem(0);
         if (ultimoPaso.current !== pasos.length) {
           ultimoPaso.current = pasos.length;
-          if (plan.conPitido) beep(true);
+          if (plan.conPitido) sonar("stop");
         }
         return;
       }
@@ -79,7 +120,7 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
       setRem(Math.ceil(acc + pasos[i].seconds - el));
       if (i !== ultimoPaso.current) {
         ultimoPaso.current = i;
-        if (plan.conPitido) beep(false);
+        if (plan.conPitido) sonar(pasos[i].sonido);
       }
     };
     update();

@@ -27,11 +27,29 @@ export function faseSerie(modalitySlug: string, idx: number): Fase | null {
   return null;
 }
 
+/**
+ * Sonido asociado a la transición hacia un paso. Cada uno tiene una cadencia y
+ * un tono distintos para poder distinguirlos sin mirar la pantalla:
+ *  - "carguen": imita la cadencia "caaar-guen".
+ *  - "atencion": imita la cadencia "aaa-ten-ción".
+ *  - "disparen": comienzo de disparos, agudo.
+ *  - "preparados": aviso neutro (duelo).
+ *  - "stop": fin/alto, grave.
+ */
+export type SonidoPaso =
+  | "carguen"
+  | "atencion"
+  | "disparen"
+  | "preparados"
+  | "stop";
+
 export type PasoTimer = {
   label: string;
   seconds: number;
   // Paso de "disparo" (se resalta en verde).
   destacar?: boolean;
+  // Sonido de la transición hacia este paso.
+  sonido?: SonidoPaso;
 };
 
 /** Una opción de arranque del temporizador (un botón). */
@@ -52,11 +70,14 @@ export function opcionesConCarguen(
   intrinsecos: PasoTimer[],
   serieLabel = "Serie",
 ): Opcion[] {
-  const serie: PasoTimer[] = [{ label: "Atención", seconds: 7 }, ...intrinsecos];
+  const serie: PasoTimer[] = [
+    { label: "Atención", seconds: 7, sonido: "atencion" },
+    ...intrinsecos,
+  ];
   return [
     {
       startLabel: "Carguen",
-      steps: [{ label: "Carguen", seconds: 60 }, ...serie],
+      steps: [{ label: "Carguen", seconds: 60, sonido: "carguen" }, ...serie],
     },
     { startLabel: serieLabel, steps: serie },
   ];
@@ -65,9 +86,9 @@ export function opcionesConCarguen(
 /** Pasos intrínsecos (sin atención ni carguen) de una fase. */
 function intrinsecosDeFase(fase: Fase): PasoTimer[] {
   if (fase.tipo === "velocidad") {
-    return [{ label: `¡Disparen! (${fase.segundos}″)`, seconds: fase.segundos, destacar: true }];
+    return [{ label: `¡Disparen! (${fase.segundos}″)`, seconds: fase.segundos, destacar: true, sonido: "disparen" }];
   }
-  return [{ label: `Tiempo de tiro (${fase.segundos}″)`, seconds: fase.segundos, destacar: true }];
+  return [{ label: `Tiempo de tiro (${fase.segundos}″)`, seconds: fase.segundos, destacar: true, sonido: "disparen" }];
 }
 
 /**
@@ -104,8 +125,8 @@ export type Modulo = {
 function dueloIntrinsecos(): PasoTimer[] {
   const steps: PasoTimer[] = [];
   for (let i = 1; i <= 5; i++) {
-    steps.push({ label: `Preparados ${i}`, seconds: 7 });
-    steps.push({ label: `¡Fuego! ${i}`, seconds: 3, destacar: true });
+    steps.push({ label: `Preparados ${i}`, seconds: 7, sonido: "preparados" });
+    steps.push({ label: `¡Fuego! ${i}`, seconds: 3, destacar: true, sonido: "disparen" });
   }
   return steps;
 }
@@ -116,21 +137,21 @@ export const MODULOS: Modulo[] = [
     key: "p150",
     label: "Precisión 150″",
     shots: 5,
-    intrinsecos: [{ label: "Tiempo de tiro (150″)", seconds: 150, destacar: true }],
+    intrinsecos: [{ label: "Tiempo de tiro (150″)", seconds: 150, destacar: true, sonido: "disparen" }],
     finalLabel: "Tiempo cumplido",
   },
   {
     key: "v20",
     label: "Velocidad 20″",
     shots: 5,
-    intrinsecos: [{ label: "¡Disparen! (20″)", seconds: 20, destacar: true }],
+    intrinsecos: [{ label: "¡Disparen! (20″)", seconds: 20, destacar: true, sonido: "disparen" }],
     finalLabel: "¡Paren!",
   },
   {
     key: "v10",
     label: "Velocidad 10″",
     shots: 5,
-    intrinsecos: [{ label: "¡Disparen! (10″)", seconds: 10, destacar: true }],
+    intrinsecos: [{ label: "¡Disparen! (10″)", seconds: 10, destacar: true, sonido: "disparen" }],
     finalLabel: "¡Paren!",
   },
   {

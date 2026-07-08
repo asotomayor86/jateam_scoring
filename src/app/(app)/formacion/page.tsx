@@ -232,8 +232,28 @@ export default async function FormacionPage() {
         </ul>
         <p>
           Si pulsas la serie directamente, arranca en los 7&quot;. En entrenamientos
-          suenan pitidos en cada cambio; en oficiales, no.
+          suenan avisos en cada cambio; en oficiales, no.
         </p>
+        <p>
+          Cada aviso tiene un <strong>sonido distinto</strong> para reconocerlo de
+          oído sin mirar la pantalla:
+        </p>
+        <ul>
+          <li>
+            <strong>Carguen</strong>: dos tonos graves con la cadencia
+            &quot;caaar-guen&quot;.
+          </li>
+          <li>
+            <strong>Atención</strong>: tres tonos con la cadencia
+            &quot;aaa-ten-ción&quot; (sube al final).
+          </li>
+          <li>
+            <strong>Empiezan los disparos</strong>: un pitido <strong>agudo</strong>.
+          </li>
+          <li>
+            <strong>Alto / fin</strong>: un tono <strong>grave</strong> y largo.
+          </li>
+        </ul>
       </Tema>
 
       <Tema titulo="Entrenamiento modular">
