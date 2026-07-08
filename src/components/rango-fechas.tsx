@@ -80,7 +80,7 @@ export function RangoFechas({
   const desactivado = span <= 0;
 
   return (
-    <div style={{ padding: "1.5rem 10px 1.6rem", userSelect: "none" }}>
+    <div style={{ width: "90%", margin: "0 auto", padding: "1.4rem 0 1.5rem", userSelect: "none" }}>
       <div
         ref={ref}
         onPointerDown={onDown}
@@ -89,9 +89,9 @@ export function RangoFechas({
         onPointerCancel={onUp}
         style={{
           position: "relative",
-          height: 10,
-          background: "var(--superficie-2)",
-          borderRadius: 6,
+          height: 5,
+          background: "color-mix(in srgb, var(--texto) 12%, transparent)",
+          borderRadius: 4,
           touchAction: "none",
           cursor: desactivado ? "default" : "pointer",
         }}
@@ -104,8 +104,8 @@ export function RangoFechas({
             bottom: 0,
             left: `${fDesde * 100}%`,
             right: `${(1 - fHasta) * 100}%`,
-            background: "var(--acento)",
-            borderRadius: 6,
+            background: "color-mix(in srgb, var(--acento) 70%, transparent)",
+            borderRadius: 4,
           }}
         />
         {/* Etiqueta "hasta" (arriba) */}
@@ -129,14 +129,14 @@ function Tirador({ frac }: { frac: number }) {
         position: "absolute",
         top: "50%",
         left: `${frac * 100}%`,
-        width: 22,
-        height: 22,
-        marginTop: -11,
-        marginLeft: -11,
+        width: 17,
+        height: 17,
+        marginTop: -8.5,
+        marginLeft: -8.5,
         borderRadius: "50%",
-        background: "var(--acento)",
+        background: "color-mix(in srgb, var(--acento) 85%, transparent)",
         border: "2px solid var(--fondo)",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
         pointerEvents: "none",
       }}
     />

@@ -10,10 +10,12 @@ import { formatPunt } from "@/lib/scoring";
 import { mm } from "@/lib/diana";
 import {
   agregarTiradas,
-  agregarEntrenamientos,
+  agruparEntrenamientosPorTipo,
+  agregarTipo,
   agregarEjercicios,
   rumbo,
-  type AggTipo,
+  type GrupoTipo,
+  type ModoDatos,
 } from "@/lib/resultados";
 import type { HojaResultado, SerieResultado } from "@/db/queries/resultados";
 
@@ -55,7 +57,10 @@ export function ResultadosView({
   );
 
   const marcas = useMemo(() => agregarTiradas(hojasRango), [hojasRango]);
-  const aggs = useMemo(() => agregarEntrenamientos(hojasRango, seriesRango), [hojasRango, seriesRango]);
+  const grupos = useMemo(
+    () => agruparEntrenamientosPorTipo(hojasRango, seriesRango),
+    [hojasRango, seriesRango],
+  );
   const ejPract = useMemo(() => agregarEjercicios(seriesRango), [seriesRango]);
 
   const tiradas = hojasRango.filter((h) => h.type !== "entrenamiento");
@@ -111,7 +116,7 @@ export function ResultadosView({
       {vista === "tiradas" ? (
         <VistaTiradas marcas={marcas} tiradas={tiradas} />
       ) : (
-        <VistaEntrenamientos aggs={aggs} ejPract={ejPract} ejMap={ejMap} nEntrenos={entrenos.length} />
+        <VistaEntrenamientos grupos={grupos} ejPract={ejPract} ejMap={ejMap} nEntrenos={entrenos.length} />
       )}
     </>
   );
@@ -279,12 +284,12 @@ function VistaTiradas({
 // --- Entrenamientos ---------------------------------------------------------
 
 function VistaEntrenamientos({
-  aggs,
+  grupos,
   ejPract,
   ejMap,
   nEntrenos,
 }: {
-  aggs: AggTipo[];
+  grupos: GrupoTipo[];
   ejPract: ReturnType<typeof agregarEjercicios>;
   ejMap: Map<string, Ejercicio>;
   nEntrenos: number;
@@ -296,7 +301,7 @@ function VistaEntrenamientos({
       </p>
     );
   }
-  if (aggs.length === 0 && ejPract.length === 0) {
+  if (grupos.length === 0 && ejPract.length === 0) {
     return (
       <p style={{ color: "var(--texto-suave)" }}>
         Los entrenamientos del rango no tienen series con datos suficientes para el análisis.
@@ -305,8 +310,8 @@ function VistaEntrenamientos({
   }
   return (
     <>
-      {aggs.map((a) => (
-        <BloqueTipo key={a.tipo} a={a} />
+      {grupos.map((g) => (
+        <BloqueTipo key={g.tipo} grupo={g} />
       ))}
 
       {ejPract.length > 0 && (
@@ -345,14 +350,67 @@ function VistaEntrenamientos({
   );
 }
 
-function BloqueTipo({ a }: { a: AggTipo }) {
+const MODOS: { modo: ModoDatos; label: string }[] = [
+  { modo: "todos", label: "Todos los puntos" },
+  { modo: "tiroatiro", label: "Tiro a tiro" },
+  { modo: "diana", label: "Diana con impactos" },
+];
+
+function BloqueTipo({ grupo }: { grupo: GrupoTipo }) {
+  const [modo, setModo] = useState<ModoDatos>("todos");
+  // Si el modo elegido ya no tiene datos en este rango, cae a "todos".
+  const modoEff: ModoDatos =
+    (modo === "tiroatiro" && !grupo.hayValores) || (modo === "diana" && !grupo.hayImpactos)
+      ? "todos"
+      : modo;
+  const a = useMemo(() => agregarTipo(grupo.series, modoEff), [grupo.series, modoEff]);
+
+  const modosDisponibles = MODOS.filter(
+    (m) =>
+      m.modo === "todos" ||
+      (m.modo === "tiroatiro" && grupo.hayValores) ||
+      (m.modo === "diana" && grupo.hayImpactos),
+  );
+
   return (
     <Card style={{ marginBottom: "0.7rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <strong style={{ fontSize: "1.05rem" }}>{a.label}</strong>
-        <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)" }}>
-          {a.nSeries} series · {a.nTiros} tiros
-        </span>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "0.5rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <strong style={{ fontSize: "1.05rem" }}>{grupo.label}</strong>
+        {modosDisponibles.length > 1 && (
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            {modosDisponibles.map((m) => (
+              <button
+                key={m.modo}
+                type="button"
+                onClick={() => setModo(m.modo)}
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                  padding: "0.2rem 0.5rem",
+                  borderRadius: 999,
+                  cursor: "pointer",
+                  border: "1px solid var(--borde)",
+                  color: modoEff === m.modo ? "var(--fondo)" : "var(--texto-suave)",
+                  background: modoEff === m.modo ? "var(--acento)" : "transparent",
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ fontSize: "0.8rem", color: "var(--texto-suave)", marginTop: "0.15rem" }}>
+        {a.nSeries} series · {a.nTiros} tiros
       </div>
 
       <div style={{ display: "flex", gap: "1.2rem", marginTop: "0.5rem", flexWrap: "wrap" }}>

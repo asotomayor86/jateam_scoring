@@ -63,79 +63,72 @@ function desviacion(xs: number[]): number {
   return Math.sqrt(v);
 }
 
-export type AggTipo = {
+/**
+ * Filtro de datos dentro de una sección:
+ *  - "todos": todas las series del periodo. Una estadística solo se muestra si es
+ *    rigurosa para TODAS (reparto/desviación exigen que todas tengan detalle tiro
+ *    a tiro; agrupación exige que todas tengan impactos de diana).
+ *  - "tiroatiro": solo las series con detalle por tiro.
+ *  - "diana": solo las series registradas en diana/láser (con impactos).
+ */
+export type ModoDatos = "todos" | "tiroatiro" | "diana";
+
+/** Una serie de entrenamiento ya clasificada, con lo necesario para agregar. */
+export type SerieTipo = {
+  date: string;
+  shotCount: number;
+  subtotal: number;
+  valores: number[];
+  impactos: Impacto[];
+  tieneValores: boolean;
+  tieneImpactos: boolean;
+};
+
+export type GrupoTipo = {
   tipo: TipoEj;
   label: string;
+  series: SerieTipo[];
+  /** ¿Alguna serie tiene detalle por tiro? (para ofrecer el filtro). */
+  hayValores: boolean;
+  /** ¿Alguna serie tiene impactos de diana? (para ofrecer el filtro). */
+  hayImpactos: boolean;
+};
+
+export type AggTipo = {
   nSeries: number;
   nTiros: number;
-  /** Media por tiro (puntos totales / tiros). null si no hay tiros. */
   mediaPorTiro: number | null;
-  /** Desviación típica por tiro (consistencia). null si no hay valores. */
   desviacion: number | null;
-  /** Media por serie más alta y más baja (subtotal/tiros). */
   mejorSerie: number | null;
   peorSerie: number | null;
-  /** Reparto de valores: índice = valor (0..10), contenido = nº de tiros. */
   reparto: number[];
-  /** ¿Hay valores individuales para el reparto/desviación? */
+  /** El reparto/desviación son rigurosos (todas las series consideradas tienen valores). */
   conValores: boolean;
-  /** ¿Hay impactos (diana/láser) para el análisis de agrupación? */
+  /** La agrupación es rigurosa (todas las series consideradas tienen impactos). */
   conImpactos: boolean;
   impactos: Impacto[];
-  /** Tamaño de agrupación medio (extreme spread por serie, mm). */
   agrupacionMedia: number | null;
-  /** Dispersión media (mm). */
   dispersionMedia: number | null;
-  /** Deriva sistemática (centro medio de los impactos, mm desde el centro). */
   derivaX: number | null;
   derivaY: number | null;
   derivaMag: number | null;
-  /** Progresión: media por tiro por fecha (orden cronológico). */
   progresion: { fecha: string; media: number }[];
 };
 
-type Acc = {
-  nSeries: number;
-  nTiros: number;
-  sumPuntos: number;
-  valores: number[];
-  reparto: number[];
-  mediasSerie: number[];
-  impactos: Impacto[];
-  spreads: number[];
-  dispersions: number[];
-  porFecha: Map<string, { suma: number; tiros: number }>;
-};
-
-function nuevoAcc(): Acc {
-  return {
-    nSeries: 0,
-    nTiros: 0,
-    sumPuntos: 0,
-    valores: [],
-    reparto: new Array(11).fill(0),
-    mediasSerie: [],
-    impactos: [],
-    spreads: [],
-    dispersions: [],
-    porFecha: new Map(),
-  };
-}
-
 /**
- * Agrega las series de entrenamiento por tipo de ejercicio. Devuelve solo los
- * tipos con datos, en orden precisión → vel 20 → vel 10 → duelo.
+ * Agrupa las series de entrenamiento por tipo de ejercicio (sin agregar todavía).
+ * Devuelve solo los tipos con datos, en orden precisión → vel 20 → vel 10 → duelo.
  */
-export function agregarEntrenamientos(
+export function agruparEntrenamientosPorTipo(
   hojas: HojaResultado[],
   series: SerieResultado[],
-): AggTipo[] {
+): GrupoTipo[] {
   const hojaDe = new Map(hojas.map((h) => [h.scorecardId, h]));
-  const acc: Record<TipoEj, Acc> = {
-    precision: nuevoAcc(),
-    vel20: nuevoAcc(),
-    vel10: nuevoAcc(),
-    duelo: nuevoAcc(),
+  const grupos: Record<TipoEj, SerieTipo[]> = {
+    precision: [],
+    vel20: [],
+    vel10: [],
+    duelo: [],
   };
 
   for (const s of series) {
@@ -144,67 +137,111 @@ export function agregarEntrenamientos(
     if (!h || h.type !== "entrenamiento") continue;
     const tipo = tipoDeSerie(h.modalitySlug, s.moduleType, s.idx);
     if (!tipo) continue;
-    const a = acc[tipo];
 
-    const vals = valoresDeSerie(s);
-    const tiros = s.shotCount || vals.length;
-    if (tiros === 0 && vals.length === 0 && s.subtotal === 0) continue; // serie vacía
+    const impactos = s.impacts ?? [];
+    const valores = valoresDeSerie(s);
+    const shotCount = s.shotCount || valores.length || impactos.length;
+    if (shotCount === 0 && s.subtotal === 0 && valores.length === 0) continue; // vacía
 
-    a.nSeries++;
-    a.nTiros += tiros;
-    a.sumPuntos += s.subtotal;
-    for (const v of vals) {
-      a.valores.push(v);
+    grupos[tipo].push({
+      date: h.date,
+      shotCount,
+      subtotal: s.subtotal,
+      valores,
+      impactos,
+      tieneValores: valores.length > 0,
+      tieneImpactos: impactos.length > 0,
+    });
+  }
+
+  const res: GrupoTipo[] = [];
+  for (const tipo of ORDEN_TIPO) {
+    const arr = grupos[tipo];
+    if (arr.length === 0) continue;
+    res.push({
+      tipo,
+      label: TIPO_LABEL[tipo],
+      series: arr,
+      hayValores: arr.some((x) => x.tieneValores),
+      hayImpactos: arr.some((x) => x.tieneImpactos),
+    });
+  }
+  return res;
+}
+
+/**
+ * Agrega las series de un tipo según el modo de datos elegido. Cada estadística
+ * solo se marca como mostrable (`conValores`/`conImpactos`) si es rigurosa para
+ * TODAS las series consideradas en ese modo.
+ */
+export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
+  const sub =
+    modo === "tiroatiro"
+      ? series.filter((s) => s.tieneValores)
+      : modo === "diana"
+        ? series.filter((s) => s.tieneImpactos)
+        : series;
+
+  let nTiros = 0;
+  let sumPuntos = 0;
+  const valores: number[] = [];
+  const reparto = new Array(11).fill(0);
+  const mediasSerie: number[] = [];
+  const impactos: Impacto[] = [];
+  const spreads: number[] = [];
+  const dispersions: number[] = [];
+  const porFecha = new Map<string, { suma: number; tiros: number }>();
+
+  for (const s of sub) {
+    nTiros += s.shotCount;
+    sumPuntos += s.subtotal;
+    for (const v of s.valores) {
+      valores.push(v);
       const k = Math.round(v);
-      if (k >= 0 && k <= 10) a.reparto[k]++;
+      if (k >= 0 && k <= 10) reparto[k]++;
     }
-    if (tiros > 0) {
-      const m = s.subtotal / tiros;
-      a.mediasSerie.push(m);
-      const f = a.porFecha.get(h.date) ?? { suma: 0, tiros: 0 };
+    if (s.shotCount > 0) {
+      mediasSerie.push(s.subtotal / s.shotCount);
+      const f = porFecha.get(s.date) ?? { suma: 0, tiros: 0 };
       f.suma += s.subtotal;
-      f.tiros += tiros;
-      a.porFecha.set(h.date, f);
+      f.tiros += s.shotCount;
+      porFecha.set(s.date, f);
     }
-    if (s.impacts && s.impacts.length) {
-      a.impactos.push(...s.impacts);
-      const st = estadisticas(s.impacts);
+    if (s.impactos.length) {
+      impactos.push(...s.impactos);
+      const st = estadisticas(s.impactos);
       if (st) {
-        a.spreads.push(st.spread);
-        a.dispersions.push(st.dispersion);
+        spreads.push(st.spread);
+        dispersions.push(st.dispersion);
       }
     }
   }
 
-  const res: AggTipo[] = [];
-  for (const tipo of ORDEN_TIPO) {
-    const a = acc[tipo];
-    if (a.nSeries === 0) continue;
-    const stGlobal = a.impactos.length ? estadisticas(a.impactos) : null;
-    res.push({
-      tipo,
-      label: TIPO_LABEL[tipo],
-      nSeries: a.nSeries,
-      nTiros: a.nTiros,
-      mediaPorTiro: a.nTiros > 0 ? a.sumPuntos / a.nTiros : null,
-      desviacion: a.valores.length >= 2 ? desviacion(a.valores) : null,
-      mejorSerie: a.mediasSerie.length ? Math.max(...a.mediasSerie) : null,
-      peorSerie: a.mediasSerie.length ? Math.min(...a.mediasSerie) : null,
-      reparto: a.reparto,
-      conValores: a.valores.length > 0,
-      conImpactos: a.impactos.length > 0,
-      impactos: a.impactos,
-      agrupacionMedia: a.spreads.length ? media(a.spreads) : null,
-      dispersionMedia: a.dispersions.length ? media(a.dispersions) : null,
-      derivaX: stGlobal ? stGlobal.mpiX : null,
-      derivaY: stGlobal ? stGlobal.mpiY : null,
-      derivaMag: stGlobal ? stGlobal.offset : null,
-      progresion: [...a.porFecha.entries()]
-        .sort((x, y) => x[0].localeCompare(y[0]))
-        .map(([fecha, f]) => ({ fecha, media: f.suma / f.tiros })),
-    });
-  }
-  return res;
+  const n = sub.length;
+  const todosValores = n > 0 && sub.every((s) => s.tieneValores);
+  const todosImpactos = n > 0 && sub.every((s) => s.tieneImpactos);
+  const stGlobal = todosImpactos && impactos.length ? estadisticas(impactos) : null;
+
+  return {
+    nSeries: n,
+    nTiros,
+    mediaPorTiro: nTiros > 0 ? sumPuntos / nTiros : null,
+    desviacion: todosValores && valores.length >= 2 ? desviacion(valores) : null,
+    mejorSerie: mediasSerie.length ? Math.max(...mediasSerie) : null,
+    peorSerie: mediasSerie.length ? Math.min(...mediasSerie) : null,
+    reparto,
+    conValores: todosValores,
+    conImpactos: todosImpactos,
+    impactos: todosImpactos ? impactos : [],
+    agrupacionMedia: todosImpactos && spreads.length ? media(spreads) : null,
+    dispersionMedia: todosImpactos && dispersions.length ? media(dispersions) : null,
+    derivaX: stGlobal ? stGlobal.mpiX : null,
+    derivaY: stGlobal ? stGlobal.mpiY : null,
+    derivaMag: stGlobal ? stGlobal.offset : null,
+    progresion: [...porFecha.entries()]
+      .sort((x, y) => x[0].localeCompare(y[0]))
+      .map(([fecha, f]) => ({ fecha, media: f.suma / f.tiros })),
+  };
 }
 
 // --- Tiradas (oficiales / amistosas) ----------------------------------------
