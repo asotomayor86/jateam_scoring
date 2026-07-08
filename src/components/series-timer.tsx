@@ -12,9 +12,9 @@ type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: Oscill
 /**
  * Patrones sonoros por tipo de aviso. La idea es que cada uno tenga una cadencia
  * y un tono reconocibles de oído, sin mirar la pantalla:
- *  - carguen: calcado de la grabación real "caaaar-guééen": ~100 Hz sostenido y
- *    largo (0,9 s) + subida acentuada a ~150 Hz al final. Onda de sierra para que
- *    un tono tan grave se oiga en el móvil.
+ *  - carguen: calcado de la grabación real "caaaar-guééen": grave y sostenido
+ *    largo (0,9 s) + subida acentuada al final. Onda triangular (cálida, sin el
+ *    zumbido de la sierra) en un registro grave pero audible en el móvil.
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
  *  - disparen: un pitido agudo y brillante (empiezan los disparos).
  *  - alto: alto el fuego entre exposiciones del duelo (grave, medio).
@@ -22,8 +22,8 @@ type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: Oscill
  */
 const PATRONES: Record<SonidoPaso, Nota[]> = {
   carguen: [
-    { f: 100, f2: 108, dur: 0.9, hueco: 0.07, tipo: "sawtooth" }, // "caaaar" (grave, sostenida)
-    { f: 108, f2: 150, dur: 0.24, tipo: "sawtooth" }, //            "guééen" (sube, acentuada)
+    { f: 131, f2: 139, dur: 0.9, hueco: 0.07, tipo: "triangle" }, // "caaaar" (grave, sostenida)
+    { f: 139, f2: 196, dur: 0.24, tipo: "triangle" }, //            "guééen" (sube, acentuada)
   ],
   atencion: [
     { f: 587, dur: 0.26, hueco: 0.06 }, // "aaa" (largo)
