@@ -80,17 +80,18 @@ export function TiradaCard(t: Props) {
             </div>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
-            {!t.isPublic ? (
-              <span className="chip" style={{ marginRight: "0.3rem" }}>
-                🔒 Privado
-              </span>
-            ) : null}
-            {t.closed ? (
-              <span className="chip" style={{ marginRight: "0.3rem" }}>
-                Cerrada
-              </span>
-            ) : null}
-            <TipoChip tipo={t.type} />
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.3rem",
+                justifyContent: "flex-end",
+              }}
+            >
+              {!t.isPublic ? <span className="chip">🔒 Priv</span> : null}
+              {t.closed ? <span className="chip">Cerr</span> : null}
+              <TipoChip tipo={t.type} corto />
+            </div>
             <div
               style={{
                 marginTop: "0.4rem",

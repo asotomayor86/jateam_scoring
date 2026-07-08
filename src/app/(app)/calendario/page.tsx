@@ -221,12 +221,13 @@ function VistaMes({
   // Eventos por fecha, con su categoría (color).
   const porFecha = new Map<
     string,
-    { id: string; kind: "tirada" | "comida"; cat: string; label: string }[]
+    { id: string; kind: "tirada" | "comida"; cat: string; label: string; closed: boolean }[]
   >();
   for (const it of items) {
     const label = it.kind === "tirada" ? it.data.modalityName : it.data.name || "Comida";
+    const closed = it.kind === "tirada" ? it.data.closed : false;
     const arr = porFecha.get(it.date) ?? [];
-    arr.push({ id: it.data.id, kind: it.kind, cat: categoria(it), label });
+    arr.push({ id: it.data.id, kind: it.kind, cat: categoria(it), label, closed });
     porFecha.set(it.date, arr);
   }
 
@@ -301,7 +302,11 @@ function VistaMes({
             >
               <span className="dia">{c.dia}</span>
               {eventos.slice(0, 3).map((e, j) => (
-                <span key={j} className={`cal-pill cal-pill-${e.cat}`} title={e.label}>
+                <span
+                  key={j}
+                  className={`cal-pill cal-pill-${e.cat}${e.closed ? " cal-pill-cerrada" : ""}`}
+                  title={e.closed ? `${e.label} (cerrada)` : e.label}
+                >
                   {e.label}
                 </span>
               ))}

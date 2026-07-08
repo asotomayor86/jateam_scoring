@@ -89,16 +89,21 @@ export function Aviso({
   );
 }
 
-/** Etiqueta de color según el tipo de tirada. */
-export function TipoChip({ tipo }: { tipo: string }) {
+/** Etiqueta de color según el tipo de tirada. `corto` abrevia el texto (para tarjetas estrechas). */
+export function TipoChip({ tipo, corto }: { tipo: string; corto?: boolean }) {
   const clase =
     tipo === "oficial"
       ? "chip chip-oficial"
       : tipo === "semioficial"
         ? "chip chip-semioficial"
         : "chip chip-entrenamiento";
-  const texto =
-    tipo === "oficial"
+  const texto = corto
+    ? tipo === "oficial"
+      ? "Ofi"
+      : tipo === "semioficial"
+        ? "Amist"
+        : "Ent"
+    : tipo === "oficial"
       ? "Oficial"
       : tipo === "semioficial"
         ? "Amistosa"
