@@ -33,12 +33,14 @@ export function faseSerie(modalitySlug: string, idx: number): Fase | null {
  *  - "carguen": imita la cadencia "caaar-guen".
  *  - "atencion": imita la cadencia "aaa-ten-ción".
  *  - "disparen": comienzo de disparos, agudo.
- *  - "stop": fin/alto, grave.
+ *  - "alto": alto el fuego entre exposiciones (grave, medio).
+ *  - "fin": final de la serie (grave y largo, más que el alto).
  *
- * En el duelo, el "preparados" de cada exposición es una atención más (mismo
- * sonido); no hay un sonido "preparados" propio.
+ * En el duelo 7/3 la cadencia es: Atención · Fuego · Alto · Fuego · Alto ·
+ * Fuego · Alto · Fuego · Alto · Fuego · Fin (una sola atención al principio;
+ * entre fuegos suena "alto"; al terminar, "fin").
  */
-export type SonidoPaso = "carguen" | "atencion" | "disparen" | "stop";
+export type SonidoPaso = "carguen" | "atencion" | "disparen" | "alto" | "fin";
 
 export type PasoTimer = {
   label: string;
@@ -122,11 +124,19 @@ export type Modulo = {
   sinAtencionInicial?: boolean;
 };
 
-/** Pasos del duelo 7/3: 5 exposiciones (7" de atención, 3" ¡Fuego!). */
+/**
+ * Pasos del duelo 7/3: una atención inicial (7") y 5 exposiciones de 3" de
+ * fuego, con 7" de "alto" entre una y la siguiente. La cadencia sonora es
+ * Atención · Fuego · Alto · Fuego · … · Alto · Fuego · (Fin).
+ */
 function dueloIntrinsecos(): PasoTimer[] {
   const steps: PasoTimer[] = [];
   for (let i = 1; i <= 5; i++) {
-    steps.push({ label: `Atención ${i}`, seconds: 7, sonido: "atencion" });
+    if (i === 1) {
+      steps.push({ label: "Atención", seconds: 7, sonido: "atencion" });
+    } else {
+      steps.push({ label: `Alto ${i - 1}`, seconds: 7, sonido: "alto" });
+    }
     steps.push({ label: `¡Fuego! ${i}`, seconds: 3, destacar: true, sonido: "disparen" });
   }
   return steps;

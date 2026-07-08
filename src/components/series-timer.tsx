@@ -12,7 +12,8 @@ type Nota = { f: number; dur: number; hueco?: number; tipo?: OscillatorType };
  *  - carguen: dos golpes graves imitando "caaaaaar-guen" (1ª sílaba muy larga, baja).
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
  *  - disparen: un pitido agudo y brillante (empiezan los disparos).
- *  - stop: un tono grave y largo, descendente (alto / fin).
+ *  - alto: alto el fuego entre exposiciones del duelo (grave, medio).
+ *  - fin: final de la serie (grave y bastante más largo que el alto).
  */
 const PATRONES: Record<SonidoPaso, Nota[]> = {
   carguen: [
@@ -25,14 +26,20 @@ const PATRONES: Record<SonidoPaso, Nota[]> = {
     { f: 740, dur: 0.22 }, //              "ción" (sube)
   ],
   disparen: [{ f: 1245, dur: 0.16, tipo: "triangle" }], // agudo
-  stop: [
+  alto: [
     { f: 311, dur: 0.14, hueco: 0.03 },
-    { f: 165, dur: 0.5 }, // grave y largo
+    { f: 165, dur: 0.5 }, // grave y medio
+  ],
+  fin: [
+    { f: 233, dur: 0.22, hueco: 0.04 },
+    { f: 117, dur: 0.9, hueco: 0.04 }, // muy grave
+    { f: 87, dur: 1.1 }, //              aún más grave y largo
   ],
 };
 
-// Volumen alto para oírlo en el campo de tiro (junto con el compresor de abajo).
-const VOLUMEN = 0.9;
+// Volumen muy alto para oírlo en el campo de tiro (el compresor de abajo evita
+// que sature al empujar tanto nivel).
+const VOLUMEN = 1.7;
 
 /** Reproduce un patrón de notas con Web Audio (permitido tras un clic previo). */
 function reproducir(notas: Nota[]) {
@@ -42,13 +49,17 @@ function reproducir(notas: Nota[]) {
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     const ctx = new Ctx();
-    // Compresor: permite subir mucho el nivel sin que sature/chasquee.
+    // Cadena: notas → compresor (limita picos al empujar mucho nivel) → makeup
+    // (sube el volumen ya comprimido, cerca del máximo sin saturar).
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -18;
-    comp.ratio.value = 12;
+    comp.threshold.value = -24;
+    comp.ratio.value = 20;
     comp.attack.value = 0.002;
     comp.release.value = 0.15;
-    comp.connect(ctx.destination);
+    const makeup = ctx.createGain();
+    makeup.gain.value = 3.2;
+    comp.connect(makeup);
+    makeup.connect(ctx.destination);
     let t = ctx.currentTime;
     for (const n of notas) {
       const osc = ctx.createOscillator();
@@ -115,7 +126,7 @@ export function SeriesTimer({ plan }: { plan: PlanTimer }) {
         setRem(0);
         if (ultimoPaso.current !== pasos.length) {
           ultimoPaso.current = pasos.length;
-          if (plan.conPitido) sonar("stop");
+          if (plan.conPitido) sonar("fin");
         }
         return;
       }

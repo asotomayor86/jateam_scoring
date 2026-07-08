@@ -251,9 +251,19 @@ export default async function FormacionPage() {
             <strong>Empiezan los disparos</strong>: un pitido <strong>agudo</strong>.
           </li>
           <li>
-            <strong>Alto / fin</strong>: un tono <strong>grave</strong> y largo.
+            <strong>Alto</strong> (alto el fuego entre exposiciones del duelo): un
+            tono <strong>grave</strong> medio.
+          </li>
+          <li>
+            <strong>Fin</strong> (fin de la serie): un tono <strong>grave y largo</strong>,
+            más que el alto.
           </li>
         </ul>
+        <p>
+          En el <strong>duelo 7/3</strong> la cadencia es: Atención · Fuego · Alto ·
+          Fuego · Alto · Fuego · Alto · Fuego · Alto · Fuego · Fin (una sola atención
+          al principio; entre fuegos suena &quot;alto&quot;; al terminar, &quot;fin&quot;).
+        </p>
       </Tema>
 
       <Tema titulo="Entrenamiento modular">
