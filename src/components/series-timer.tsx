@@ -12,7 +12,9 @@ type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: Oscill
 /**
  * Patrones sonoros por tipo de aviso. La idea es que cada uno tenga una cadencia
  * y un tono reconocibles de oído, sin mirar la pantalla:
- *  - carguen: "caaaaaar-guééen": 1ª sílaba sostenida y larga (sin caer), 2ª sube y se acentúa al final.
+ *  - carguen: calcado de la grabación real "caaaar-guééen": ~100 Hz sostenido y
+ *    largo (0,9 s) + subida acentuada a ~150 Hz al final. Onda de sierra para que
+ *    un tono tan grave se oiga en el móvil.
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
  *  - disparen: un pitido agudo y brillante (empiezan los disparos).
  *  - alto: alto el fuego entre exposiciones del duelo (grave, medio).
@@ -20,8 +22,8 @@ type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: Oscill
  */
 const PATRONES: Record<SonidoPaso, Nota[]> = {
   carguen: [
-    { f: 523, dur: 1.0, hueco: 0.05 }, //         "caaaaaar" (sostenida, larga, sin caer)
-    { f: 523, f2: 659, dur: 0.42 }, //            "guééen"   (sube y se acentúa al final)
+    { f: 100, f2: 108, dur: 0.9, hueco: 0.07, tipo: "sawtooth" }, // "caaaar" (grave, sostenida)
+    { f: 108, f2: 150, dur: 0.24, tipo: "sawtooth" }, //            "guééen" (sube, acentuada)
   ],
   atencion: [
     { f: 587, dur: 0.26, hueco: 0.06 }, // "aaa" (largo)
@@ -43,13 +45,6 @@ const PATRONES: Record<SonidoPaso, Nota[]> = {
 // Volumen muy alto para oírlo en el campo de tiro (el compresor de abajo evita
 // que sature al empujar tanto nivel).
 const VOLUMEN = 1.7;
-
-/** Muestras de audio grabadas por tipo de aviso (si existen). Se intentan primero
- *  y, si el navegador no las puede decodificar (p. ej. Ogg en iOS), se cae al
- *  pitido sintético. */
-const MUESTRAS: Partial<Record<SonidoPaso, string>> = {
-  carguen: "/carguen.ogg",
-};
 
 function nuevoCtx(): AudioContext | null {
   const Ctx =
@@ -106,48 +101,9 @@ function reproducir(notas: Nota[]) {
   }
 }
 
-// Muestras que ya fallaron al decodificarse: no reintentarlas, ir directas al
-// pitido sintético.
-const muestraFallida = new Set<string>();
-
-/**
- * Reproduce una muestra grabada. Si no se puede decodificar (formato no
- * soportado, p. ej. Ogg en iOS) o falla la carga, ejecuta `fallback`.
- */
-function reproducirMuestra(url: string, fallback: () => void) {
-  if (muestraFallida.has(url)) {
-    fallback();
-    return;
-  }
-  const ctx = nuevoCtx();
-  if (!ctx) {
-    fallback();
-    return;
-  }
-  const entrada = crearCadena(ctx, 2.4);
-  fetch(url)
-    .then((r) => r.arrayBuffer())
-    .then((b) => ctx.decodeAudioData(b))
-    .then((buf) => {
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(entrada);
-      src.start();
-      src.onended = () => ctx.close().catch(() => {});
-    })
-    .catch(() => {
-      muestraFallida.add(url);
-      ctx.close().catch(() => {});
-      fallback();
-    });
-}
-
 /** Reproduce el sonido de un tipo de aviso (si existe). */
 function sonar(tipo?: SonidoPaso) {
-  if (!tipo) return;
-  const url = MUESTRAS[tipo];
-  if (url) reproducirMuestra(url, () => reproducir(PATRONES[tipo]));
-  else reproducir(PATRONES[tipo]);
+  if (tipo) reproducir(PATRONES[tipo]);
 }
 
 function mmss(seg: number): string {
