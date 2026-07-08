@@ -3,13 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlanTimer, PasoTimer, SonidoPaso } from "@/lib/fases";
 
-/** Una nota de un patrón sonoro. */
-type Nota = { f: number; dur: number; hueco?: number; tipo?: OscillatorType };
+/**
+ * Una nota de un patrón sonoro. Si se indica `f2`, el tono desliza de `f` a `f2`
+ * a lo largo de la nota (para acentuar/subir al final, p. ej. "guééen").
+ */
+type Nota = { f: number; f2?: number; dur: number; hueco?: number; tipo?: OscillatorType };
 
 /**
  * Patrones sonoros por tipo de aviso. La idea es que cada uno tenga una cadencia
  * y un tono reconocibles de oído, sin mirar la pantalla:
- *  - carguen: dos golpes graves imitando "caaaaaar-guen" (1ª sílaba muy larga, baja).
+ *  - carguen: "caaaaaar-guééen": 1ª sílaba sostenida y larga (sin caer), 2ª sube y se acentúa al final.
  *  - atencion: tres golpes imitando "aaa-ten-ción" (largo-corto-corto, sube al final).
  *  - disparen: un pitido agudo y brillante (empiezan los disparos).
  *  - alto: alto el fuego entre exposiciones del duelo (grave, medio).
@@ -17,8 +20,8 @@ type Nota = { f: number; dur: number; hueco?: number; tipo?: OscillatorType };
  */
 const PATRONES: Record<SonidoPaso, Nota[]> = {
   carguen: [
-    { f: 523, dur: 0.85, hueco: 0.06 }, // "caaaaaar" (muy largo)
-    { f: 415, dur: 0.2 }, //               "guen"     (corto, baja)
+    { f: 523, dur: 1.0, hueco: 0.05 }, //         "caaaaaar" (sostenida, larga, sin caer)
+    { f: 523, f2: 659, dur: 0.42 }, //            "guééen"   (sube y se acentúa al final)
   ],
   atencion: [
     { f: 587, dur: 0.26, hueco: 0.06 }, // "aaa" (largo)
@@ -65,7 +68,8 @@ function reproducir(notas: Nota[]) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = n.tipo ?? "sine";
-      osc.frequency.value = n.f;
+      osc.frequency.setValueAtTime(n.f, t);
+      if (n.f2) osc.frequency.linearRampToValueAtTime(n.f2, t + n.dur);
       osc.connect(gain);
       gain.connect(comp);
       gain.gain.setValueAtTime(0.0001, t);
