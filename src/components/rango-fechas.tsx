@@ -80,7 +80,7 @@ export function RangoFechas({
   const desactivado = span <= 0;
 
   return (
-    <div style={{ width: "90%", margin: "0 auto", padding: "1.4rem 0 1.5rem", userSelect: "none" }}>
+    <div style={{ width: "90%", margin: "0 auto", padding: "2rem 0 2.1rem", userSelect: "none" }}>
       <div
         ref={ref}
         onPointerDown={onDown}
@@ -158,7 +158,7 @@ function Etiqueta({
         position: "absolute",
         left: `${frac * 100}%`,
         transform: "translateX(-50%)",
-        [arriba ? "bottom" : "top"]: 20,
+        [arriba ? "bottom" : "top"]: 11,
         fontSize: "0.75rem",
         fontWeight: 700,
         color: "var(--texto)",

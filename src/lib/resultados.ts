@@ -75,6 +75,8 @@ export type ModoDatos = "todos" | "tiroatiro" | "diana";
 
 /** Una serie de entrenamiento ya clasificada, con lo necesario para agregar. */
 export type SerieTipo = {
+  tiradaId: string;
+  idx: number;
   date: string;
   shotCount: number;
   subtotal: number;
@@ -83,6 +85,13 @@ export type SerieTipo = {
   tieneValores: boolean;
   tieneImpactos: boolean;
 };
+
+/** Subconjunto de series de un grupo según el modo de datos. */
+export function seriesDelModo(series: SerieTipo[], modo: ModoDatos): SerieTipo[] {
+  if (modo === "tiroatiro") return series.filter((s) => s.tieneValores);
+  if (modo === "diana") return series.filter((s) => s.tieneImpactos);
+  return series;
+}
 
 export type GrupoTipo = {
   tipo: TipoEj;
@@ -144,6 +153,8 @@ export function agruparEntrenamientosPorTipo(
     if (shotCount === 0 && s.subtotal === 0 && valores.length === 0) continue; // vacía
 
     grupos[tipo].push({
+      tiradaId: h.tiradaId,
+      idx: s.idx,
       date: h.date,
       shotCount,
       subtotal: s.subtotal,
@@ -175,12 +186,7 @@ export function agruparEntrenamientosPorTipo(
  * TODAS las series consideradas en ese modo.
  */
 export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
-  const sub =
-    modo === "tiroatiro"
-      ? series.filter((s) => s.tieneValores)
-      : modo === "diana"
-        ? series.filter((s) => s.tieneImpactos)
-        : series;
+  const sub = seriesDelModo(series, modo);
 
   let nTiros = 0;
   let sumPuntos = 0;

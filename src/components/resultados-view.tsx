@@ -12,10 +12,12 @@ import {
   agregarTiradas,
   agruparEntrenamientosPorTipo,
   agregarTipo,
+  seriesDelModo,
   agregarEjercicios,
   rumbo,
   type GrupoTipo,
   type ModoDatos,
+  type SerieTipo,
 } from "@/lib/resultados";
 import type { HojaResultado, SerieResultado } from "@/db/queries/resultados";
 
@@ -116,7 +118,7 @@ export function ResultadosView({
       {vista === "tiradas" ? (
         <VistaTiradas marcas={marcas} tiradas={tiradas} />
       ) : (
-        <VistaEntrenamientos grupos={grupos} ejPract={ejPract} ejMap={ejMap} nEntrenos={entrenos.length} />
+        <VistaEntrenamientos grupos={grupos} ejPract={ejPract} ejMap={ejMap} entrenos={entrenos} />
       )}
     </>
   );
@@ -287,14 +289,15 @@ function VistaEntrenamientos({
   grupos,
   ejPract,
   ejMap,
-  nEntrenos,
+  entrenos,
 }: {
   grupos: GrupoTipo[];
   ejPract: ReturnType<typeof agregarEjercicios>;
   ejMap: Map<string, Ejercicio>;
-  nEntrenos: number;
+  entrenos: HojaResultado[];
 }) {
-  if (nEntrenos === 0) {
+  const [verEntrenos, setVerEntrenos] = useState(false);
+  if (entrenos.length === 0) {
     return (
       <p style={{ color: "var(--texto-suave)" }}>
         No hay entrenamientos en el rango seleccionado.
@@ -310,13 +313,17 @@ function VistaEntrenamientos({
   }
   return (
     <>
+      {grupos.length > 0 && <SeccionTitulo>Series realizadas</SeccionTitulo>}
       {grupos.map((g) => (
         <BloqueTipo key={g.tipo} grupo={g} />
       ))}
 
       {ejPract.length > 0 && (
         <>
-          <SeccionTitulo>Ejercicios practicados</SeccionTitulo>
+          <SeccionTitulo extra={<EnlaceToggle texto="Ver entrenamientos" onClick={() => setVerEntrenos((v) => !v)} abierto={verEntrenos} />}>
+            Ejercicios practicados
+          </SeccionTitulo>
+          {verEntrenos && <ListaHojas hojas={entrenos} />}
           <Card>
             <table className="tabla">
               <thead>
@@ -358,61 +365,59 @@ const MODOS: { modo: ModoDatos; label: string }[] = [
 
 function BloqueTipo({ grupo }: { grupo: GrupoTipo }) {
   const [modo, setModo] = useState<ModoDatos>("todos");
-  // Si el modo elegido ya no tiene datos en este rango, cae a "todos".
-  const modoEff: ModoDatos =
-    (modo === "tiroatiro" && !grupo.hayValores) || (modo === "diana" && !grupo.hayImpactos)
-      ? "todos"
-      : modo;
-  const a = useMemo(() => agregarTipo(grupo.series, modoEff), [grupo.series, modoEff]);
-
-  const modosDisponibles = MODOS.filter(
-    (m) =>
-      m.modo === "todos" ||
-      (m.modo === "tiroatiro" && grupo.hayValores) ||
-      (m.modo === "diana" && grupo.hayImpactos),
-  );
+  const [verApuntes, setVerApuntes] = useState(false);
+  const a = useMemo(() => agregarTipo(grupo.series, modo), [grupo.series, modo]);
+  const sub = useMemo(() => seriesDelModo(grupo.series, modo), [grupo.series, modo]);
 
   return (
     <Card style={{ marginBottom: "0.7rem" }}>
+      <span className="seccion-titulo" style={{ fontSize: "1.05rem" }}>
+        {grupo.label}
+      </span>
+
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
-          gap: "0.5rem",
+          gap: 6,
           flexWrap: "wrap",
+          margin: "0.5rem 0 0.1rem",
         }}
       >
-        <strong style={{ fontSize: "1.05rem" }}>{grupo.label}</strong>
-        {modosDisponibles.length > 1 && (
-          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-            {modosDisponibles.map((m) => (
-              <button
-                key={m.modo}
-                type="button"
-                onClick={() => setModo(m.modo)}
-                style={{
-                  fontSize: "0.72rem",
-                  fontWeight: 600,
-                  padding: "0.2rem 0.5rem",
-                  borderRadius: 999,
-                  cursor: "pointer",
-                  border: "1px solid var(--borde)",
-                  color: modoEff === m.modo ? "var(--fondo)" : "var(--texto-suave)",
-                  background: modoEff === m.modo ? "var(--acento)" : "transparent",
-                }}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-        )}
+        {MODOS.map((m) => (
+          <button
+            key={m.modo}
+            type="button"
+            onClick={() => setModo(m.modo)}
+            style={{
+              fontSize: "0.72rem",
+              fontWeight: 600,
+              padding: "0.22rem 0.55rem",
+              borderRadius: 999,
+              cursor: "pointer",
+              border: "1px solid var(--borde)",
+              color: modo === m.modo ? "var(--fondo)" : "var(--texto-suave)",
+              background: modo === m.modo ? "var(--acento)" : "transparent",
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
+        <EnlaceToggle texto="Ver apuntes" onClick={() => setVerApuntes((v) => !v)} abierto={verApuntes} />
       </div>
 
-      <div style={{ fontSize: "0.8rem", color: "var(--texto-suave)", marginTop: "0.15rem" }}>
+      {verApuntes && <ListaApuntes series={sub} />}
+
+      <div style={{ fontSize: "0.8rem", color: "var(--texto-suave)", marginTop: "0.35rem" }}>
         {a.nSeries} series · {a.nTiros} tiros
       </div>
 
+      {a.nSeries === 0 ? (
+        <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", marginTop: "0.4rem" }}>
+          No hay series de este tipo con esos datos en el rango.
+        </p>
+      ) : (
+        <>
       <div style={{ display: "flex", gap: "1.2rem", marginTop: "0.5rem", flexWrap: "wrap" }}>
         {a.mediaPorTiro != null && <Dato etiqueta="Media/tiro" valor={a.mediaPorTiro.toFixed(2)} grande />}
         {a.desviacion != null && <Dato etiqueta="Desviación" valor={`±${a.desviacion.toFixed(2)}`} />}
@@ -466,7 +471,99 @@ function BloqueTipo({ grupo }: { grupo: GrupoTipo }) {
           <MiniGrafica valores={a.progresion.map((p) => p.media)} color="var(--verde)" />
         </div>
       )}
+        </>
+      )}
     </Card>
+  );
+}
+
+/** Enlace tipo botón para desplegar/ocultar una lista. */
+function EnlaceToggle({
+  texto,
+  onClick,
+  abierto,
+}: {
+  texto: string;
+  onClick: () => void;
+  abierto: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        marginLeft: "auto",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        color: "var(--acento)",
+        fontSize: "0.78rem",
+        fontWeight: 700,
+        padding: "0.22rem 0",
+      }}
+    >
+      {texto} {abierto ? "▲" : "▼"}
+    </button>
+  );
+}
+
+/** Lista de sesiones (entrenamientos/tiradas) que enlaza a cada tirada. */
+function ListaHojas({ hojas }: { hojas: HojaResultado[] }) {
+  if (hojas.length === 0) {
+    return (
+      <p style={{ color: "var(--texto-suave)", fontSize: "0.82rem", margin: "0.2rem 0 0.6rem" }}>
+        No hay sesiones en el rango.
+      </p>
+    );
+  }
+  return (
+    <div style={{ display: "grid", gap: 4, margin: "0.2rem 0 0.7rem" }}>
+      {hojas.map((h) => (
+        <Link
+          key={h.scorecardId}
+          href={`/tiradas/${h.tiradaId}`}
+          style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.82rem", color: "var(--texto)" }}
+        >
+          <span style={{ color: "var(--texto-suave)", minWidth: 88 }}>{h.date}</span>
+          <span style={{ flex: 1 }}>{h.modalityName}</span>
+          <TipoChip tipo={h.type} corto />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/** Lista de apuntes (series) que cumplen el filtro, enlazando a su tirada. */
+function ListaApuntes({ series }: { series: SerieTipo[] }) {
+  if (series.length === 0) {
+    return (
+      <p style={{ color: "var(--texto-suave)", fontSize: "0.82rem", margin: "0.2rem 0 0.4rem" }}>
+        No hay apuntes que cumplan el filtro.
+      </p>
+    );
+  }
+  return (
+    <div style={{ display: "grid", gap: 4, margin: "0.2rem 0 0.5rem" }}>
+      {series.map((s, i) => {
+        const tiros = s.shotCount || s.valores.length;
+        const medio = tiros > 0 ? (s.subtotal / tiros).toFixed(2) : "–";
+        return (
+          <Link
+            key={`${s.tiradaId}-${s.idx}-${i}`}
+            href={`/tiradas/${s.tiradaId}`}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.82rem", color: "var(--texto)" }}
+          >
+            <span style={{ color: "var(--texto-suave)", minWidth: 88 }}>{s.date}</span>
+            <span style={{ flex: 1 }}>
+              Serie {s.idx} · {tiros} tiros
+              {s.tieneImpactos ? " · 🎯" : ""}
+            </span>
+            <span style={{ fontWeight: 700 }}>{s.subtotal}</span>
+            <span style={{ color: "var(--texto-suave)" }}>({medio})</span>
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 
