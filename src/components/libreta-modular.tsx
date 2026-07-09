@@ -722,10 +722,10 @@ export function LibretaModular({
                       fontWeight: 600,
                     }}
                   >
-                    ⏱ Cronómetro {fila.cronoOpen ? "▲" : "▼"}
+                    ⏱ Crono {fila.cronoOpen ? "▲" : "▼"}
                   </button>
                 ) : null}
-                <span>Repeticiones realizadas</span>
+                <span>Reps</span>
                 <input
                   type="number"
                   inputMode="numeric"
