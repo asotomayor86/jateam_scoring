@@ -30,7 +30,8 @@ import { MODULOS, getModulo, moduloPlan } from "@/lib/fases";
 import { Card } from "@/components/ui";
 import { SeriesTimer } from "@/components/series-timer";
 import { RatingFace } from "@/components/rating-face";
-import { CronoEjercicio } from "@/components/crono-ejercicio";
+import { CronoPanel } from "@/components/crono-ejercicio";
+import { cronoDeEjercicio } from "@/lib/crono-ejercicios";
 
 type Ejercicio = { id: string; code: string; title: string; tipologia: string };
 
@@ -65,6 +66,7 @@ type Fila = {
   notes: string | null;
   impacts: Impacto[];
   usaDiana: boolean; // conmutador por módulo: apuntar en la diana en vez de casillas
+  cronoOpen: boolean; // desplegable del cronómetro del ejercicio (solo UI)
   estado: EstadoGuardado;
 };
 
@@ -103,6 +105,7 @@ function filaVacia(): Omit<Fila, "idx" | "kind" | "estado"> {
     notes: null,
     impacts: [],
     usaDiana: false,
+    cronoOpen: false,
   };
 }
 
@@ -699,6 +702,29 @@ export function LibretaModular({
                   color: "var(--texto-suave)",
                 }}
               >
+                {ej && cronoDeEjercicio(ej.code) ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFilas((prev) =>
+                        prev.map((f) => (f.idx === fila.idx ? { ...f, cronoOpen: !f.cronoOpen } : f)),
+                      )
+                    }
+                    style={{
+                      marginRight: "auto",
+                      background: "none",
+                      border: "1px solid var(--borde)",
+                      borderRadius: 8,
+                      padding: "0.3rem 0.6rem",
+                      cursor: "pointer",
+                      color: "var(--texto)",
+                      fontSize: "0.82rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    ⏱ Cronómetro {fila.cronoOpen ? "▲" : "▼"}
+                  </button>
+                ) : null}
                 <span>Repeticiones realizadas</span>
                 <input
                   type="number"
@@ -746,7 +772,7 @@ export function LibretaModular({
                   +
                 </button>
               </div>
-              {ej ? <CronoEjercicio code={ej.code} /> : null}
+              {ej && fila.cronoOpen ? <CronoPanel code={ej.code} /> : null}
               {ej ? (
                 <a
                   href={`/ejercicios/${ej.id}`}
