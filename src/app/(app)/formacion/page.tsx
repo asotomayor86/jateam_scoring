@@ -39,29 +39,51 @@ export default async function FormacionPage() {
         <p>
           Es la herramienta del grupo para <strong>apuntar tiradas y
           entrenamientos</strong> de tiro, dejarlos registrados y{" "}
-          <strong>compararse</strong> entre todos. También sirve de{" "}
-          <strong>libreta en vivo</strong> durante la tirada (con cronómetros) y
-          organiza <strong>comidas</strong>, <strong>campos</strong>,{" "}
-          <strong>ejercicios</strong> y un <strong>calendario</strong> común.
+          <strong>compararse</strong> entre todos. La idea es que todo lo del club
+          esté en un único sitio, siempre a mano en el móvil, sin cuadernos ni
+          hojas de cálculo sueltas.
         </p>
         <p>
-          Está pensada para el <strong>móvil</strong>: puedes instalarla como app
-          en la pantalla de inicio (ver «Instalar la app»).
+          Hace tres cosas principales: sirve de <strong>libreta en vivo</strong>{" "}
+          durante la tirada (con cronómetros y avisos sonoros), <strong>guarda el
+          histórico</strong> de todo lo que disparas para poder analizarlo después
+          (ver «Mis resultados»), y <strong>organiza al grupo</strong> con{" "}
+          <strong>comidas</strong>, <strong>campos</strong>,{" "}
+          <strong>restaurantes</strong>, una <strong>biblioteca de ejercicios</strong>,
+          un <strong>chat</strong> y un <strong>calendario</strong> común.
+        </p>
+        <p>
+          Está pensada para el <strong>móvil</strong> y funciona también sin buena
+          cobertura una vez cargada. Puedes instalarla como app en la pantalla de
+          inicio (ver «Instalar la app»), y elegir <strong>tema claro u oscuro</strong>{" "}
+          según prefieras o según la luz del campo.
         </p>
       </Tema>
 
       <Tema titulo="Acceso y contraseña">
         <p>
-          No hay registro abierto: se entra <strong>por invitación</strong>. El
-          encargado te crea la cuenta y recibes un email para poner tu contraseña.
+          No hay registro abierto: se entra <strong>por invitación</strong> para
+          que el grupo sea cerrado y de confianza. El encargado te crea la cuenta
+          con tu email y recibes un correo con un <strong>enlace</strong> para poner
+          tu contraseña la primera vez. Si no lo ves, revisa la carpeta de{" "}
+          <strong>spam</strong>.
         </p>
         <ul>
           <li>Entra en <strong>Login</strong> con tu email y contraseña.</li>
           <li>
             Si la olvidas, usa <strong>«He olvidado mi contraseña»</strong>; te
-            llega un enlace para restablecerla.
+            llega un enlace para restablecerla (caduca a las pocas horas, pídelo de
+            nuevo si hace falta).
           </li>
-          <li>Puedes cambiarla desde <strong>Perfil → Cambiar contraseña</strong>.</li>
+          <li>
+            Puedes cambiarla cuando quieras desde{" "}
+            <strong>Perfil → Cambiar contraseña</strong>.
+          </li>
+          <li>
+            La sesión queda <strong>guardada</strong> en ese dispositivo, así que no
+            tienes que entrar cada vez; en un móvil compartido, cierra sesión al
+            terminar.
+          </li>
         </ul>
       </Tema>
 
@@ -75,23 +97,43 @@ export default async function FormacionPage() {
         <p>
           Algunas secciones muestran un <strong>círculo con un número</strong>{" "}
           cuando hay novedades: <strong>rojo</strong> en Chat (mensajes nuevos) y{" "}
-          <strong>verde</strong> en Tiradas (tiradas/entrenos nuevos). Se pone a
+          <strong>verde</strong> en Tiradas (tiradas/entrenos nuevos). El número
+          cuenta las novedades <strong>desde tu última visita</strong> y se pone a
           cero al abrir la sección.
         </p>
         <p>
           Arriba a la derecha del menú también tienes el botón de{" "}
-          <strong>tema claro/oscuro</strong> (☀️/🌙).
+          <strong>tema claro/oscuro</strong> (☀️/🌙); la app recuerda tu elección.
+          El menú se cierra solo al elegir una sección, y si es más largo que la
+          pantalla puedes <strong>desplazarlo</strong> arriba y abajo. En el móvil,
+          la barra superior respeta la zona de la <strong>batería/hora</strong> para
+          que el menú quede siempre accesible.
         </p>
       </Tema>
 
       <Tema titulo="Tu perfil">
-        <p>En <strong>Perfil</strong> configuras:</p>
+        <p>
+          En <strong>Perfil</strong> configuras tus datos y tus preferencias. Es lo
+          primero que conviene rellenar al empezar:
+        </p>
         <ul>
-          <li><strong>Nombre</strong> y <strong>apodo</strong> (cómo apareces en los rankings).</li>
-          <li><strong>DNI</strong> y <strong>nº de licencia</strong> (para tiradas oficiales).</li>
           <li>
-            <strong>Modo de apunte por defecto</strong>: cómo prefieres rellenar la
-            libreta (ver «La libreta»).
+            <strong>Nombre</strong> y <strong>apodo</strong>: el apodo es como
+            apareces en los rankings y en el chat, así que ponlo reconocible para el
+            grupo.
+          </li>
+          <li>
+            <strong>DNI</strong> y <strong>nº de licencia</strong>: se usan en las
+            tiradas oficiales (relación de tiradores). Rellénalos una vez y ya
+            quedan guardados.
+          </li>
+          <li>
+            <strong>Modo de apunte por defecto</strong>: con qué formato se abre tu
+            libreta (ver «La libreta»); luego puedes cambiarlo en cada tirada.
+          </li>
+          <li>
+            <strong>Notificaciones</strong> y <strong>cambio de contraseña</strong>{" "}
+            también están aquí.
           </li>
         </ul>
       </Tema>
@@ -141,39 +183,80 @@ export default async function FormacionPage() {
       <SeccionTitulo>2 · Tiradas, libreta y eventos</SeccionTitulo>
 
       <Tema titulo="Tipos de tirada">
+        <p>
+          Toda actividad de tiro es de uno de estos tres tipos, que determina cómo
+          se trata y cómo cuenta en tus resultados:
+        </p>
         <ul>
-          <li><strong>Entrenamiento</strong>: práctica personal o de grupo.</li>
-          <li><strong>Amistosa</strong>: tirada «seria» entre nosotros.</li>
-          <li><strong>Oficial</strong>: competición; al apuntarte eliges categoría.</li>
+          <li>
+            <strong>Entrenamiento</strong>: práctica personal o de grupo. Es donde
+            suenan los avisos de los cronómetros y donde vive el{" "}
+            <strong>entrenamiento modular</strong>. Se analiza aparte de las tiradas.
+          </li>
+          <li>
+            <strong>Amistosa</strong>: tirada «seria» entre nosotros, sin ser
+            competición oficial. Cuenta como marca en «Mis resultados».
+          </li>
+          <li>
+            <strong>Oficial</strong>: competición; al apuntarte eliges{" "}
+            <strong>categoría</strong> y admite la puntuación final del árbitro.
+          </li>
         </ul>
+        <p>
+          Además, cualquier tipo puede ser <strong>pública</strong> (la ve todo el
+          grupo) o <strong>privada</strong> (solo tú).
+        </p>
       </Tema>
 
       <Tema titulo="Crear una tirada">
         <p>
           En <strong>Tiradas y Entrenamientos → + Nueva</strong> (o desde Inicio).
           Rellenas fecha, hora, modalidad, campo, tipo, calibre (opcional) y notas.
-          El <strong>identificador se genera solo</strong> (fecha-modalidad-campo-tipo),
-          así todas tienen la misma estructura.
+          Puedes ponerle también un <strong>nombre</strong> para distinguir varias
+          el mismo día. El <strong>identificador se genera solo</strong>{" "}
+          (fecha-modalidad-campo-tipo), así todas comparten la misma estructura y es
+          fácil buscarlas.
+        </p>
+        <p>
+          Si el <strong>campo</strong> o la <strong>modalidad</strong> que buscas no
+          están en la lista, el encargado puede añadirlos a los catálogos.
         </p>
         <p>
           Casilla <strong>Público</strong>: si la desmarcas, la tirada es{" "}
-          <strong>privada</strong> y solo la ves y te apuntas tú (útil para
-          entrenamientos personales).
+          <strong>privada</strong> y solo la ves y te apuntas tú; es la opción ideal
+          para <strong>entrenamientos personales</strong> que no quieres que salgan
+          en el calendario común.
         </p>
-        <p>Cualquiera puede crear tiradas; quien la crea (o el encargado) la edita, cierra o borra.</p>
+        <p>
+          Cualquiera puede crear tiradas; <strong>quien la crea</strong> (o el
+          encargado) es quien la <strong>edita, cierra o borra</strong>. Al{" "}
+          <strong>cerrarla</strong> se da por terminada: nadie nuevo puede apuntarse,
+          se muestra como pasada y, importante, es entonces cuando cuenta en «Mis
+          resultados».
+        </p>
       </Tema>
 
       <Tema titulo="Apuntarte y el ranking">
         <p>
-          En el detalle de la tirada pulsa <strong>Apuntarme</strong>. En las
-          oficiales eliges tu <strong>categoría</strong> (1ª/2ª/3ª/Veterano/Damas).
-          El <strong>modo de apunte</strong> se elige y se cambia luego{" "}
-          <strong>dentro de la libreta</strong> (ver «La libreta»).
+          En el detalle de la tirada pulsa <strong>Apuntarme</strong>: se te crea tu{" "}
+          <strong>hoja de puntuación</strong> y ya apareces en la lista de
+          tiradores. En las oficiales eliges tu <strong>categoría</strong>{" "}
+          (1ª/2ª/3ª/Veterano/Damas). El <strong>modo de apunte</strong> ya no se
+          elige aquí: se ajusta y se cambia luego <strong>dentro de la libreta</strong>{" "}
+          (ver «La libreta»).
         </p>
         <p>
-          El <strong>ranking</strong> ordena por total y desempata por dieces. En
-          oficiales muestra también la categoría. Una vez tienes puntos, la tirada
-          queda registrada y ya no puedes desapuntarte.
+          El detalle muestra la <strong>ficha del evento</strong>, la lista de{" "}
+          <strong>apuntados</strong> y el <strong>ranking</strong>, que ordena por
+          total y <strong>desempata por dieces interiores</strong> (X). En oficiales
+          muestra también la categoría de cada uno. Desde aquí entras a{" "}
+          <strong>tu libreta</strong> para rellenar.
+        </p>
+        <p>
+          Puedes desapuntarte mientras no tengas puntos; en cuanto anotas algo, la
+          tirada queda <strong>registrada</strong> y ya no puedes borrarte (para no
+          perder datos). Recuerda que en «Mis resultados» solo entra cuando la
+          tirada está <strong>cerrada</strong>.
         </p>
       </Tema>
 
@@ -190,23 +273,36 @@ export default async function FormacionPage() {
           </li>
         </ul>
         <p>
-          El modo se puede <strong>cambiar dentro de la libreta</strong> mientras
-          no tengas ningún apunte de disparo: arriba aparece un selector{" "}
-          <strong>«Modo de apunte»</strong>. Además, cada serie tiene un{" "}
-          <strong>icono de diana</strong> 🎯 para apuntarla de forma{" "}
+          Los modos se pueden <strong>mezclar</strong> dentro de la misma hoja
+          (una serie tiro a tiro y otra por total), y el modo se puede{" "}
+          <strong>cambiar dentro de la libreta</strong> mientras no tengas ningún
+          apunte de disparo: arriba aparece un selector{" "}
+          <strong>«Modo de apunte»</strong>. En cuanto anotas la primera serie el
+          selector desaparece, para no reinterpretar lo ya metido. Además, cada
+          serie tiene un <strong>icono de diana</strong> 🎯 para apuntarla de forma{" "}
           <strong>gráfica</strong> (ver «Apuntar en la diana»).
         </p>
         <p>
-          Se <strong>guarda solo</strong> mientras escribes. Al acabar,{" "}
-          <strong>Finalizar hoja</strong> (puedes reabrirla para corregir).
+          El <strong>total</strong> y los <strong>dieces</strong> se calculan solos
+          según vas metiendo datos, y todo se <strong>guarda automáticamente</strong>{" "}
+          serie a serie (no hay botón de guardar; funciona aunque la cobertura sea
+          floja). Al acabar, pulsa <strong>Finalizar hoja</strong>; si te equivocas,
+          puedes <strong>reabrirla</strong> para corregir y volver a cerrarla.
         </p>
       </Tema>
 
       <Tema titulo="Puntuación final del árbitro (oficiales)">
         <p>
           En tiradas oficiales y amistosas, al pie de la libreta puedes meter la{" "}
-          <strong>puntuación final</strong> que dio el árbitro; el sistema guarda la
-          diferencia respecto a tu conteo y esa es la que cuenta en el ranking.
+          <strong>puntuación final</strong> que dio el árbitro. Es útil porque la
+          oficial siempre manda: si tu conteo y el del árbitro no cuadran, vale el
+          suyo.
+        </p>
+        <p>
+          El sistema guarda el <strong>ajuste</strong> (la diferencia respecto a tu
+          conteo) y usa ese total corregido en el <strong>ranking</strong> y en tus
+          marcas. En los <strong>entrenamientos</strong> no aparece esta opción,
+          porque no hay árbitro.
         </p>
       </Tema>
 
@@ -268,15 +364,22 @@ export default async function FormacionPage() {
       </Tema>
 
       <Tema titulo="Comidas, campos y restaurantes">
+        <p>La parte social y de logística del club:</p>
         <ul>
           <li>
-            <strong>Comidas</strong>: eventos con fecha, hora y restaurante. Te
-            apuntas indicando <strong>acompañantes</strong> (+N).
+            <strong>Comidas</strong>: eventos con fecha, hora y restaurante,
+            pensados para quedar después de tirar. Te apuntas indicando{" "}
+            <strong>acompañantes</strong> (+N), así el que reserva sabe cuántos sois
+            en total. Aparecen también en el <strong>calendario</strong> (en azul)
+            y en los próximos eventos de Inicio.
           </li>
           <li>
-            <strong>Campos</strong> y <strong>Restaurantes</strong>: catálogos con{" "}
-            <strong>enlace de Google Maps</strong>. Los ve todo el mundo, pero{" "}
-            <strong>solo el encargado</strong> puede añadirlos o editarlos.
+            <strong>Campos</strong> (campos de tiro) y <strong>Restaurantes</strong>:
+            catálogos con su <strong>enlace de Google Maps</strong> para llegar sin
+            perderte. Sirven para <strong>estandarizar</strong>: al crear una tirada
+            o una comida eliges de la lista en vez de escribir el sitio a mano. Los
+            ve todo el mundo, pero <strong>solo el encargado</strong> puede
+            añadirlos o editarlos.
           </li>
         </ul>
       </Tema>
@@ -426,29 +529,74 @@ export default async function FormacionPage() {
 
       <Tema titulo="Biblioteca de ejercicios y principios">
         <p>
-          En <strong>Ejercicios</strong> tienes un catálogo con ficha completa
-          (objetivo, material, ejecución, frecuencias, errores, progresión, métrica
-          y claves), con <strong>buscador y filtro por tipología</strong>. Arriba,
-          los <strong>principios de entrenamiento</strong> en un carrusel.
+          En <strong>Ejercicios</strong> tienes un catálogo pensado para{" "}
+          <strong>entrenar mejor</strong>, no solo para tirar más. Cada ejercicio
+          trae una <strong>ficha completa</strong>: objetivo, material, ejecución
+          paso a paso, frecuencias recomendadas (iniciación y nacional), errores
+          típicos, progresión, métrica para medir el avance y claves. Los tienes de{" "}
+          <strong>técnica en seco y fuego real, físicos, mentales y de análisis</strong>.
+        </p>
+        <p>
+          Hay <strong>buscador</strong> y <strong>filtro por tipología</strong> para
+          encontrar rápido lo que buscas, y arriba, los{" "}
+          <strong>principios de entrenamiento</strong> en un carrusel. Desde el{" "}
+          <strong>entrenamiento modular</strong> puedes añadir cualquiera de estos
+          ejercicios a tu sesión, calificarlo, contar repeticiones y usar su
+          cronómetro (ver «Entrenamiento modular»).
         </p>
       </Tema>
 
       <Tema titulo="Instalar la app (PWA)">
         <p>
-          Al entrar suele aparecer un aviso para <strong>instalarla</strong>. En
-          Android pulsa «Instalar app»; en iPhone, usa <strong>Compartir → Añadir a
-          pantalla de inicio</strong>. Así se abre a pantalla completa como una app.
+          Aunque funciona en el navegador, se disfruta mucho más{" "}
+          <strong>instalada</strong>: se abre a pantalla completa como una app de la
+          galería, va más fluida y es imprescindible para recibir{" "}
+          <strong>notificaciones</strong> en el móvil.
+        </p>
+        <p>
+          Al entrar suele salir un <strong>aviso</strong> para instalarla. En{" "}
+          <strong>Android</strong> pulsa «Instalar app» y confirma. En{" "}
+          <strong>iPhone</strong> hay que hacerlo a mano: botón{" "}
+          <strong>Compartir</strong> de Safari →{" "}
+          <strong>Añadir a pantalla de inicio</strong> → Añadir. A partir de ahí,
+          ábrela siempre desde ese <strong>icono</strong> (no desde Safari) para que
+          cuenten las notificaciones. Puedes cerrar el aviso si no quieres
+          instalarla ahora; no vuelve a insistir.
         </p>
       </Tema>
 
       <Tema titulo="Funciones del encargado">
-        <p>Si eres encargado, además tienes:</p>
+        <p>
+          El <strong>encargado</strong> (rol de administración) es quien mantiene el
+          grupo en orden. Además de todo lo normal, tiene:
+        </p>
         <ul>
-          <li><strong>Miembros</strong>: invitar por email, editar perfiles, marcar encargados y reenviar invitaciones.</li>
-          <li><strong>Cerrar hojas</strong> de otros que se hayan quedado sin finalizar, en la tirada.</li>
-          <li><strong>Copiar tiradores</strong>: exporta la relación (nº, nombre, DNI, licencia, categoría) al portapapeles.</li>
-          <li>Gestionar los catálogos: <strong>campos</strong>, <strong>restaurantes</strong>, <strong>modalidades</strong> y la <strong>biblioteca de ejercicios</strong> (crear/editar/borrar).</li>
-          <li><strong>Chat</strong>: borrar <strong>hilos</strong> (solo el encargado) y borrar <strong>cualquier mensaje</strong>.</li>
+          <li>
+            <strong>Miembros</strong>: invitar por email a gente nueva, editar
+            perfiles, <strong>marcar a otros como encargados</strong> y reenviar
+            invitaciones si a alguien no le llegó el correo.
+          </li>
+          <li>
+            <strong>Cerrar hojas</strong> de otros tiradores que se hayan quedado sin
+            finalizar, desde el detalle de la tirada, para poder cerrarla del todo.
+          </li>
+          <li>
+            <strong>Copiar tiradores</strong>: exporta la relación (nº, nombre, DNI,
+            licencia, categoría) al portapapeles, lista para pegar en la
+            documentación oficial.
+          </li>
+          <li>
+            Gestionar los <strong>catálogos</strong> (crear/editar/borrar):{" "}
+            <strong>campos</strong>, <strong>restaurantes</strong>,{" "}
+            <strong>modalidades</strong> y la{" "}
+            <strong>biblioteca de ejercicios</strong>. Así todos usan los mismos
+            datos estandarizados.
+          </li>
+          <li>
+            <strong>Chat</strong>: borrar <strong>hilos</strong> enteros (solo el
+            encargado) y borrar <strong>cualquier mensaje</strong>, no solo los
+            suyos.
+          </li>
         </ul>
       </Tema>
 
@@ -549,9 +697,11 @@ export default async function FormacionPage() {
 
       <Tema titulo="Chat del grupo">
         <p>
-          En <strong>Chat</strong> el grupo habla por <strong>hilos</strong>:
-          alguien abre un hilo (título y primer mensaje opcional) y dentro os vais
-          respondiendo.
+          En <strong>Chat</strong> el grupo habla por <strong>hilos</strong>, como
+          en un foro: en vez de un chat corrido, alguien abre un hilo con un{" "}
+          <strong>título</strong> (y un primer mensaje opcional) y dentro os vais{" "}
+          <strong>respondiendo</strong>. Así cada tema (una quedada, una duda, una
+          foto de la tirada) queda ordenado y es fácil de seguir después.
         </p>
         <ul>
           <li>
