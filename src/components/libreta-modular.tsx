@@ -682,6 +682,7 @@ export function LibretaModular({
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "flex-end",
                   gap: "0.5rem",
                   marginTop: "0.6rem",
                   fontSize: "0.85rem",
