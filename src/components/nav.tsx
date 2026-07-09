@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/auth/client";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { InstalarBoton } from "@/components/instalar-boton";
 
 type Props = {
   displayName: string;
@@ -218,15 +219,24 @@ export function Nav({ displayName, isAdmin, badges }: Props) {
 
       {/* Drawer móvil. */}
       <div id="nav-drawer" className="nav-drawer">
-        {items.map((e) => {
-          const badge = badgeDe(e.href);
-          return (
-            <Link key={e.href} href={e.href} data-activo={esActivo(e.href)}>
-              {e.label}
-              {badge ? <Badge n={badge.n} color={badge.color} /> : null}
-            </Link>
-          );
-        })}
+        {/* Primera fila: Inicio (50%) + Instalar app (50%). */}
+        <div className="nav-drawer-fila">
+          <Link href="/" data-activo={esActivo("/")}>
+            Inicio
+          </Link>
+          <InstalarBoton />
+        </div>
+        {items
+          .filter((e) => e.href !== "/")
+          .map((e) => {
+            const badge = badgeDe(e.href);
+            return (
+              <Link key={e.href} href={e.href} data-activo={esActivo(e.href)}>
+                {e.label}
+                {badge ? <Badge n={badge.n} color={badge.color} /> : null}
+              </Link>
+            );
+          })}
         <div className="nav-drawer-foot">
           <span
             style={{

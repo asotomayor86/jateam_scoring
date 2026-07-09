@@ -301,6 +301,31 @@ a {
   color: #1a1205;
   border-color: transparent;
 }
+/* Primera fila del menú: Inicio (50%) + Instalar app (50%). */
+.nav-drawer-fila {
+  display: flex;
+  gap: 0.5rem;
+}
+.nav-drawer-fila > a,
+.nav-drawer-fila > .nav-drawer-item {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--menu-item);
+  border: 1px solid var(--borde);
+  color: var(--texto);
+  cursor: pointer;
+}
+.nav-drawer-fila > .nav-drawer-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
 .nav-drawer-foot {
   display: flex;
   align-items: center;
