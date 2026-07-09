@@ -100,23 +100,40 @@ export default async function FormacionPage() {
         <p>
           <strong>Inicio</strong> muestra tu portada y los{" "}
           <strong>próximos eventos</strong> (tiradas y comidas que aún no han
-          pasado).
+          pasado). Cada evento aparece como una <strong>tarjeta</strong> con la
+          modalidad, la fecha, el campo y el número de tiradores apuntados.
+        </p>
+        <p>
+          En la esquina de cada tarjeta hay <strong>etiquetas de color</strong>.
+          Para que quepan en el móvil van <strong>abreviadas</strong>:{" "}
+          <strong>Ent</strong> (entrenamiento), <strong>Ofi</strong> (oficial),{" "}
+          <strong>Amist</strong> (amistosa), <strong>Cerr</strong> (cerrada) y{" "}
+          <strong>Priv</strong> (privada). Una tarjeta cerrada se ve además
+          atenuada.
         </p>
         <p>
           <strong>Calendario</strong> reúne todos los eventos en dos vistas:
         </p>
         <ul>
-          <li><strong>Lista</strong>: próximas y pasadas.</li>
+          <li>
+            <strong>Lista</strong>: próximas y pasadas, con filtros por tipo, con
+            el mismo formato de tarjeta que en Inicio.
+          </li>
           <li>
             <strong>Calendario</strong>: rejilla mensual; la semana en curso se
-            resalta y puedes pulsar un día para ver sus eventos.
+            resalta, el día de hoy va marcado y puedes pulsar un día para ver sus
+            eventos en la lista.
           </li>
         </ul>
         <p>
           Cada evento tiene un color: <strong>oficial</strong> (rojo),{" "}
           <strong>amistosa</strong> (ámbar), <strong>entrenamiento</strong>{" "}
-          (verde) y <strong>comida</strong> (azul). «Pasado» se calcula por la
-          hora de inicio real.
+          (verde) y <strong>comida</strong> (azul). En la vista de mes, las
+          actividades <strong>cerradas</strong> salen en su mismo color pero con{" "}
+          <strong>otra tonalidad</strong> (más clara en tema claro, más oscura en
+          tema oscuro), para distinguir de un vistazo lo que ya está terminado.
+          «Pasado» se calcula por la <strong>hora de inicio real</strong> del
+          evento, no solo por el día.
         </p>
       </Tema>
 
@@ -195,23 +212,59 @@ export default async function FormacionPage() {
 
       <Tema titulo="Mis resultados">
         <p>
-          En <strong>Mis resultados</strong> tienes tu análisis personal, con dos
-          pestañas:
+          En <strong>Mis resultados</strong> tienes tu análisis personal. Solo
+          cuenta lo que está <strong>cerrado</strong>: una tirada o entrenamiento
+          abierto (aún en curso) no da puntos fiables, así que no aparece hasta que
+          se cierra. Hay dos pestañas y, debajo, un <strong>filtro de fechas</strong>
+          que afecta a todo.
+        </p>
+        <p>
+          <strong>Slider de fechas</strong>: una barra con dos tiradores para
+          elegir el <strong>rango</strong> que quieres analizar. La fecha del
+          tirador de la izquierda se ve debajo y la de la derecha encima. Al
+          moverlo, <strong>todo lo de abajo se recalcula en vivo</strong>. Justo
+          debajo, un desplegable <strong>«Fuentes»</strong> lista las sesiones que
+          se están teniendo en cuenta.
+        </p>
+        <p>
+          <strong>Pestaña Tiradas</strong> (oficiales y amistosas):
         </p>
         <ul>
           <li>
-            <strong>Tiradas</strong> (oficiales y amistosas): mejores marcas, media
-            y X por modalidad, evolución de la marca e histórico.
+            <strong>Marcas por modalidad</strong>: tu <strong>mejor</strong>,{" "}
+            <strong>media</strong> y <strong>mejor X</strong>, con una mini-gráfica
+            de la <strong>evolución</strong> de la marca en el tiempo.
           </li>
-          <li>
-            <strong>Entrenamientos</strong>: análisis por tipo de ejercicio
-            (Precisión, Velocidad 20″/10″, Duelo) con <strong>media por tiro</strong>,{" "}
-            <strong>desviación</strong> y reparto de valores. Donde hay diana o láser,
-            además <strong>agrupación</strong> y <strong>deriva</strong> sobre una
-            diana con la nube de impactos. También los <strong>ejercicios</strong>{" "}
-            practicados con su valoración 🟢🟡🔴.
-          </li>
+          <li><strong>Historial</strong> de las tiradas del rango, enlazado a cada una.</li>
         </ul>
+        <p>
+          <strong>Pestaña Entrenamientos</strong>: bajo el título{" "}
+          <strong>SERIES REALIZADAS</strong>, el análisis se separa por{" "}
+          <strong>tipo de ejercicio</strong> (Precisión, Velocidad 20″, Velocidad
+          10″, Duelo), que la app detecta sola. En cada tipo verás{" "}
+          <strong>media por tiro</strong>, <strong>desviación</strong>{" "}
+          (consistencia), mejor y peor serie, el <strong>reparto de valores</strong>{" "}
+          (cuántos 10, 9, 8…), la <strong>progresión</strong> por sesión y, cuando
+          hay diana o láser, la <strong>agrupación</strong> y la{" "}
+          <strong>deriva</strong> sobre una diana con la nube de impactos acumulada.
+        </p>
+        <p>
+          <strong>Filtros de rigor</strong> (botones en cada tipo):{" "}
+          <strong>Todos los puntos</strong>, <strong>Tiro a tiro</strong> y{" "}
+          <strong>Diana con impactos</strong>. Sirven para que <em>solo se muestre
+          lo que tiene sentido</em>: por ejemplo, el reparto de valores solo
+          aparece si <em>todas</em> las series consideradas tienen el detalle por
+          tiro, y la agrupación solo si <em>todas</em> son de diana. Así no se
+          mezclan datos incompletos con completos.
+        </p>
+        <p>
+          A la derecha de los botones, <strong>«Ver apuntes»</strong> despliega la
+          lista de las series que cumplen el filtro (fecha, nº de tiros, si tienen
+          diana y el resultado), enlazadas a su tirada. En{" "}
+          <strong>EJERCICIOS PRACTICADOS</strong> tienes los ejercicios de la
+          biblioteca hechos, con su valoración 🟢🟡🔴, y un{" "}
+          <strong>«Ver entrenamientos»</strong> para ver las sesiones del rango.
+        </p>
       </Tema>
 
       <Tema titulo="Comidas, campos y restaurantes">
@@ -246,7 +299,10 @@ export default async function FormacionPage() {
         </ul>
         <p>
           Si pulsas la serie directamente, arranca en los 7&quot;. En entrenamientos
-          suenan avisos en cada cambio; en oficiales, no.
+          suenan avisos en cada cambio; en oficiales, no (para no molestar en
+          competición). Los avisos van a <strong>volumen alto</strong> a propósito,
+          pensados para oírlos en el campo de tiro; recuerda subir el volumen del
+          móvil y no tenerlo en silencio.
         </p>
         <p>
           Cada aviso tiene un <strong>sonido distinto</strong> para reconocerlo de
@@ -254,15 +310,17 @@ export default async function FormacionPage() {
         </p>
         <ul>
           <li>
-            <strong>Carguen</strong>: dos tonos graves con la cadencia
-            &quot;caaar-guen&quot;.
+            <strong>Carguen</strong>: un tono sostenido y largo que{" "}
+            <strong>sube al final</strong>, imitando la cadencia
+            &quot;caaaaaar-guééen&quot;.
           </li>
           <li>
             <strong>Atención</strong>: tres tonos con la cadencia
-            &quot;aaa-ten-ción&quot; (sube al final).
+            &quot;aaa-ten-ción&quot; (sube en la última sílaba).
           </li>
           <li>
-            <strong>Empiezan los disparos</strong>: un pitido <strong>agudo</strong>.
+            <strong>Empiezan los disparos</strong> (¡Fuego!): un tono{" "}
+            <strong>agudo</strong> y sostenido que sube, tipo &quot;¡FUEGOOO!&quot;.
           </li>
           <li>
             <strong>Alto</strong> (alto el fuego entre exposiciones del duelo): un
@@ -278,31 +336,91 @@ export default async function FormacionPage() {
           Fuego · Alto · Fuego · Alto · Fuego · Alto · Fuego · Fin (una sola atención
           al principio; entre fuegos suena &quot;alto&quot;; al terminar, &quot;fin&quot;).
         </p>
+        <p>
+          Estos mismos relojes y sonidos los usan también los{" "}
+          <strong>ejercicios</strong> del entrenamiento modular, cada uno con su
+          configuración propia (ver «El cronómetro de cada ejercicio»).
+        </p>
       </Tema>
 
       <Tema titulo="Entrenamiento modular">
         <p>
           Es una modalidad especial (solo tipo entrenamiento). La libreta{" "}
-          <strong>empieza vacía</strong> y tú vas construyendo la sesión:
+          <strong>empieza vacía</strong> y tú vas construyendo la sesión con dos
+          tipos de fila:
         </p>
         <ul>
           <li>
             <strong>+ Añadir serie</strong>: elige el tipo (Precisión 150&quot;,
             Velocidad 20&quot;/10&quot;, Duelo 7/3). Cada serie trae su cronómetro y sus
-            casillas de tiro.
+            casillas de tiro, y <strong>puntúa</strong> como una serie normal.
           </li>
           <li>
-            <strong>+ Añadir ejercicio</strong>: mete un ejercicio de la biblioteca
-            y califícalo con una <strong>carita</strong> 🙂/😐/☹️ (verde/amarillo/
-            rojo). Queda registrado para el análisis.
+            <strong>+ Añadir ejercicio</strong>: mete un ejercicio de la biblioteca.
+            No puntúa (no suma al total), pero queda registrado para el análisis de
+            tu trabajo.
+          </li>
+        </ul>
+        <p>En cada fila de <strong>ejercicio</strong> tienes:</p>
+        <ul>
+          <li>
+            <strong>Calificación</strong> con una carita 🟢 Bien / 🟡 Regular / 🔴
+            Mal. Si vuelves a pulsar la que ya está marcada, se{" "}
+            <strong>desmarca</strong> (la borras).
+          </li>
+          <li>
+            <strong>Reps</strong>: el número final de <strong>repeticiones</strong>{" "}
+            realizadas, para la evaluación de carga de trabajo. Puedes escribirlo o
+            usar el botón <strong>+</strong> de la derecha para ir{" "}
+            <strong>contando</strong> con el móvil según las haces.
+          </li>
+          <li>
+            <strong>⏱ Crono</strong>: el cronómetro específico del ejercicio (ver el
+            apartado siguiente).
           </li>
         </ul>
         <p>
           El <strong>modo de libreta</strong> (tiro a tiro, total o asistido) se
           elige y se cambia <strong>dentro de la libreta</strong> mientras esté
           vacía. Cada <strong>módulo de disparo</strong> tiene también su{" "}
-          <strong>icono de diana</strong> 🎯. Los ejercicios no puntúan; solo suman
-          las series de disparos.
+          <strong>icono de diana</strong> 🎯 para apuntarlo de forma gráfica.
+        </p>
+      </Tema>
+
+      <Tema titulo="El cronómetro de cada ejercicio">
+        <p>
+          Muchos ejercicios de la biblioteca traen su <strong>propio cronómetro</strong>,
+          pensado para no necesitar metrónomo ni cronómetro auxiliar. Se despliega
+          con el botón <strong>⏱ Crono</strong> de la fila del ejercicio. Cada uno
+          está configurado según lo que pide:
+        </p>
+        <ul>
+          <li>
+            <strong>Ejercicios de tiro</strong> (precisión, velocidad, transiciones):
+            botón <strong>Carguen</strong> (1:00, igual que siempre) y botón{" "}
+            <strong>Entrenamiento</strong> con la ventana de tiempo correspondiente.
+          </li>
+          <li>
+            <strong>Alzadas / duelo</strong>: cadencia de atención y fuego, repetida
+            por exposiciones.
+          </li>
+          <li>
+            <strong>Físicos</strong> (holds, isométricos, core, equilibrio): botón{" "}
+            <strong>Empezar</strong> con ciclos de <strong>trabajo</strong> y{" "}
+            <strong>descanso</strong>.
+          </li>
+          <li>
+            <strong>Aeróbico</strong>: una <strong>cuenta atrás</strong> de la
+            duración; <strong>respiración</strong>: ciclos de inspira, retén y espira;
+            <strong>tiro en seco</strong>: un <strong>metrónomo</strong> para marcar
+            la cadencia.
+          </li>
+        </ul>
+        <p>
+          Los ejercicios que lo permiten muestran <strong>parámetros ajustables</strong>{" "}
+          (tiempo, series, descanso, ciclos…). Puedes cambiarlos para esa sesión;
+          estos valores se usan <strong>solo en el momento</strong> (no se guardan).
+          Los ejercicios de análisis, rutina o visualización no llevan cronómetro.
         </p>
       </Tema>
 
