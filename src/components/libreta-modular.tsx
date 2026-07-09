@@ -30,6 +30,7 @@ import { MODULOS, getModulo, moduloPlan } from "@/lib/fases";
 import { Card } from "@/components/ui";
 import { SeriesTimer } from "@/components/series-timer";
 import { RatingFace } from "@/components/rating-face";
+import { CronoEjercicio } from "@/components/crono-ejercicio";
 
 type Ejercicio = { id: string; code: string; title: string; tipologia: string };
 
@@ -745,6 +746,7 @@ export function LibretaModular({
                   +
                 </button>
               </div>
+              {ej ? <CronoEjercicio code={ej.code} /> : null}
               {ej ? (
                 <a
                   href={`/ejercicios/${ej.id}`}
