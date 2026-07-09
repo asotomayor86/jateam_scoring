@@ -89,6 +89,7 @@ export default async function LibretaPage({
             blancoNuevo: s.blancoNuevo,
             exerciseId: s.exerciseId,
             rating: s.rating,
+            reps: s.reps,
             notes: s.notes,
             impacts: s.impacts,
           }))}

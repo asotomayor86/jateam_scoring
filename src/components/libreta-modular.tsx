@@ -42,6 +42,7 @@ type SerieInicial = {
   blancoNuevo: boolean;
   exerciseId: string | null;
   rating: string | null;
+  reps: number | null;
   notes: string | null;
   impacts: Impacto[] | null;
 };
@@ -59,6 +60,7 @@ type Fila = {
   blancoNuevo: boolean;
   exerciseId: string;
   rating: string | null;
+  reps: string; // repeticiones realizadas (texto del input)
   notes: string | null;
   impacts: Impacto[];
   usaDiana: boolean; // conmutador por módulo: apuntar en la diana en vez de casillas
@@ -71,6 +73,14 @@ const CALIFICACIONES = [
   { valor: "amarillo" as const, label: "Regular" },
   { valor: "rojo" as const, label: "Mal" },
 ];
+
+/** Repeticiones (texto del input) a entero ≥0, o null si está vacío/no válido. */
+function parseReps(s: string): number | null {
+  const t = s.trim();
+  if (t === "") return null;
+  const n = parseInt(t, 10);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
 
 function modoDeGranularidad(g: string): Modo {
   if (g === "asistido") return "asistido";
@@ -88,6 +98,7 @@ function filaVacia(): Omit<Fila, "idx" | "kind" | "estado"> {
     blancoNuevo: false,
     exerciseId: "",
     rating: null,
+    reps: "",
     notes: null,
     impacts: [],
     usaDiana: false,
@@ -106,6 +117,7 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
           ...filaVacia(),
           exerciseId: s.exerciseId,
           rating: s.rating,
+          reps: s.reps != null ? String(s.reps) : "",
           notes: s.notes,
           estado: "" as const,
         };
@@ -518,6 +530,26 @@ export function LibretaModular({
         idx,
         exerciseId: fila.exerciseId,
         rating: rating as "verde" | "amarillo" | "rojo",
+        reps: parseReps(fila.reps),
+      });
+      setEstado(idx, r.ok ? "guardado" : "error");
+    } catch {
+      setEstado(idx, "error");
+    }
+  }
+
+  /** Guarda el nº de repeticiones realizadas de una fila de ejercicio. */
+  async function guardarReps(idx: number, valor: string) {
+    const fila = filasRef.current.find((f) => f.idx === idx);
+    if (!fila || fila.kind !== "ejercicio") return;
+    setEstado(idx, "guardando");
+    try {
+      const r = await guardarEjercicioSerie({
+        scorecardId,
+        idx,
+        exerciseId: fila.exerciseId,
+        rating: fila.rating as "verde" | "amarillo" | "rojo" | null,
+        reps: parseReps(valor),
       });
       setEstado(idx, r.ok ? "guardado" : "error");
     } catch {
@@ -646,6 +678,40 @@ export function LibretaModular({
                   </button>
                 ))}
               </div>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginTop: "0.6rem",
+                  fontSize: "0.85rem",
+                  color: "var(--texto-suave)",
+                }}
+              >
+                Repeticiones realizadas
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  disabled={finalizada}
+                  value={fila.reps}
+                  onChange={(e) =>
+                    setFilas((prev) =>
+                      prev.map((f) => (f.idx === fila.idx ? { ...f, reps: e.target.value } : f)),
+                    )
+                  }
+                  onBlur={(e) => guardarReps(fila.idx, e.target.value)}
+                  style={{
+                    width: 90,
+                    padding: "0.35rem 0.5rem",
+                    borderRadius: 8,
+                    border: "1px solid var(--borde)",
+                    background: "var(--superficie-2)",
+                    color: "var(--texto)",
+                    fontSize: "0.95rem",
+                  }}
+                />
+              </label>
               {ej ? (
                 <a
                   href={`/ejercicios/${ej.id}`}

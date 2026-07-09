@@ -239,6 +239,9 @@ export const series = pgTable(
       onDelete: "set null",
     }),
     rating: text("rating"),
+    // Modular (fila de ejercicio): nº final de repeticiones realizadas, para una
+    // futura evaluación de carga de trabajo.
+    reps: integer("reps"),
     // Solo modo "diana": impactos sobre la diana a escala, en mm desde el
     // centro (x → derecha, y → arriba) con su puntuación derivada del anillo
     // (corregible). El subtotal/shots/inner se derivan de estos impactos.

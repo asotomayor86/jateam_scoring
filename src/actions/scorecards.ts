@@ -399,6 +399,7 @@ const esquemaEjercicio = z.object({
   idx: z.number().int().min(1).max(200),
   exerciseId: z.string().uuid(),
   rating: z.enum(["verde", "amarillo", "rojo"]).nullable(),
+  reps: z.number().int().min(0).max(100000).nullable().default(null),
 });
 
 /**
@@ -434,10 +435,11 @@ export async function guardarEjercicioSerie(
         blancoNuevo: false,
         exerciseId: d.exerciseId,
         rating: d.rating,
+        reps: d.reps,
       })
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
-        set: { exerciseId: d.exerciseId, rating: d.rating },
+        set: { exerciseId: d.exerciseId, rating: d.rating, reps: d.reps },
       });
   } catch (e) {
     console.error("guardarEjercicioSerie error:", e);
