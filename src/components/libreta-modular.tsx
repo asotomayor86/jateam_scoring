@@ -538,6 +538,15 @@ export function LibretaModular({
     }
   }
 
+  /** Suma una repetición (contador con el móvil) y la guarda. */
+  async function incrementarReps(idx: number) {
+    const fila = filasRef.current.find((f) => f.idx === idx);
+    if (!fila || fila.kind !== "ejercicio") return;
+    const nuevo = String((parseReps(fila.reps) ?? 0) + 1);
+    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, reps: nuevo } : f)));
+    await guardarReps(idx, nuevo);
+  }
+
   /** Guarda el nº de repeticiones realizadas de una fila de ejercicio. */
   async function guardarReps(idx: number, valor: string) {
     const fila = filasRef.current.find((f) => f.idx === idx);
@@ -678,7 +687,7 @@ export function LibretaModular({
                   </button>
                 ))}
               </div>
-              <label
+              <div
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -689,7 +698,7 @@ export function LibretaModular({
                   color: "var(--texto-suave)",
                 }}
               >
-                Repeticiones realizadas
+                <span>Repeticiones realizadas</span>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -703,16 +712,39 @@ export function LibretaModular({
                   }
                   onBlur={(e) => guardarReps(fila.idx, e.target.value)}
                   style={{
-                    width: 90,
+                    width: 70,
                     padding: "0.35rem 0.5rem",
                     borderRadius: 8,
                     border: "1px solid var(--borde)",
                     background: "var(--superficie-2)",
                     color: "var(--texto)",
                     fontSize: "0.95rem",
+                    textAlign: "right",
                   }}
                 />
-              </label>
+                <button
+                  type="button"
+                  disabled={finalizada}
+                  onClick={() => incrementarReps(fila.idx)}
+                  aria-label="Sumar una repetición"
+                  title="Sumar una repetición"
+                  style={{
+                    width: 38,
+                    height: 38,
+                    flexShrink: 0,
+                    borderRadius: 10,
+                    border: "1px solid var(--borde)",
+                    background: "var(--acento)",
+                    color: "var(--fondo)",
+                    fontSize: "1.4rem",
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    cursor: finalizada ? "default" : "pointer",
+                  }}
+                >
+                  +
+                </button>
+              </div>
               {ej ? (
                 <a
                   href={`/ejercicios/${ej.id}`}
