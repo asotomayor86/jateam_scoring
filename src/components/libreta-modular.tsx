@@ -526,14 +526,16 @@ export function LibretaModular({
   async function calificar(idx: number, rating: string) {
     const fila = filasRef.current.find((f) => f.idx === idx);
     if (!fila || fila.kind !== "ejercicio") return;
-    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, rating } : f)));
+    // Pulsar la calificación ya activa la borra (desmarcar).
+    const nuevo = fila.rating === rating ? null : rating;
+    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, rating: nuevo } : f)));
     setEstado(idx, "guardando");
     try {
       const r = await guardarEjercicioSerie({
         scorecardId,
         idx,
         exerciseId: fila.exerciseId,
-        rating: rating as "verde" | "amarillo" | "rojo",
+        rating: nuevo as "verde" | "amarillo" | "rojo" | null,
         reps: parseReps(fila.reps),
       });
       setEstado(idx, r.ok ? "guardado" : "error");
