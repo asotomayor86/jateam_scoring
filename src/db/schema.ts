@@ -358,6 +358,22 @@ export const deviceSessions = pgTable(
 );
 
 /**
+ * Cola de "eventos láser" para la captura remota (Cámara → Control). La Cámara
+ * inserta cada disparo detectado (x,y en mm desde el centro + puntuación); el
+ * Control los consume (delete-returning) y los añade a la serie que tiene abierta.
+ */
+export const laserEvents = pgTable("laser_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  x: real("x").notNull(),
+  y: real("y").notNull(),
+  s: integer("s").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * Chat del grupo por hilos. Un usuario crea un hilo y dentro se responden.
  * Retención: los mensajes de más de 3 meses se filtran al leer y se purgan de
  * forma perezosa (al listar/publicar); los hilos sin actividad reciente caducan.

@@ -16,6 +16,7 @@ export type EstadoSesiones = {
   bloqueada: boolean; // cámara en conflicto (hay más de una)
   laserBloqueado: boolean; // el Control debe bloquear el láser local
   cerrada: boolean; // esta sesión fue cerrada (por el otro dispositivo)
+  capturaActiva: boolean; // el Control tiene una serie en captura remota
   total: number;
   sesiones: SesionInfo[];
 };
@@ -51,6 +52,7 @@ async function leerEstado(userId: string, token: string): Promise<EstadoSesiones
     bloqueada: miRol === "camara" && conflicto,
     laserBloqueado: total >= 2 && miRol !== "camara" && hayCamaraValida,
     cerrada: !!miFila && !miFila.active,
+    capturaActiva: activas.some((f) => f.captureScorecardId != null),
     total,
     sesiones: activas
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())

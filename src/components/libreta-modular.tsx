@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   guardarSerie,
@@ -16,6 +16,8 @@ import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
 import { LaserCamLink } from "@/components/laser-cam-link";
 import { LaserTrainer } from "@/components/laser-trainer";
+import { useLaserBloqueado } from "@/components/laser-contexto";
+import { fijarCaptura, consumirEventosLaser } from "@/actions/laser";
 import { ImpactosBoxes } from "@/components/impactos-boxes";
 import {
   parseTiro,
@@ -277,6 +279,54 @@ export function LibretaModular({
     const f = filasRef.current.find((x) => x.idx === idx);
     cambiaImpactos(idx, [...(f?.impacts ?? []), imp], true);
   }
+  function anadirVariosLaser(idx: number, imps: Impacto[]) {
+    if (!imps.length) return;
+    const f = filasRef.current.find((x) => x.idx === idx);
+    cambiaImpactos(idx, [...(f?.impacts ?? []), ...imps], true);
+  }
+
+  // --- Captura remota (este dispositivo es Control con una Cámara activa) ---
+  const capturaDisp = useLaserBloqueado();
+  const [capturaFila, setCapturaFila] = useState<number | null>(null);
+
+  async function toggleCaptura(idx: number) {
+    if (capturaFila === idx) {
+      setCapturaFila(null);
+      await fijarCaptura(null, null);
+      return;
+    }
+    setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, usaDiana: true } : f)));
+    setCapturaFila(idx);
+    await fijarCaptura(scorecardId, idx);
+  }
+
+  // Mientras hay captura, sondea los disparos que envía la Cámara y los añade.
+  useEffect(() => {
+    if (capturaFila == null) return;
+    let vivo = true;
+    const id = setInterval(async () => {
+      try {
+        const evs = await consumirEventosLaser();
+        if (vivo && evs.length) anadirVariosLaser(capturaFila, evs);
+      } catch {
+        /* ignora */
+      }
+    }, 1500);
+    return () => {
+      vivo = false;
+      clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturaFila]);
+
+  // Si se pierde la Cámara (deja de estar disponible), detén la captura.
+  useEffect(() => {
+    if (!capturaDisp && capturaFila != null) {
+      setCapturaFila(null);
+      void fijarCaptura(null, null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturaDisp]);
 
   const modulos = filas.filter((f) => f.kind === "modulo");
   const numEj = filas.length - modulos.length;
@@ -873,10 +923,39 @@ export function LibretaModular({
                     {fila.blancoNuevo ? "● Blanco nuevo" : "○ Blanco nuevo"}
                   </button>
                 )}
-                <LaserCamLink
-                  activo={laserFila === fila.idx}
-                  onClick={() => toggleLaser(fila.idx)}
-                />
+                {capturaDisp ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleCaptura(fila.idx)}
+                    aria-pressed={capturaFila === fila.idx}
+                    title="Capturar con cámara remota"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 2,
+                      height: 30,
+                      padding: "0 0.5rem",
+                      borderRadius: 8,
+                      border:
+                        capturaFila === fila.idx
+                          ? "2px solid var(--acento-fuerte)"
+                          : "1px solid var(--borde)",
+                      background: capturaFila === fila.idx ? "var(--superficie-2)" : "transparent",
+                      color: "var(--texto-suave)",
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                      flexShrink: 0,
+                    }}
+                  >
+                    📷{capturaFila === fila.idx ? " ●" : ""}
+                  </button>
+                ) : (
+                  <LaserCamLink
+                    activo={laserFila === fila.idx}
+                    onClick={() => toggleLaser(fila.idx)}
+                  />
+                )}
                 {!finalizada && (
                   <button
                     type="button"
