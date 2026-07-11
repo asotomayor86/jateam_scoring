@@ -288,6 +288,16 @@ export function LibretaModular({
   // --- Captura remota (este dispositivo es Control con una Cámara activa) ---
   const capturaDisp = useLaserBloqueado();
   const [capturaFila, setCapturaFila] = useState<number | null>(null);
+  const capturaFilaRef = useRef<number | null>(null);
+  capturaFilaRef.current = capturaFila;
+
+  // Al desmontar la libreta, libera la captura (si estaba activa).
+  useEffect(
+    () => () => {
+      if (capturaFilaRef.current != null) void fijarCaptura(null, null);
+    },
+    [],
+  );
 
   async function toggleCaptura(idx: number) {
     if (capturaFila === idx) {

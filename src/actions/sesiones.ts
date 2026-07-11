@@ -52,7 +52,10 @@ async function leerEstado(userId: string, token: string): Promise<EstadoSesiones
     bloqueada: miRol === "camara" && conflicto,
     laserBloqueado: total >= 2 && miRol !== "camara" && hayCamaraValida,
     cerrada: !!miFila && !miFila.active,
-    capturaActiva: activas.some((f) => f.captureScorecardId != null),
+    // Captura activa solo si algún Control la fijó y sigue "vivo" (latido reciente).
+    capturaActiva: activas.some(
+      (f) => f.captureScorecardId != null && Date.now() - f.lastSeenAt.getTime() < 30000,
+    ),
     total,
     sesiones: activas
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())

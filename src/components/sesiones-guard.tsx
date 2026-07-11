@@ -74,8 +74,9 @@ export function SesionesGuard({ nav, children }: { nav: ReactNode; children: Rea
     return <Cerrada onReabrir={reabrir} />;
   }
 
-  // Dispositivo de Cámara: pantalla mínima (sensor).
-  if (estado?.miRol === "camara") {
+  // Dispositivo de Cámara: pantalla mínima (sensor). Solo si sigue habiendo 2+
+  // sesiones (si te quedas solo, vuelve al modo normal).
+  if (estado && estado.total >= 2 && estado.miRol === "camara") {
     return <CamaraRemota estado={estado} onCerrar={cerrar} />;
   }
 
