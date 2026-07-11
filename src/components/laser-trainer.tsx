@@ -26,6 +26,11 @@ const LONG_PRESS = 320;
 const MOVE_PX = 8;
 const HIT_NORM = 0.07;
 
+// Zoom deseado por el usuario. A nivel de módulo para que PERSISTA si se cierra y
+// se vuelve a abrir la cámara (o si el componente se re-monta); solo cambia cuando
+// el usuario hace zoom o pulsa el botón de restablecer.
+let zoomGuardado: number | null = null;
+
 function clamp(v: number, a: number, b: number) {
   return Math.max(a, Math.min(b, v));
 }
@@ -259,6 +264,9 @@ export function LaserTrainer({
   const [color, setColor] = useState<Color>("rojo");
   const [sensibilidad, setSensibilidad] = useState(70);
   const [error, setError] = useState<string | null>(null);
+  // Zoom de la cámara (para la UI): nivel actual y si el dispositivo lo permite.
+  const [zoomUi, setZoomUi] = useState(1);
+  const [zoomSoportado, setZoomSoportado] = useState(false);
   const [overlay, setOverlay] = useState<string | null>(null);
   const [resizeTick, setResizeTick] = useState(0);
   const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
@@ -347,14 +355,28 @@ export function LaserTrainer({
       try {
         const caps = (track.getCapabilities?.() ?? {}) as { zoom?: { min: number; max: number } };
         if (caps.zoom && typeof caps.zoom.min === "number") {
-          zoomCapR.current = { min: caps.zoom.min, max: caps.zoom.max };
+          const { min, max } = caps.zoom;
+          zoomCapR.current = { min, max };
           const st = (track.getSettings?.() ?? {}) as { zoom?: number };
-          zoomActualR.current = typeof st.zoom === "number" ? st.zoom : caps.zoom.min;
+          // Si el usuario ya había fijado un zoom, se respeta al reabrir.
+          const inicial =
+            zoomGuardado != null
+              ? Math.max(min, Math.min(max, zoomGuardado))
+              : typeof st.zoom === "number"
+                ? st.zoom
+                : min;
+          zoomActualR.current = inicial;
+          setZoomUi(inicial);
+          setZoomSoportado(true);
+          empujarZoom(inicial);
+          reasegurarZoom(); // algunos móviles resetean el zoom tras el autoenfoque
         } else {
           zoomCapR.current = null;
+          setZoomSoportado(false);
         }
       } catch {
         zoomCapR.current = null;
+        setZoomSoportado(false);
       }
       setEsquinas([]);
       homoR.current = null;
@@ -382,6 +404,7 @@ export function LaserTrainer({
     zoomCapR.current = null;
     zoomPendienteR.current = null;
     zoomBusyR.current = false;
+    setZoomSoportado(false);
     setEscuchando(false);
     setFase("inicio");
   }
@@ -514,6 +537,27 @@ export function LaserTrainer({
     if (!zoomBusyR.current) aplicarSiguienteZoom();
   }
 
+  // Reafirma el zoom un momento después de arrancar (autoenfoque/reajuste inicial
+  // de algunas cámaras que, si no, lo devolverían a 1×).
+  function reasegurarZoom() {
+    [400, 1200].forEach((ms) =>
+      setTimeout(() => {
+        if (trackR.current && zoomCapR.current) empujarZoom(zoomActualR.current);
+      }, ms),
+    );
+  }
+
+  /** Fija el zoom (botones ±/1×). Persiste hasta que lo cambies tú. */
+  function ponerZoom(z: number) {
+    const cap = zoomCapR.current;
+    if (!cap) return;
+    const zz = Math.max(cap.min, Math.min(cap.max, z));
+    zoomActualR.current = zz;
+    zoomGuardado = zz;
+    setZoomUi(zz);
+    empujarZoom(zz);
+  }
+
   function onDown(e: RPtr<HTMLDivElement>) {
     if (fase !== "activa") return;
     e.preventDefault();
@@ -569,6 +613,8 @@ export function LaserTrainer({
         const { min, max } = zoomCapR.current;
         const z = Math.max(min, Math.min(max, pinchR.current.zoom * (dist / pinchR.current.dist)));
         zoomActualR.current = z;
+        zoomGuardado = z; // persiste el zoom elegido
+        setZoomUi(z);
         empujarZoom(z);
       }
       return;
@@ -774,6 +820,29 @@ export function LaserTrainer({
           }}
         />
       </div>
+
+      {fase === "activa" && zoomSoportado ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ fontSize: "0.85rem", color: "var(--texto-suave)" }}>Zoom</span>
+          <button type="button" className="btn" style={{ flex: 1 }} onClick={() => ponerZoom(zoomActualR.current / 1.25)}>
+            −
+          </button>
+          <span style={{ fontSize: "0.85rem", minWidth: 42, textAlign: "center", fontWeight: 700 }}>
+            {zoomUi.toFixed(1)}×
+          </span>
+          <button type="button" className="btn" style={{ flex: 1 }} onClick={() => ponerZoom(zoomActualR.current * 1.25)}>
+            +
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{ flex: 1 }}
+            onClick={() => ponerZoom(zoomCapR.current?.min ?? 1)}
+          >
+            1×
+          </button>
+        </div>
+      ) : null}
 
       {fase === "activa" ? (
         <div style={{ display: "flex", gap: "0.5rem" }}>
