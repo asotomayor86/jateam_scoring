@@ -557,6 +557,7 @@ function ListaApuntes({ series }: { series: SerieTipo[] }) {
             <span style={{ flex: 1 }}>
               Serie {s.idx} · {tiros} tiros
               {s.tieneImpactos ? " · 🎯" : ""}
+              {s.distancia === "reducida" ? " · 7 m" : ""}
             </span>
             <span style={{ fontWeight: 700 }}>{s.subtotal}</span>
             <span style={{ color: "var(--texto-suave)" }}>({medio})</span>

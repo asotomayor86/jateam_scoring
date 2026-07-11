@@ -90,6 +90,7 @@ export default async function LibretaPage({
             exerciseId: s.exerciseId,
             rating: s.rating,
             reps: s.reps,
+            distanceMode: s.distanceMode,
             notes: s.notes,
             impacts: s.impacts,
           }))}

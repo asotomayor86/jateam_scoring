@@ -45,6 +45,7 @@ export async function getResultados(userId: string) {
       moduleType: series.moduleType,
       exerciseId: series.exerciseId,
       rating: series.rating,
+      distanceMode: series.distanceMode,
       impacts: series.impacts,
     })
     .from(series)
@@ -66,5 +67,6 @@ export type SerieResultado = {
   moduleType: string | null;
   exerciseId: string | null;
   rating: string | null;
+  distanceMode: string | null;
   impacts: { x: number; y: number; s: number }[] | null;
 };

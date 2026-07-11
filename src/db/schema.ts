@@ -242,6 +242,10 @@ export const series = pgTable(
     // Modular (fila de ejercicio): nº final de repeticiones realizadas, para una
     // futura evaluación de carga de trabajo.
     reps: integer("reps"),
+    // Modular (serie de disparo): distancia de la sesión, "real" (25 m) o
+    // "reducida" (7 m). Se guarda para el análisis (a 7 m las puntuaciones
+    // tienden a ser más bajas). null = no informado / no aplica.
+    distanceMode: text("distance_mode"),
     // Solo modo "diana": impactos sobre la diana a escala, en mm desde el
     // centro (x → derecha, y → arriba) con su puntuación derivada del anillo
     // (corregible). El subtotal/shots/inner se derivan de estos impactos.

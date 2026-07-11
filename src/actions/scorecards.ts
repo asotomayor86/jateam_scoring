@@ -211,6 +211,8 @@ const esquemaSerie = z.object({
   inner: z.number().int().min(0).max(50),
   // Solo entrenamiento modular: tipo de módulo de la serie.
   moduleType: z.string().max(20).nullable().optional(),
+  // Distancia de la sesión (modular): "real" (25 m) o "reducida" (7 m).
+  distancia: z.enum(["real", "reducida"]).nullable().optional(),
   // Si la serie se apuntó con la diana gráfica: sus impactos (o null si no).
   impacts: impactosSchema.nullable().optional(),
 });
@@ -246,8 +248,10 @@ export async function guardarSerie(
         subtotal: redondea1(d.subtotal),
         inner: d.inner,
         moduleType: d.moduleType ?? null,
+        distanceMode: d.distancia ?? null,
         impacts: d.impacts ?? null,
       })
+      // La distancia se fija al crear la fila (no se toca al actualizar).
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
         set: {
@@ -278,6 +282,7 @@ const esquemaAsistida = z.object({
   impacts: impactosSchema.nullable().optional(),
   // Solo asistido dentro de un modular: tipo de módulo (para conservarlo).
   moduleType: z.string().max(20).nullable().optional(),
+  distancia: z.enum(["real", "reducida"]).nullable().optional(),
 });
 
 /**
@@ -316,8 +321,9 @@ export async function guardarSerieAsistida(
         buckets: d.buckets,
         impacts: d.impacts ?? null,
         moduleType: d.moduleType ?? null,
+        distanceMode: d.distancia ?? null,
       })
-      // No se toca moduleType al actualizar: se fija al crear la fila.
+      // No se toca moduleType/distancia al actualizar: se fijan al crear la fila.
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
         set: { blancoNuevo: d.blancoNuevo, buckets: d.buckets, impacts: d.impacts ?? null },
@@ -338,6 +344,7 @@ const esquemaDiana = z.object({
   impacts: impactosSchema,
   // Solo si la diana es una serie de un entrenamiento modular: tipo de módulo.
   moduleType: z.string().max(20).nullable().optional(),
+  distancia: z.enum(["real", "reducida"]).nullable().optional(),
 });
 
 /**
@@ -377,9 +384,10 @@ export async function guardarDianaSerie(
         inner,
         blancoNuevo: false,
         moduleType: d.moduleType ?? null,
+        distanceMode: d.distancia ?? null,
         impacts: d.impacts,
       })
-      // No se toca moduleType al actualizar: se fija al crear la fila y se conserva.
+      // No se toca moduleType/distancia al actualizar: se fijan al crear la fila.
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
         set: { shots, shotCount: d.impacts.length, subtotal, inner, impacts: d.impacts },

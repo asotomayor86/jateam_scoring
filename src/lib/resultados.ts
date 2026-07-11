@@ -84,6 +84,8 @@ export type SerieTipo = {
   impactos: Impacto[];
   tieneValores: boolean;
   tieneImpactos: boolean;
+  /** Distancia de la sesión: "real" (25 m) / "reducida" (7 m) / null. */
+  distancia: string | null;
 };
 
 /** Subconjunto de series de un grupo según el modo de datos. */
@@ -162,6 +164,7 @@ export function agruparEntrenamientosPorTipo(
       impactos,
       tieneValores: valores.length > 0,
       tieneImpactos: impactos.length > 0,
+      distancia: s.distanceMode,
     });
   }
 

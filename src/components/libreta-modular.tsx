@@ -45,11 +45,13 @@ type SerieInicial = {
   exerciseId: string | null;
   rating: string | null;
   reps: number | null;
+  distanceMode: string | null;
   notes: string | null;
   impacts: Impacto[] | null;
 };
 
 type Modo = "tiros" | "total" | "asistido" | "diana";
+type Distancia = "real" | "reducida";
 type EstadoGuardado = "" | "guardando" | "guardado" | "error";
 
 type Fila = {
@@ -63,6 +65,7 @@ type Fila = {
   exerciseId: string;
   rating: string | null;
   reps: string; // repeticiones realizadas (texto del input)
+  distancia: Distancia; // solo módulos de disparo: 25 m (real) / 7 m (reducida)
   notes: string | null;
   impacts: Impacto[];
   usaDiana: boolean; // conmutador por módulo: apuntar en la diana en vez de casillas
@@ -102,6 +105,7 @@ function filaVacia(): Omit<Fila, "idx" | "kind" | "estado"> {
     exerciseId: "",
     rating: null,
     reps: "",
+    distancia: "real",
     notes: null,
     impacts: [],
     usaDiana: false,
@@ -132,6 +136,7 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
         kind: "modulo" as const,
         ...filaVacia(),
         moduleType: s.moduleType as string,
+        distancia: s.distanceMode === "reducida" ? "reducida" : "real",
         notes: s.notes,
         celdas: Array.from({ length: mod.shots }, (_, j) =>
           modo === "tiros" && s.shots && j < s.shots.length
@@ -253,6 +258,7 @@ export function LibretaModular({
     filasIniciales(seriesIniciales, modo),
   );
   const [tipoNuevo, setTipoNuevo] = useState(MODULOS[0].key);
+  const [distanciaNueva, setDistanciaNueva] = useState<Distancia>("real");
   const [ejNuevo, setEjNuevo] = useState(ejercicios[0]?.id ?? "");
   const [laserFila, setLaserFila] = useState<number | null>(null);
   const filasRef = useRef(filas);
@@ -478,6 +484,7 @@ export function LibretaModular({
     if (!mod) return;
     const esPrimero = !filasRef.current.some((f) => f.kind === "modulo");
     const idx = siguienteIdx();
+    const distancia = distanciaNueva;
     setFilas((prev) => [
       ...prev,
       {
@@ -485,6 +492,7 @@ export function LibretaModular({
         kind: "modulo",
         ...filaVacia(),
         moduleType: mod.key,
+        distancia,
         celdas: Array(mod.shots).fill(""),
         blancoNuevo: esPrimero,
         estado: "",
@@ -497,9 +505,10 @@ export function LibretaModular({
         blancoNuevo: esPrimero,
         buckets: ASISTIDO_VALORES.map(() => 0),
         moduleType: mod.key,
+        distancia,
       });
     } else if (modo === "diana") {
-      await guardarDianaSerie({ scorecardId, idx, impacts: [], moduleType: mod.key });
+      await guardarDianaSerie({ scorecardId, idx, impacts: [], moduleType: mod.key, distancia });
     } else {
       await guardarSerie({
         scorecardId,
@@ -509,6 +518,7 @@ export function LibretaModular({
         subtotal: 0,
         inner: 0,
         moduleType: mod.key,
+        distancia,
       });
     }
   }
@@ -827,6 +837,11 @@ export function LibretaModular({
             >
               <strong style={{ fontSize: "0.95rem" }}>
                 {fila.idx}. {mod.label}
+                {fila.distancia === "reducida" ? (
+                  <span className="chip" style={{ marginLeft: "0.4rem", fontWeight: 600 }}>
+                    7 m
+                  </span>
+                ) : null}
               </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)" }}>
@@ -1000,6 +1015,15 @@ export function LibretaModular({
                     {m.label}
                   </option>
                 ))}
+              </select>
+              <select
+                value={distanciaNueva}
+                onChange={(e) => setDistanciaNueva(e.target.value as Distancia)}
+                style={selectStyle}
+                title="Distancia de la sesión"
+              >
+                <option value="real">25 m (real)</option>
+                <option value="reducida">7 m (reducida)</option>
               </select>
               <button
                 type="button"
