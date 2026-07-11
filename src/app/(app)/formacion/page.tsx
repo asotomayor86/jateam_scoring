@@ -752,6 +752,169 @@ export default async function FormacionPage() {
           cada dispositivo por separado.
         </p>
       </Tema>
+
+      {/* ---------------------- DOS DISPOSITIVOS ---------------------- */}
+      <SeccionTitulo>6 · Dos dispositivos (Control + Cámara)</SeccionTitulo>
+
+      <Tema titulo="Para qué sirve" abierto>
+        <p>
+          Es un modo pensado para entrenar con la <strong>diana láser</strong> sin
+          tener que estar tocando el mismo móvil que hace de cámara. La idea: un
+          teléfono se queda <strong>fijo apuntando a la diana</strong> (hace de
+          sensor) y con el otro, que tienes en la mano, <strong>ves los resultados
+          y manejas los cronómetros</strong>. Los disparos que detecta la cámara
+          aparecen solos en la diana del móvil que llevas.
+        </p>
+        <p>
+          Muy importante: si solo usas <strong>un</strong> dispositivo, no cambia
+          absolutamente nada respecto a lo de siempre. Todo este modo solo se activa
+          cuando <strong>abres la app en un segundo dispositivo con tu mismo
+          usuario</strong>.
+        </p>
+      </Tema>
+
+      <Tema titulo="Abrir la segunda sesión y elegir rol">
+        <p>
+          Entra en la app (con <strong>tu misma cuenta</strong>) en el segundo
+          móvil. Como ya tienes una sesión abierta, aparece un aviso que te pregunta{" "}
+          <strong>qué es este dispositivo</strong>:
+        </p>
+        <ul>
+          <li>
+            <strong>🕹️ Control</strong>: hace de todo (libreta, cronómetros,
+            resultados…) <strong>menos</strong> encender el láser.
+          </li>
+          <li>
+            <strong>📷 Cámara</strong>: solo hace de <strong>sensor láser</strong>.
+          </li>
+        </ul>
+        <p>
+          Se pregunta <strong>en los dos</strong> teléfonos. La combinación válida es{" "}
+          <strong>un Control + una Cámara</strong>. Si por error los dos se ponen como
+          Cámara, se avisa y la Cámara queda <strong>bloqueada</strong> hasta que dejes
+          solo una (cierra una o cámbiala a Control). Arriba del todo verás una{" "}
+          <strong>barra</strong> con cuántos dispositivos hay y qué rol tiene este.
+        </p>
+      </Tema>
+
+      <Tema titulo="El dispositivo de Control">
+        <p>
+          Es tu móvil «de mano». Funciona como siempre, con un par de diferencias
+          mientras haya una Cámara conectada:
+        </p>
+        <ul>
+          <li>
+            En las tarjetas, el botón de <strong>láser local</strong> aparece en{" "}
+            <strong>gris</strong> (el láser se usa en la Cámara). En su lugar, en cada
+            serie de disparo sale un botón <strong>📷 de captura remota</strong>.
+          </li>
+          <li>
+            Al pulsar <strong>📷</strong> en una serie: se abre su diana y esa serie
+            queda <strong>«a la escucha»</strong>. Verás un indicador verde{" "}
+            <strong>● cámara · N recibidos</strong> con el número de disparos que van
+            llegando. La barra superior muestra{" "}
+            <strong>«📷 capturando»</strong> cuando está en marcha, o{" "}
+            <strong>«📷 cámara conectada»</strong> si aún no.
+          </li>
+          <li>
+            Vuelve a pulsar <strong>📷</strong> para dejar de capturar. Si cambias de
+            serie, la captura se mueve a la nueva.
+          </li>
+        </ul>
+      </Tema>
+
+      <Tema titulo="El dispositivo de Cámara">
+        <p>
+          Es el móvil que colocas <strong>fijo, en un soporte, apuntando a la diana</strong>.
+          Su pantalla es mínima:
+        </p>
+        <ul>
+          <li>
+            <strong>En espera</strong>: mientras el Control no active la captura,
+            muestra un mensaje de espera. No tienes que tocar nada.
+          </li>
+          <li>
+            <strong>Capturando</strong>: en cuanto el Control activa una serie, aquí se
+            abre la <strong>cámara con todo el láser</strong> de siempre (iniciar
+            cámara, marcar las 4 esquinas, detectar diana, zoom con dos dedos, tocar
+            para reenfocar y «Escuchar disparos»). Arriba ves un contador{" "}
+            <strong>📤 N enviados</strong>.
+          </li>
+        </ul>
+        <p>
+          Cada disparo que detecta se manda al Control y aparece en su diana en{" "}
+          <strong>1-2 segundos</strong>. La calibración es de la diana física: si el
+          Control cambia de serie, <strong>no</strong> hace falta recalibrar.
+        </p>
+      </Tema>
+
+      <Tema titulo="Capturar disparos en vivo (paso a paso)">
+        <ol>
+          <li>Abre la app con tu usuario en los dos móviles.</li>
+          <li>
+            En el segundo, elige <strong>Cámara</strong>; el primero queda de{" "}
+            <strong>Control</strong>.
+          </li>
+          <li>
+            Coloca el móvil de <strong>Cámara</strong> fijo y de frente a la diana
+            reducida, con buena luz.
+          </li>
+          <li>
+            En el <strong>Control</strong>, entra en tu <strong>entrenamiento
+            modular</strong>, abre (o añade) una <strong>serie de disparo</strong> y
+            pulsa <strong>📷</strong>.
+          </li>
+          <li>
+            En la <strong>Cámara</strong> se abre la cámara: inicia, calibra (4
+            esquinas + «Detectar diana»), ajusta zoom/enfoque y pulsa{" "}
+            <strong>«Escuchar disparos»</strong>.
+          </li>
+          <li>
+            Dispara con el láser: los impactos aparecen en la diana del{" "}
+            <strong>Control</strong> y el contador sube en ambos lados.
+          </li>
+        </ol>
+      </Tema>
+
+      <Tema titulo="Cerrar sesiones y avisos">
+        <p>
+          Desde cualquiera de los dos puedes <strong>cerrar tu propia sesión</strong>{" "}
+          o <strong>la del otro dispositivo</strong> (botones «Cerrar esta» / «Cerrar
+          la otra»). Al cerrar la del otro, ese móvil muestra{" "}
+          <strong>«Sesión cerrada»</strong> con un botón para <strong>reabrir</strong>.
+        </p>
+        <p>
+          Las sesiones <strong>no caducan solas</strong> (se cierran a mano), pero si
+          el Control desaparece de golpe, la Cámara deja de capturar sola a los pocos
+          segundos para no gastar batería. Cuando vuelves a quedarte con{" "}
+          <strong>un solo dispositivo</strong>, todo regresa al modo normal (con el
+          láser local disponible otra vez).
+        </p>
+      </Tema>
+
+      <Tema titulo="Límites y consejos">
+        <ul>
+          <li>
+            El retardo de los disparos es de <strong>1-2 segundos</strong> (la app
+            comprueba periódicamente si hay disparos nuevos); es normal, está pensado
+            para revisar cómodamente, no para competir contra el reloj.
+          </li>
+          <li>
+            De momento la captura remota funciona en el <strong>entrenamiento
+            modular</strong> (el caso habitual de práctica con diana/láser).
+          </li>
+          <li>
+            En <strong>iPhone</strong>, para usar la cámara hace falta{" "}
+            <strong>iOS 16.4 o superior</strong> y abrir la app{" "}
+            <strong>instalada</strong> desde el icono de inicio. El{" "}
+            <strong>zoom</strong> de cámara suele estar solo en Android.
+          </li>
+          <li>
+            Ten los dos móviles con <strong>buena batería</strong>: el de Cámara con la
+            pantalla y la cámara encendidas consume bastante.
+          </li>
+        </ul>
+      </Tema>
     </div>
   );
 }

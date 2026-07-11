@@ -288,6 +288,7 @@ export function LibretaModular({
   // --- Captura remota (este dispositivo es Control con una Cámara activa) ---
   const capturaDisp = useLaserBloqueado();
   const [capturaFila, setCapturaFila] = useState<number | null>(null);
+  const [recibidos, setRecibidos] = useState(0);
   const capturaFilaRef = useRef<number | null>(null);
   capturaFilaRef.current = capturaFila;
 
@@ -307,6 +308,7 @@ export function LibretaModular({
     }
     setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, usaDiana: true } : f)));
     setCapturaFila(idx);
+    setRecibidos(0);
     await fijarCaptura(scorecardId, idx);
   }
 
@@ -317,7 +319,10 @@ export function LibretaModular({
     const id = setInterval(async () => {
       try {
         const evs = await consumirEventosLaser();
-        if (vivo && evs.length) anadirVariosLaser(capturaFila, evs);
+        if (vivo && evs.length) {
+          anadirVariosLaser(capturaFila, evs);
+          setRecibidos((n) => n + evs.length);
+        }
       } catch {
         /* ignora */
       }
@@ -960,12 +965,18 @@ export function LibretaModular({
                   >
                     📷{capturaFila === fila.idx ? " ●" : ""}
                   </button>
-                ) : (
+                ) : null}
+                {capturaDisp && capturaFila === fila.idx ? (
+                  <span style={{ fontSize: "0.75rem", color: "var(--verde)", fontWeight: 600 }}>
+                    ● cámara · {recibidos} recibidos
+                  </span>
+                ) : null}
+                {!capturaDisp ? (
                   <LaserCamLink
                     activo={laserFila === fila.idx}
                     onClick={() => toggleLaser(fila.idx)}
                   />
-                )}
+                ) : null}
                 {!finalizada && (
                   <button
                     type="button"

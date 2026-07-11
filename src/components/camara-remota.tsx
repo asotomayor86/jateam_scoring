@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { EstadoSesiones } from "@/actions/sesiones";
 import { emitirEventoLaser } from "@/actions/laser";
 import { LaserTrainer } from "@/components/laser-trainer";
@@ -16,6 +17,7 @@ export function CamaraRemota({
   estado: EstadoSesiones;
   onCerrar: (id: string) => void;
 }) {
+  const [enviados, setEnviados] = useState(0);
   const yo = estado.sesiones.find((s) => s.esEste);
   const otras = estado.sesiones.filter((s) => !s.esEste);
 
@@ -53,9 +55,31 @@ export function CamaraRemota({
   if (estado.capturaActiva) {
     return (
       <main className="contenedor" style={{ paddingBottom: "2rem" }}>
-        <h1 className="titulo-app" style={{ fontSize: "1.3rem", margin: "0.5rem 0" }}>
-          📷 Capturando para el Control
-        </h1>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.5rem",
+            margin: "0.5rem 0",
+          }}
+        >
+          <h1 className="titulo-app" style={{ fontSize: "1.3rem", margin: 0 }}>
+            📷 Capturando
+          </h1>
+          <span
+            style={{
+              fontSize: "0.85rem",
+              fontWeight: 700,
+              padding: "0.25rem 0.6rem",
+              borderRadius: 999,
+              background: "var(--superficie-2)",
+              color: "var(--texto)",
+            }}
+          >
+            📤 {enviados} enviados
+          </span>
+        </div>
         <p style={{ color: "var(--texto-suave)", fontSize: "0.85rem", margin: "0 0 0.6rem" }}>
           Coloca el móvil fijo apuntando a la diana, calibra y escucha los disparos. Cada
           impacto detectado se envía al dispositivo de Control.
@@ -63,6 +87,7 @@ export function CamaraRemota({
         <LaserTrainer
           compacto
           onImpacto={(imp) => {
+            setEnviados((n) => n + 1);
             void emitirEventoLaser({ x: imp.x, y: imp.y, s: imp.s });
           }}
         />

@@ -102,6 +102,7 @@ function BarraSesiones({
   const yo = estado.sesiones.find((s) => s.esEste);
   const otras = estado.sesiones.filter((s) => !s.esEste);
   const etiqueta = (r: string | null) => (r === "camara" ? "Cámara" : r === "control" ? "Control" : "sin rol");
+  const hayCamara = estado.sesiones.some((s) => s.role === "camara");
   return (
     <div
       style={{
@@ -119,6 +120,16 @@ function BarraSesiones({
       <span style={{ color: "var(--texto-suave)" }}>
         📱 {estado.total} dispositivos · este: <strong>{etiqueta(yo?.role ?? null)}</strong>
       </span>
+      {yo?.role === "control" && hayCamara ? (
+        <span
+          style={{
+            fontWeight: 700,
+            color: estado.capturaActiva ? "var(--verde)" : "var(--texto-suave)",
+          }}
+        >
+          {estado.capturaActiva ? "📷 capturando" : "📷 cámara conectada"}
+        </span>
+      ) : null}
       {yo ? (
         <button type="button" className="btn" style={miniBtn} onClick={() => onCerrar(yo.id)}>
           Cerrar esta
