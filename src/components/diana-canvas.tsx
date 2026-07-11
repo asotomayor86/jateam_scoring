@@ -20,6 +20,7 @@ const HIT_MM = 18; // radio (mm) para seleccionar un impacto al tocarlo
 const DOT_MM = SPEC.caliberMm / 2;
 const LONG_PRESS_MS = 320; // pulsación larga para crear un impacto
 const MOVE_THRESHOLD_PX = 8; // desplazamiento mínimo para considerarlo arrastre
+const MIN_VIEW = VIEW / 4; // zoom máximo (×4): el viewBox no baja de aquí
 
 /** Estado de un gesto en curso sobre la diana. */
 type Gesto = {
@@ -75,6 +76,10 @@ export function DianaCanvas({
   selRef.current = sel;
   const gesto = useRef<Gesto | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Zoom/pan: viewBox actual (en coordenadas SVG). Por defecto, la diana entera.
+  const [view, setView] = useState({ x: -R, y: -R, w: VIEW, h: VIEW });
+  const punteros = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinch = useRef<{ startDist: number; startW: number; anchorX: number; anchorY: number } | null>(null);
 
   const stats = estadisticas(impacts);
 
@@ -82,8 +87,8 @@ export function DianaCanvas({
     const rect = svgRef.current!.getBoundingClientRect();
     const fx = (clientX - rect.left) / rect.width;
     const fy = (clientY - rect.top) / rect.height;
-    const x = clamp(-R + fx * VIEW, -R, R);
-    const y = clamp(R - fy * VIEW, -R, R); // eje modelo hacia arriba
+    const x = clamp(view.x + fx * view.w, -R, R);
+    const y = clamp(-(view.y + fy * view.h), -R, R); // eje modelo hacia arriba
     return { x, y };
   }
 
@@ -107,10 +112,34 @@ export function DianaCanvas({
     }
   }
 
+  /** Empieza un pinch de zoom/pan con los dos punteros activos. */
+  function iniciarPinch() {
+    const pts = [...punteros.current.values()];
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const rect = svgRef.current!.getBoundingClientRect();
+    const fx = (mid.x - rect.left) / rect.width;
+    const fy = (mid.y - rect.top) / rect.height;
+    pinch.current = {
+      startDist: dist || 1,
+      startW: view.w,
+      anchorX: view.x + fx * view.w,
+      anchorY: view.y + fy * view.h,
+    };
+  }
+
   function onPointerDown(e: RPtr<SVGSVGElement>) {
-    if (finalizada) return;
     e.preventDefault();
     svgRef.current?.setPointerCapture(e.pointerId);
+    punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    // Dos dedos: modo zoom/pan (funciona también con la hoja finalizada).
+    if (punteros.current.size >= 2) {
+      limpiaTimer();
+      gesto.current = null;
+      iniciarPinch();
+      return;
+    }
+    if (finalizada) return;
     limpiaTimer();
     const arr = impacts.map((i) => ({ ...i }));
     const target = selRef.current ?? -1;
@@ -145,8 +174,8 @@ export function DianaCanvas({
 
   function aplicaDelta(g: Gesto, dxScreen: number, dyScreen: number) {
     const rect = svgRef.current!.getBoundingClientRect();
-    g.pos.x = clamp(g.pos.x + dxScreen * (VIEW / rect.width), -R, R);
-    g.pos.y = clamp(g.pos.y - dyScreen * (VIEW / rect.height), -R, R);
+    g.pos.x = clamp(g.pos.x + dxScreen * (view.w / rect.width), -R, R);
+    g.pos.y = clamp(g.pos.y - dyScreen * (view.h / rect.height), -R, R);
     const i = g.target;
     if (i < 0 || i >= g.arr.length) return;
     g.arr[i] = { x: g.pos.x, y: g.pos.y, s: puntuacionDeImpacto(SPEC, g.pos.x, g.pos.y) };
@@ -157,6 +186,24 @@ export function DianaCanvas({
   }
 
   function onPointerMove(e: RPtr<SVGSVGElement>) {
+    if (punteros.current.has(e.pointerId)) {
+      punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+    // Pinch: zoom (por la separación) y pan (por el punto medio).
+    if (pinch.current && punteros.current.size >= 2) {
+      e.preventDefault();
+      const pts = [...punteros.current.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+      const rect = svgRef.current!.getBoundingClientRect();
+      const w = clamp(pinch.current.startW * (pinch.current.startDist / dist), MIN_VIEW, VIEW);
+      const fx = (mid.x - rect.left) / rect.width;
+      const fy = (mid.y - rect.top) / rect.height;
+      const x = clamp(pinch.current.anchorX - fx * w, -R, R - w);
+      const y = clamp(pinch.current.anchorY - fy * w, -R, R - w);
+      setView({ x, y, w, h: w });
+      return;
+    }
     const g = gesto.current;
     if (!g) return;
     e.preventDefault();
@@ -177,7 +224,9 @@ export function DianaCanvas({
     }
   }
 
-  function onPointerUp() {
+  function onPointerUp(e?: RPtr<SVGSVGElement>) {
+    if (e && typeof e.pointerId === "number") punteros.current.delete(e.pointerId);
+    if (punteros.current.size < 2) pinch.current = null;
     limpiaTimer();
     const g = gesto.current;
     gesto.current = null;
@@ -201,11 +250,23 @@ export function DianaCanvas({
     onChange(next, true);
   }
 
+  /** Zoom con los botones, centrado en el centro del viewBox actual. */
+  function zoomCentro(factor: number) {
+    const cx = view.x + view.w / 2;
+    const cy = view.y + view.h / 2;
+    const w = clamp(view.w * factor, MIN_VIEW, VIEW);
+    setView({ x: clamp(cx - w / 2, -R, R - w), y: clamp(cy - w / 2, -R, R - w), w, h: w });
+  }
+  function reajustar() {
+    setView({ x: -R, y: -R, w: VIEW, h: VIEW });
+  }
+  const zoomNivel = VIEW / view.w;
+
   return (
     <>
       <svg
         ref={svgRef}
-        viewBox={`${-R} ${-R} ${VIEW} ${VIEW}`}
+        viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -272,6 +333,36 @@ export function DianaCanvas({
         )}
       </svg>
 
+      {/* Controles de zoom (además del pellizco con dos dedos). */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "0.5rem",
+          marginTop: "0.4rem",
+        }}
+      >
+        <button type="button" aria-label="Alejar" style={zoomBtn} onClick={() => zoomCentro(1 / 0.7)}>
+          −
+        </button>
+        <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)", minWidth: 40, textAlign: "center" }}>
+          {zoomNivel.toFixed(1)}×
+        </span>
+        <button type="button" aria-label="Acercar" style={zoomBtn} onClick={() => zoomCentro(0.7)}>
+          +
+        </button>
+        {zoomNivel > 1.02 && (
+          <button
+            type="button"
+            style={{ ...zoomBtn, width: "auto", padding: "0 0.6rem", fontSize: "0.8rem" }}
+            onClick={reajustar}
+          >
+            Reajustar
+          </button>
+        )}
+      </div>
+
       {!finalizada && (
         <p
           style={{
@@ -281,8 +372,8 @@ export function DianaCanvas({
             textAlign: "center",
           }}
         >
-          Mantén pulsado para añadir · arrastra en cualquier punto para mover el
-          seleccionado
+          Mantén pulsado para añadir · arrastra para mover el seleccionado ·{" "}
+          <strong>pellizca con dos dedos</strong> para hacer zoom
         </p>
       )}
 
@@ -445,4 +536,21 @@ const corrBtn = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+} as const;
+
+const zoomBtn = {
+  width: 40,
+  height: 36,
+  padding: 0,
+  fontSize: "1.3rem",
+  fontWeight: 700,
+  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 8,
+  border: "1px solid var(--borde)",
+  background: "var(--superficie-2)",
+  color: "var(--texto)",
+  cursor: "pointer",
 } as const;
