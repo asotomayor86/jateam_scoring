@@ -76,9 +76,12 @@ export default async function HomePage() {
             objectFit: "cover",
             borderRadius: "50%",
             display: "block",
-            margin: "1rem auto 0",
-            border: "3px solid var(--borde)",
-            boxShadow: "0 6px 22px rgba(0,0,0,0.3)",
+            // Mitad superpuesta a la imagen (sube media altura del logo).
+            margin: "-60px auto 0",
+            position: "relative",
+            zIndex: 1,
+            border: "3px solid var(--fondo)",
+            boxShadow: "0 6px 22px rgba(0,0,0,0.35)",
           }}
         />
       </div>

@@ -26,6 +26,23 @@ export default async function FormacionPage() {
 
   return (
     <div className="guia">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/jateamLogo.jpeg"
+        alt="Logo JA Team"
+        width={96}
+        height={96}
+        style={{
+          width: 96,
+          height: 96,
+          objectFit: "cover",
+          borderRadius: "50%",
+          display: "block",
+          margin: "0.5rem auto 0.8rem",
+          border: "3px solid var(--borde)",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+        }}
+      />
       <SeccionTitulo grande>Formación APP</SeccionTitulo>
       <p style={{ color: "var(--texto-suave)", fontSize: "0.9rem", margin: "0 0 1rem" }}>
         Guía de uso de la aplicación, del nivel básico al avanzado. Despliega cada
