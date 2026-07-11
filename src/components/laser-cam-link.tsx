@@ -1,8 +1,11 @@
 "use client";
 
+import { useLaserBloqueado } from "@/components/laser-contexto";
+
 /**
  * Botón de cámara (con una diana detrás y la lente roja) que abre/cierra el
- * medidor láser dentro de la propia tarjeta.
+ * medidor láser dentro de la propia tarjeta. Si este dispositivo es el de Control
+ * (con una Cámara remota activa), el botón sale en gris y bloqueado.
  */
 export function LaserCamLink({
   activo,
@@ -11,12 +14,18 @@ export function LaserCamLink({
   activo?: boolean;
   onClick?: () => void;
 }) {
+  const bloqueado = useLaserBloqueado();
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={bloqueado ? undefined : onClick}
       aria-pressed={activo}
-      title="Medir con láser (cámara)"
+      disabled={bloqueado}
+      title={
+        bloqueado
+          ? "El láser se usa en el dispositivo de Cámara"
+          : "Medir con láser (cámara)"
+      }
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -28,7 +37,8 @@ export function LaserCamLink({
         background: activo ? "var(--superficie-2)" : "transparent",
         color: "var(--texto-suave)",
         flexShrink: 0,
-        cursor: "pointer",
+        cursor: bloqueado ? "not-allowed" : "pointer",
+        opacity: bloqueado ? 0.4 : 1,
         padding: 0,
       }}
     >

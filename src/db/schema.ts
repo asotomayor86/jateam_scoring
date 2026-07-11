@@ -332,6 +332,32 @@ export const exercises = pgTable("exercises", {
 });
 
 /**
+ * Sesiones de dispositivo (para el modo "dos dispositivos" del mismo usuario:
+ * uno de Control y otro de Cámara láser remota). Una fila por dispositivo activo,
+ * identificado por un token guardado en su localStorage. El rol se elige cuando
+ * hay 2+ sesiones. Se cierran a mano (no caducan solas).
+ */
+export const deviceSessions = pgTable(
+  "device_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    deviceToken: text("device_token").notNull(),
+    // "control" | "camara" | null (sin elegir todavía).
+    role: text("role"),
+    active: boolean("active").notNull().default(true),
+    // Serie que el Control tiene "en captura remota" (para la Fase 2).
+    captureScorecardId: uuid("capture_scorecard_id"),
+    captureIdx: integer("capture_idx"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.deviceToken)],
+);
+
+/**
  * Chat del grupo por hilos. Un usuario crea un hilo y dentro se responden.
  * Retención: los mensajes de más de 3 meses se filtran al leer y se purgan de
  * forma perezosa (al listar/publicar); los hilos sin actividad reciente caducan.
