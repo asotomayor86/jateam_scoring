@@ -64,6 +64,23 @@ export default async function HomePage() {
           JA TEAM SCORING
         </h1>
         <Portada />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/jateamLogo.jpeg"
+          alt="Logo JA Team"
+          width={120}
+          height={120}
+          style={{
+            width: 120,
+            height: 120,
+            objectFit: "cover",
+            borderRadius: "50%",
+            display: "block",
+            margin: "1rem auto 0",
+            border: "3px solid var(--borde)",
+            boxShadow: "0 6px 22px rgba(0,0,0,0.3)",
+          }}
+        />
       </div>
 
       <div style={{ margin: "0.5rem 0 0.25rem" }}>
