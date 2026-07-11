@@ -267,6 +267,9 @@ export function LaserTrainer({
   // Zoom de la cámara (para la UI): nivel actual y si el dispositivo lo permite.
   const [zoomUi, setZoomUi] = useState(1);
   const [zoomSoportado, setZoomSoportado] = useState(false);
+  // Anillo de autoenfoque (feedback del toque).
+  const [foco, setFoco] = useState<Punto | null>(null);
+  const focoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [overlay, setOverlay] = useState<string | null>(null);
   const [resizeTick, setResizeTick] = useState(0);
   const [centro, setCentro] = useState<Punto>({ x: 0, y: 0 });
@@ -396,6 +399,8 @@ export function LaserTrainer({
       rafRef.current = null;
     }
     if (timerR.current) clearTimeout(timerR.current);
+    if (focoTimer.current) clearTimeout(focoTimer.current);
+    setFoco(null);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     trackR.current = null;
@@ -558,6 +563,37 @@ export function LaserTrainer({
     empujarZoom(zz);
   }
 
+  /**
+   * Pide autoenfoque en el punto tocado (normalizado 0..1). Donde el navegador lo
+   * permite (Android suele) reenfoca ahí; en iOS Safari no expone el enfoque, así
+   * que no hace nada (la cámara autoenfoca sola). Siempre muestra el anillo.
+   */
+  function enfocarEn(p: Punto) {
+    // Feedback visual del toque.
+    setFoco(p);
+    if (focoTimer.current) clearTimeout(focoTimer.current);
+    focoTimer.current = setTimeout(() => setFoco(null), 700);
+
+    const t = trackR.current;
+    if (!t) return;
+    let caps: { focusMode?: string[] } = {};
+    try {
+      caps = (t.getCapabilities?.() ?? {}) as { focusMode?: string[] };
+    } catch {
+      return;
+    }
+    const modos = caps.focusMode ?? [];
+    const soportaPOI = "pointsOfInterest" in caps;
+    const advanced: Record<string, unknown>[] = [];
+    if (soportaPOI) advanced.push({ pointsOfInterest: [{ x: p.x, y: p.y }] });
+    if (modos.includes("single-shot")) advanced.push({ focusMode: "single-shot" });
+    else if (modos.includes("continuous")) advanced.push({ focusMode: "continuous" });
+    // Conserva el zoom actual para que el reenfoque no lo resetee.
+    if (zoomCapR.current) advanced.push({ zoom: zoomActualR.current });
+    if (advanced.length === 0) return; // enfoque no soportado (p. ej. iOS)
+    t.applyConstraints({ advanced } as unknown as MediaTrackConstraints).catch(() => {});
+  }
+
   function onDown(e: RPtr<HTMLDivElement>) {
     if (fase !== "activa") return;
     e.preventDefault();
@@ -646,7 +682,12 @@ export function LaserTrainer({
     if (e) punterosR.current.delete(e.pointerId);
     if (punterosR.current.size < 2) pinchR.current = null;
     limpiaTimer();
+    const g = gestoR.current;
     gestoR.current = null;
+    // Toque corto (sin mover ni crear/mover esquina): pide autoenfoque ahí.
+    if (g && g.mode === "pending" && !g.moved) {
+      enfocarEn(toNorm(g.startX, g.startY));
+    }
   }
 
   function recalibrar() {
@@ -819,6 +860,24 @@ export function LaserTrainer({
             pointerEvents: "none",
           }}
         />
+
+        {/* Anillo de autoenfoque al tocar. */}
+        {foco ? (
+          <div
+            style={{
+              position: "absolute",
+              left: `${foco.x * 100}%`,
+              top: `${foco.y * 100}%`,
+              width: 64,
+              height: 64,
+              transform: "translate(-50%, -50%)",
+              borderRadius: "50%",
+              border: "2px solid #ffd24d",
+              boxShadow: "0 0 0 1px rgba(0,0,0,0.35)",
+              pointerEvents: "none",
+            }}
+          />
+        ) : null}
       </div>
 
       {fase === "activa" && zoomSoportado ? (
@@ -859,8 +918,9 @@ export function LaserTrainer({
         <p style={{ fontSize: "0.85rem", margin: 0 }}>
           <strong>Mantén pulsado</strong> para poner la esquina{" "}
           <strong>{ETIQUETAS[esquinas.length] ?? ""}</strong> de la tarjeta ({esquinas.length}/4).
-          Con <strong>dos dedos</strong> haces zoom. Con las 4 esquinas puestas,
-          pulsa <strong>«Detectar diana»</strong> para ajustarla dentro de esa zona.
+          Con <strong>dos dedos</strong> haces zoom y con un <strong>toque</strong>{" "}
+          reenfocas la cámara. Con las 4 esquinas puestas, pulsa{" "}
+          <strong>«Detectar diana»</strong> para ajustarla dentro de esa zona.
         </p>
       ) : null}
 
