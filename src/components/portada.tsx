@@ -12,7 +12,7 @@ export function Portada() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/portada.png"
+      src="/portada.png?v=2"
       alt="JA Team"
       onError={() => setOk(false)}
       style={{
