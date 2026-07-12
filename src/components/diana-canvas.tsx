@@ -341,6 +341,18 @@ export function DianaCanvas({
         )}
       </svg>
 
+      {/* Blanco en uso (precisión / duelo). */}
+      <p
+        style={{
+          margin: "0.3rem 0 0",
+          textAlign: "center",
+          fontSize: "0.78rem",
+          color: "var(--texto-suave)",
+        }}
+      >
+        Blanco: <strong style={{ color: "var(--texto)" }}>{SPEC.nombre}</strong>
+      </p>
+
       {/* Controles de zoom (además del pellizco con dos dedos). */}
       <div
         style={{
