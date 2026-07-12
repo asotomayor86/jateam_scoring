@@ -45,7 +45,7 @@ const enlaces = [
   { href: "/calendario", label: "Calendario" },
   { href: "/tiradas", label: "Tiradas y Entrenamientos" },
   { href: "/yo", label: "Mis resultados" },
-  { href: "/ejercicios", label: "Ejercicios" },
+  { href: "/ejercicios", label: "Academia" },
   { href: "/clubs", label: "Campos" },
   { href: "/comidas", label: "Comidas" },
   { href: "/restaurantes", label: "Restaurantes" },

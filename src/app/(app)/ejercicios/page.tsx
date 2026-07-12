@@ -23,8 +23,38 @@ export default async function EjerciciosPage() {
           ) : undefined
         }
       >
-        Ejercicios
+        Academia
       </SeccionTitulo>
+
+      <SeccionTitulo>Principios de entrenamiento</SeccionTitulo>
+      <a
+        href="/academia_principios_tirador.html"
+        style={{
+          display: "block",
+          marginBottom: "1rem",
+          borderRadius: 14,
+          padding: "1rem 1.1rem",
+          color: "#fff",
+          textDecoration: "none",
+          background:
+            "radial-gradient(120% 95% at 70% 0%, #2a5c93 0%, #14304f 46%, #0b1420 100%)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          boxShadow: "0 6px 20px rgba(13,28,46,0.35)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>📖</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <strong style={{ fontSize: "1.05rem", color: "#fff", display: "block" }}>
+              Principios básicos del tirador
+            </strong>
+            <span style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.8)" }}>
+              Guía completa · 10 principios · 7 bloques · ~15 min
+            </span>
+          </div>
+          <span style={{ fontSize: "1.3rem", color: "rgba(255,255,255,0.85)" }}>›</span>
+        </div>
+      </a>
 
       <PrincipiosTraining />
 

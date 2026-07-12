@@ -114,7 +114,7 @@ export function PrincipiosTraining() {
         }}
       >
         <h2 className="seccion-titulo" style={{ margin: 0, fontSize: "1rem", flex: 1 }}>
-          Principios de entrenamiento
+          Tips rápidos
         </h2>
         <button
           type="button"
@@ -185,7 +185,7 @@ export function PrincipiosTraining() {
           {PRINCIPIOS.map((p, i) => (
             <div
               key={i}
-              style={{ flex: "0 0 100%", scrollSnapAlign: "start", minWidth: 0 }}
+              style={{ flex: "0 0 100%", scrollSnapAlign: "start", minWidth: 0, paddingTop: "0.4rem" }}
             >
               <strong
                 style={{
