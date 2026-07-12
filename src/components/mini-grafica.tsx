@@ -7,8 +7,13 @@ function fechaCortaG(iso: string): string {
   return `${d} ${MESES_G[(m ?? 1) - 1]}`;
 }
 
-/** Punto de una gráfica de progresión: valor principal + agrupación (mm) opcional. */
-type PuntoProg = { fecha: string; valor: number; agrupacion?: number | null };
+/** Punto de una gráfica de progresión: valor principal + agrupación y deriva (mm). */
+type PuntoProg = {
+  fecha: string;
+  valor: number;
+  agrupacion?: number | null;
+  deriva?: number | null;
+};
 
 /**
  * Gráfica de progresión temporal con valores en los puntos y fechas en el eje X.
@@ -35,6 +40,7 @@ export function GraficaProgresion({
   const mR = 26;
   const xAt = (i: number) => (n === 1 ? W / 2 : mL + (i / (n - 1)) * (W - mL - mR));
   const hayAgr = puntos.some((p) => p.agrupacion != null);
+  const hayDeriva = puntos.some((p) => p.deriva != null);
 
   return (
     <div>
@@ -53,6 +59,18 @@ export function GraficaProgresion({
           titulo="Agrupación media"
           valores={puntos.map((p) => p.agrupacion ?? null)}
           color="#0ea5b7"
+          decimales={0}
+          sufijo=" mm"
+          xAt={xAt}
+          w={W}
+          n={n}
+        />
+      ) : null}
+      {hayDeriva ? (
+        <SubLinea
+          titulo="Deriva (desde el centro)"
+          valores={puntos.map((p) => p.deriva ?? null)}
+          color="#e08a2e"
           decimales={0}
           sufijo=" mm"
           xAt={xAt}

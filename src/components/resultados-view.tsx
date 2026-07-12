@@ -480,6 +480,7 @@ function BloqueTipo({ grupo }: { grupo: GrupoTipo }) {
               fecha: p.fecha,
               valor: p.media,
               agrupacion: p.agrupacion,
+              deriva: p.deriva,
             }))}
             etiquetaValor="Media/tiro"
             colorValor="var(--verde)"

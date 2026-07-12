@@ -133,8 +133,13 @@ export type AggTipo = {
   conImpactos: boolean;
   /** Agrupación separada por tipo de diana (precisión / duelo). */
   dianas: DianaAgg[];
-  /** Progresión por sesión: media por tiro y agrupación media (mm) de ese día. */
-  progresion: { fecha: string; media: number; agrupacion: number | null }[];
+  /** Progresión por sesión: media por tiro, agrupación media y deriva (mm) del día. */
+  progresion: {
+    fecha: string;
+    media: number;
+    agrupacion: number | null;
+    deriva: number | null;
+  }[];
 };
 
 /**
@@ -208,7 +213,11 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
   const valores: number[] = [];
   const reparto = new Array(11).fill(0);
   const mediasSerie: number[] = [];
-  const porFecha = new Map<string, { suma: number; tiros: number; spreads: number[] }>();
+  // Por fecha: puntos/tiros (media), spreads (agrupación) y suma de impactos (deriva).
+  const porFecha = new Map<
+    string,
+    { suma: number; tiros: number; spreads: number[]; sx: number; sy: number; ni: number }
+  >();
   // Impactos y estadísticas separados por tipo de diana (precisión / duelo).
   const porDiana: Record<
     "precision" | "duelo",
@@ -229,10 +238,15 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
     const st = s.impactos.length ? estadisticas(s.impactos) : null;
     if (s.shotCount > 0) {
       mediasSerie.push(s.subtotal / s.shotCount);
-      const f = porFecha.get(s.date) ?? { suma: 0, tiros: 0, spreads: [] };
+      const f = porFecha.get(s.date) ?? { suma: 0, tiros: 0, spreads: [], sx: 0, sy: 0, ni: 0 };
       f.suma += s.subtotal;
       f.tiros += s.shotCount;
       if (st) f.spreads.push(st.spread);
+      for (const im of s.impactos) {
+        f.sx += im.x;
+        f.sy += im.y;
+        f.ni++;
+      }
       porFecha.set(s.date, f);
     }
     if (s.impactos.length) {
@@ -285,6 +299,7 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
         fecha,
         media: f.suma / f.tiros,
         agrupacion: f.spreads.length ? media(f.spreads) : null,
+        deriva: f.ni ? Math.hypot(f.sx / f.ni, f.sy / f.ni) : null,
       })),
   };
 }
