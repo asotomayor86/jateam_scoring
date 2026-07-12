@@ -133,7 +133,8 @@ export type AggTipo = {
   conImpactos: boolean;
   /** Agrupación separada por tipo de diana (precisión / duelo). */
   dianas: DianaAgg[];
-  progresion: { fecha: string; media: number }[];
+  /** Progresión por sesión: media por tiro y agrupación media (mm) de ese día. */
+  progresion: { fecha: string; media: number; agrupacion: number | null }[];
 };
 
 /**
@@ -207,7 +208,7 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
   const valores: number[] = [];
   const reparto = new Array(11).fill(0);
   const mediasSerie: number[] = [];
-  const porFecha = new Map<string, { suma: number; tiros: number }>();
+  const porFecha = new Map<string, { suma: number; tiros: number; spreads: number[] }>();
   // Impactos y estadísticas separados por tipo de diana (precisión / duelo).
   const porDiana: Record<
     "precision" | "duelo",
@@ -225,17 +226,18 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
       const k = Math.round(v);
       if (k >= 0 && k <= 10) reparto[k]++;
     }
+    const st = s.impactos.length ? estadisticas(s.impactos) : null;
     if (s.shotCount > 0) {
       mediasSerie.push(s.subtotal / s.shotCount);
-      const f = porFecha.get(s.date) ?? { suma: 0, tiros: 0 };
+      const f = porFecha.get(s.date) ?? { suma: 0, tiros: 0, spreads: [] };
       f.suma += s.subtotal;
       f.tiros += s.shotCount;
+      if (st) f.spreads.push(st.spread);
       porFecha.set(s.date, f);
     }
     if (s.impactos.length) {
       const d = porDiana[s.dianaTipo];
       d.impactos.push(...s.impactos);
-      const st = estadisticas(s.impactos);
       if (st) {
         d.spreads.push(st.spread);
         d.dispersions.push(st.dispersion);
@@ -279,7 +281,11 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
     dianas,
     progresion: [...porFecha.entries()]
       .sort((x, y) => x[0].localeCompare(y[0]))
-      .map(([fecha, f]) => ({ fecha, media: f.suma / f.tiros })),
+      .map(([fecha, f]) => ({
+        fecha,
+        media: f.suma / f.tiros,
+        agrupacion: f.spreads.length ? media(f.spreads) : null,
+      })),
   };
 }
 

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, SeccionTitulo, TipoChip } from "@/components/ui";
 import { DianaMini } from "@/components/diana-mini";
-import { MiniGrafica, RepartoBarras } from "@/components/mini-grafica";
+import { GraficaProgresion, RepartoBarras } from "@/components/mini-grafica";
 import { RangoFechas, diaTs } from "@/components/rango-fechas";
 import { formatPunt } from "@/lib/scoring";
 import { mm, dianaPorTipo } from "@/lib/diana";
@@ -234,7 +234,12 @@ function VistaTiradas({
               </div>
               {m.progresion.length >= 2 && (
                 <div style={{ marginTop: "0.6rem" }}>
-                  <MiniGrafica valores={m.progresion.map((p) => p.total)} />
+                  <GraficaProgresion
+                    puntos={m.progresion.map((p) => ({ fecha: p.fecha, valor: p.total }))}
+                    etiquetaValor="Marca"
+                    colorValor="var(--acento)"
+                    decimales={m.allowsDecimals ? 1 : 0}
+                  />
                 </div>
               )}
             </Card>
@@ -468,9 +473,18 @@ function BloqueTipo({ grupo }: { grupo: GrupoTipo }) {
       {a.progresion.length >= 2 && (
         <div style={{ marginTop: "0.7rem" }}>
           <div style={{ fontSize: "0.78rem", color: "var(--texto-suave)", marginBottom: 2 }}>
-            Progresión (media/tiro por sesión)
+            Progresión por sesión
           </div>
-          <MiniGrafica valores={a.progresion.map((p) => p.media)} color="var(--verde)" />
+          <GraficaProgresion
+            puntos={a.progresion.map((p) => ({
+              fecha: p.fecha,
+              valor: p.media,
+              agrupacion: p.agrupacion,
+            }))}
+            etiquetaValor="Media/tiro"
+            colorValor="var(--verde)"
+            decimales={2}
+          />
         </div>
       )}
         </>

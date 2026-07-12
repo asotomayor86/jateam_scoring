@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Academia · Principios básicos del tirador</title>
+<style>
+/* ============ BASE (mobile-first) ============ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0d1c2e; --navy2:#14304f; --steel:#5b7c9d;
+  --amber:#e8a33d; --amber2:#f6c877; --red:#d1533f; --green:#2fa574;
+  --ink:#16232f; --muted:#5f7386; --line:#dbe3ec; --bg:#eef2f7; --card:#fff;
+  --sh1:0 1px 2px rgba(13,28,46,.06);
+  --sh2:0 6px 18px rgba(13,28,46,.10);
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.62; font-size:16px; overflow-x:hidden;
+}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+img,svg{max-width:100%;height:auto;display:block}
+h2{font-size:1.55rem;line-height:1.2;letter-spacing:-.02em;color:var(--navy);font-weight:800}
+h3{font-size:1.08rem;color:var(--navy);font-weight:800;margin-bottom:6px;letter-spacing:-.01em}
+h4{font-size:.95rem;color:var(--navy);font-weight:700;margin-bottom:4px}
+p{margin-bottom:12px;color:#2c3e52}
+p:last-child{margin-bottom:0}
+strong{color:var(--navy);font-weight:700}
+ul{list-style:none}
+li{position:relative;padding-left:18px;margin-bottom:7px;color:#2c3e52}
+li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:2px;background:var(--amber);transform:rotate(45deg)}
+
+/* ============ HERO 3D ============ */
+.hero{
+  position:relative; overflow:hidden; color:#fff;
+  background:
+    radial-gradient(90% 60% at 78% 12%, rgba(232,163,61,.16) 0%, transparent 58%),
+    radial-gradient(120% 95% at 60% 0%, #2a5c93 0%, #14304f 44%, #08111d 100%);
+  padding:44px 0 54px; perspective:1000px;
+}
+.hero::before{ /* rejilla de calle de tiro en fuga */
+  content:"";position:absolute;left:-10%;right:-10%;bottom:-2px;height:46%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 60px),
+    linear-gradient(0deg, rgba(255,255,255,.05), transparent);
+  transform:perspective(420px) rotateX(66deg);transform-origin:bottom;pointer-events:none;
+}
+.hero::after{ /* viñeta */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(4,10,18,.55) 100%);
+}
+.hero .wrap{position:relative;z-index:3}
+
+/* logo circular 3D */
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.hero-txt{flex:1 1 auto;min-width:0}
+.logo-scene{flex:0 0 auto;perspective:800px;width:112px}
+@media(min-width:640px){ .logo-scene{width:158px} }
+.logo3d{
+  position:relative;transform-style:preserve-3d;
+  transform:rotateY(-14deg) rotateX(7deg);
+  animation:float 8s ease-in-out infinite;will-change:transform;
+}
+.logo-disc{
+  position:relative;border-radius:50%;overflow:hidden;
+  border:2px solid rgba(255,255,255,.22);
+  box-shadow:
+    0 22px 40px -14px rgba(0,0,0,.75),
+    0 4px 12px rgba(0,0,0,.45),
+    inset 0 0 0 6px rgba(255,255,255,.05);
+}
+.logo-disc img{width:100%;display:block;border-radius:50%}
+.logo-disc::after{ /* reflejo cristal */
+  content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:linear-gradient(140deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.07) 34%, transparent 56%);
+}
+.logo3d::before{ /* aro ámbar orbital */
+  content:"";position:absolute;inset:-9%;border-radius:50%;
+  border:2px solid rgba(232,163,61,.55);
+  border-bottom-color:transparent;border-left-color:transparent;
+  transform:translateZ(-16px) rotateX(58deg);
+  animation:orbit 12s linear infinite;
+}
+.logo3d::after{ /* halo */
+  content:"";position:absolute;inset:-22%;border-radius:50%;
+  background:radial-gradient(circle, rgba(232,163,61,.34), transparent 66%);
+  transform:translateZ(-46px);z-index:-1;
+}
+@keyframes float{
+  0%,100%{transform:rotateY(-14deg) rotateX(7deg) translateY(0)}
+  50%{transform:rotateY(-5deg) rotateX(3deg) translateY(-8px)}
+}
+@keyframes orbit{ to{ transform:translateZ(-16px) rotateX(58deg) rotateZ(360deg) } }
+
+.kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.62rem;letter-spacing:.24em;color:var(--amber);font-weight:800;text-transform:uppercase;
+}
+.kicker::before{content:"";width:22px;height:2px;background:var(--amber);border-radius:2px}
+.hero h1{
+  font-size:2.15rem;line-height:1.02;letter-spacing:-.02em;font-weight:900;margin:14px 0 0;
+  text-transform:uppercase;
+  text-shadow:0 2px 18px rgba(0,0,0,.35);
+}
+.hero h1 .l2{
+  display:block;
+  background:linear-gradient(100deg,#f6c877 0%,#e8a33d 45%,#c98a20 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+@media(min-width:640px){ .hero h1{font-size:2.9rem} }
+.hero .rulez{width:52px;height:4px;border-radius:4px;background:linear-gradient(90deg,#f6c877,#d38f26);margin:18px 0 16px;box-shadow:0 3px 10px rgba(232,163,61,.4)}
+.hero .lead{color:#b9d3ec;font-size:1.02rem;max-width:44ch}
+.hero .lead strong{color:#fff;font-weight:700}
+.hero .tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:22px}
+.tag{font-size:.68rem;font-weight:700;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#cfe2f3;backdrop-filter:blur(4px)}
+
+/* barra de datos */
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:26px;
+  background:rgba(255,255,255,.13);border-radius:12px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.14);
+}
+.stat{background:rgba(9,20,34,.55);padding:12px 8px;text-align:center}
+.stat b{display:block;font-size:1.18rem;font-weight:900;color:var(--amber2);line-height:1.1}
+.stat span{display:block;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#8fb0cf;margin-top:3px;font-weight:700}
+
+/* diana 3D de fondo */
+.scene-target{position:absolute;right:-100px;bottom:-70px;width:250px;height:250px;perspective:700px;z-index:1;opacity:.22}
+.target3d{width:100%;height:100%;position:relative;transform-style:preserve-3d;transform:rotateX(62deg) rotateZ(-18deg);animation:spin 30s linear infinite}
+@keyframes spin{to{transform:rotateX(62deg) rotateZ(342deg)}}
+.ring{position:absolute;top:50%;left:50%;border-radius:50%;border:2px solid rgba(255,255,255,.5);transform-style:preserve-3d}
+.ring.f{background:rgba(232,163,61,.35);border-color:var(--amber2)}
+
+/* ============ SECCIONES ============ */
+section{padding:44px 0;position:relative;border-top:1px solid var(--line)}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px}
+.num{
+  flex:0 0 auto;width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
+  font-weight:900;font-size:1rem;color:#fff;
+  background:linear-gradient(145deg,#2a5787,#14304f);
+  box-shadow:0 6px 14px rgba(20,48,79,.32), inset 0 1px 0 rgba(255,255,255,.25);
+  transform:rotateX(12deg) rotateY(-12deg);
+}
+.num.amber{background:linear-gradient(145deg,#f2b862,#d38f26);box-shadow:0 6px 14px rgba(211,143,38,.35), inset 0 1px 0 rgba(255,255,255,.4)}
+.sub{color:var(--muted);font-size:.92rem;margin:8px 0 22px}
+.card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:var(--sh1),var(--sh2);border:1px solid rgba(219,227,236,.9)}
+.card.dark{background:linear-gradient(150deg,#16375b,#0d1c2e);color:#dbe7f2;border:none;box-shadow:0 16px 34px -16px rgba(13,28,46,.6)}
+.card.dark h3,.card.dark h4{color:#fff}
+.card.dark p,.card.dark li{color:#c5d8e9}
+.card.acc{border-left:4px solid var(--amber)}
+.card.red{border-left:4px solid var(--red)}
+.card.green{border-left:4px solid var(--green)}
+.grid{display:grid;gap:14px}
+@media(min-width:640px){ .grid.g2{grid-template-columns:1fr 1fr} .grid.g3{grid-template-columns:repeat(3,1fr)} }
+.lbl{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);font-weight:800;margin-bottom:9px}
+.quote{font-size:1.15rem;line-height:1.42;font-weight:700;color:var(--navy);border-left:4px solid var(--amber);padding:4px 0 4px 14px;margin:20px 0}
+
+/* barras 3D */
+.bars3d{perspective:800px;padding:8px 0 4px}
+.bar-row{margin-bottom:20px;transform-style:preserve-3d}
+.bar-row .cap{display:flex;justify-content:space-between;font-size:.76rem;font-weight:800;color:var(--navy);margin-bottom:7px}
+.bar{height:34px;display:flex;border-radius:7px;overflow:hidden;transform:rotateX(16deg);box-shadow:0 10px 18px -8px rgba(13,28,46,.45)}
+.bar i{display:grid;place-items:center;font-style:normal;font-size:.68rem;font-weight:800;color:#fff;letter-spacing:.06em}
+.bar .seco{background:linear-gradient(180deg,#2a5787,#14304f);box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+.bar .real{background:linear-gradient(180deg,#f2b862,#d38f26);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* cubos 3D */
+.cubes{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;perspective:800px}
+@media(min-width:640px){ .cubes{grid-template-columns:repeat(3,1fr)} }
+.cube{background:#fff;border-radius:13px;padding:14px;text-align:center;border:1px solid var(--line);box-shadow:0 10px 22px -12px rgba(13,28,46,.4);transform:rotateX(6deg)}
+.cube .n{width:36px;height:36px;margin:0 auto 9px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:900;font-size:.9rem;background:linear-gradient(145deg,#2a5787,#14304f);box-shadow:0 5px 12px rgba(20,48,79,.4),inset 0 1px 0 rgba(255,255,255,.25);transform:rotateY(-14deg) rotateX(10deg)}
+.cube.a .n{background:linear-gradient(145deg,#f2b862,#d38f26);box-shadow:0 5px 12px rgba(211,143,38,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+.cube h4{font-size:.86rem;margin-bottom:4px}
+.cube p{font-size:.74rem;line-height:1.42;color:var(--muted);margin:0}
+
+/* pirámide 3D */
+.pyr{perspective:900px;display:grid;place-items:center;padding:14px 0 4px}
+.pyr-in{transform-style:preserve-3d;transform:rotateX(22deg);width:100%;max-width:340px}
+.lvl{margin:0 auto 6px;border-radius:8px;color:#fff;text-align:center;padding:11px 6px;font-weight:800;font-size:.76rem;box-shadow:0 10px 20px -10px rgba(13,28,46,.55),inset 0 1px 0 rgba(255,255,255,.25)}
+.lvl small{display:block;font-weight:500;font-size:.66rem;opacity:.85;margin-top:2px}
+.l1{width:52%;background:linear-gradient(145deg,#e2705c,#c1402c)}
+.l2{width:68%;background:linear-gradient(145deg,#f2b862,#d38f26)}
+.l3{width:84%;background:linear-gradient(145deg,#2a5787,#14304f)}
+.l4{width:100%;background:linear-gradient(145deg,#7593ad,#4f6d89)}
+
+/* flip cards 3D */
+.flips{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;perspective:1000px}
+.flip{height:138px;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1);position:relative;cursor:pointer}
+.flip.on{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:13px;padding:13px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 12px 26px -14px rgba(13,28,46,.55)}
+.face.front{background:linear-gradient(150deg,#1b3f66,#0d1c2e);color:#fff}
+.face.back{background:linear-gradient(150deg,#f2b862,#d99630);transform:rotateY(180deg)}
+.face .idx{font-size:1.5rem;font-weight:900;color:var(--amber2);line-height:1}
+.face.back .idx{color:#12283f;opacity:.35}
+.face h4{font-size:.8rem;margin:6px 0 0;color:#fff;line-height:1.28}
+.face.back p{font-size:.76rem;line-height:1.4;color:#1d3550;margin:6px 0 0}
+.hint{text-align:center;font-size:.74rem;color:#7ea3c8;margin-top:12px}
+
+/* timeline 3D */
+.tl{position:relative;padding-left:34px}
+.tl::before{content:"";position:absolute;left:13px;top:6px;bottom:6px;width:3px;border-radius:3px;background:linear-gradient(180deg,#2a5787,#e8a33d)}
+.tl-item{position:relative;margin-bottom:20px}
+.tl-item .dot{position:absolute;left:-34px;top:1px;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:900;font-size:.72rem;background:linear-gradient(145deg,#2a5787,#14304f);box-shadow:0 5px 12px rgba(20,48,79,.4),inset 0 1px 0 rgba(255,255,255,.25);transform:rotateY(-16deg) rotateX(10deg)}
+.tl-item.a .dot{background:linear-gradient(145deg,#f2b862,#d38f26)}
+.tl-item.g .dot{background:linear-gradient(145deg,#4dbb90,#22855c)}
+.tl-item.r .dot{background:linear-gradient(145deg,#e2705c,#bb3f2b)}
+.tl-item h4{font-size:.9rem}
+.tl-item p{font-size:.86rem;margin:0;color:#3a4d61}
+
+/* tabla */
+.tbl{width:100%;border-collapse:collapse;font-size:.82rem;border-radius:11px;overflow:hidden;box-shadow:var(--sh2)}
+.tbl th{background:linear-gradient(150deg,#1b3f66,#0d1c2e);color:#fff;text-align:left;padding:10px;font-size:.74rem}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);background:#fff}
+.tbl tr:nth-child(even) td{background:#f4f7fa}
+.leg{display:flex;gap:9px;align-items:flex-start;margin-bottom:7px;font-size:.83rem}
+.leg span.c{flex:0 0 auto;width:13px;height:13px;border-radius:4px;margin-top:5px}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){ .rv{opacity:1;transform:none;transition:none} .target3d,.logo3d,.logo3d::before{animation:none} }
+footer{background:var(--navy);color:#8fb0cf;padding:30px 0;font-size:.78rem;text-align:center}
+footer strong{color:#fff}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="scene-target" aria-hidden="true">
+    <div class="target3d">
+      <div class="ring" style="width:240px;height:240px;margin:-120px 0 0 -120px;transform:translateZ(0)"></div>
+      <div class="ring" style="width:188px;height:188px;margin:-94px 0 0 -94px;transform:translateZ(9px)"></div>
+      <div class="ring" style="width:140px;height:140px;margin:-70px 0 0 -70px;transform:translateZ(18px)"></div>
+      <div class="ring" style="width:94px;height:94px;margin:-47px 0 0 -47px;transform:translateZ(27px)"></div>
+      <div class="ring f" style="width:48px;height:48px;margin:-24px 0 0 -24px;transform:translateZ(38px)"></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="hero-top">
+      <div class="hero-txt">
+        <div class="kicker">JA Team · Academia</div>
+        <h1>Principios<br>básicos del<span class="l2">tirador</span></h1>
+      </div>
+      <div class="logo-scene" aria-hidden="false">
+        <div class="logo3d">
+          <div class="logo-disc">
+            <img src="data:image/jpeg;base64,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" alt="JA Team · Olympic Pistol Shooting">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rulez"></div>
+
+    <p class="lead">Sesenta disparos. Un solo gesto, repetido hasta que deja de necesitarte.<br>
+    <strong>Esta es la guía de todo lo que sostiene ese gesto:</strong> la respiración, el dedo, el material, la cabeza y el día en que todo cuenta.</p>
+
+    <div class="tags">
+      <span class="tag">Pistola Standard 25 m</span>
+      <span class="tag">Fuego Central 25 m</span>
+      <span class="tag">Iniciación · Nacional</span>
+      <span class="tag">Reglamento ISSF</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>7</b><span>bloques</span></div>
+      <div class="stat"><b>10</b><span>principios</span></div>
+      <div class="stat"><b>~15</b><span>min de lectura</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap rv">
+    <p>Un disparo de 10 no es un golpe de suerte: es la consecuencia inevitable de tres cosas que ocurren a la vez. <strong>Las miras enrasadas, la presión del disparador creciendo sin interrupción y el arma sin perturbar.</strong> Nada más. Todo lo que leerás aquí —la respiración, el físico, la rutina mental, la configuración del arma— existe con un único propósito: conseguir que esas tres cosas se repitan sesenta veces seguidas, también cuando estás nervioso y el reloj corre.</p>
+    <p>Esa es la buena noticia y la mala. La buena: el objetivo es simple y no requiere talento excepcional. La mala: la <em>consistencia</em> es lo más difícil que existe en este deporte y no se compra con munición. Se construye con repeticiones perfectas, casi todas ellas sin un solo cartucho.</p>
+    <div class="quote">Un tirador no mejora disparando mucho. Mejora disparando siempre igual.</div>
+    <p>Esta guía está pensada para leerse entera una vez y volver después a cada bloque cuando algo se atasque. Va de lo general a lo concreto: primero la filosofía, después la herramienta que más rendimiento da (el seco), luego los dos fundamentos técnicos que deciden la puntuación (respiración y disparador), el material, y por último la preparación de la sesión y del día de competición.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num">1</div><h2>La filosofía:<br>cómo se construye un tirador</h2></div>
+      <p class="sub">Antes de la técnica, el marco. Todo lo demás cuelga de aquí.</p>
+    </div>
+
+    <div class="pyr rv">
+      <div class="pyr-in">
+        <div class="lvl l1">COMPETIR<small>solo ejecutas lo automatizado</small></div>
+        <div class="lvl l2">FUEGO REAL · verificar<small>confirma lo que ya sabes hacer</small></div>
+        <div class="lvl l3">TIRO EN SECO · construir<small>aquí ocurre el 80 % del progreso</small></div>
+        <div class="lvl l4">FÍSICO · MENTAL · ANÁLISIS · sostener<small>la base que permite todo lo anterior</small></div>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:20px">
+      <p>Casi todos los tiradores construyen la pirámide al revés. Compran munición, suben al campo, disparan trescientos tiros y se van a casa con la sensación de haber entrenado mucho. Han entrenado poco: han <em>ensayado</em> mucho, que no es lo mismo. Han repetido —y por tanto reforzado— exactamente los errores que traían de casa.</p>
+      <p>El orden correcto es el inverso. La base la ponen el físico, la cabeza y el análisis. Sobre ella se construye la técnica en seco, sin munición y sin retroceso, hasta que el gesto sale solo. El fuego real no está para aprender: está para <strong>comprobar</strong> que lo aprendido en casa sobrevive al estampido. Y la competición no está para mejorar: está para ejecutar.</p>
+    </div>
+
+    <div class="grid g2 rv" style="margin-top:18px">
+      <div class="card acc">
+        <h3>Calidad sobre cantidad</h3>
+        <p>Veinte disparos en seco con atención plena valen más que cien mecánicos. En cuanto la atención cae, empiezas a grabar ruido. <strong>Termina siempre con un buen disparo</strong>, nunca con fatiga: lo último que haces es lo que el sistema nervioso se lleva a casa.</p>
+      </div>
+      <div class="card acc">
+        <h3>Un solo foco por sesión</h3>
+        <p>Nunca corrijas dos errores a la vez: no sabrás cuál de las dos correcciones funcionó. El foco de hoy lo decide el análisis de ayer. Escríbelo en el diario <em>antes</em> de empezar y no lo cambies a mitad de sesión.</p>
+      </div>
+      <div class="card acc">
+        <h3>Consistencia sobre intensidad</h3>
+        <p>Cinco sesiones de veinte minutos superan a dos de dos horas. El sistema nervioso consolida por frecuencia, no por volumen puntual. Es mejor un seco diario mediocre que un seco heroico un domingo al mes.</p>
+      </div>
+      <div class="card acc">
+        <h3>Abortar es entrenar bien</h3>
+        <p>Si la puntería no se estabiliza, <strong>baja el arma</strong>. Forzar el disparo entrena justo el error que quieres eliminar: le enseñas a tu cerebro que se puede disparar sin que se den las condiciones.</p>
+      </div>
+    </div>
+
+    <div class="card dark rv" style="margin-top:16px">
+      <div class="lbl" style="color:var(--amber2)">La regla de oro</div>
+      <p style="font-size:1.05rem;font-weight:700;color:#fff;line-height:1.4">El seco construye la técnica. El fuego real solo la verifica.</p>
+      <p style="margin-top:8px">Si un error aparece en el campo, se corrige en casa. Nunca gastes cartuchos en <em>practicar</em> algo que todavía no dominas en seco: lo único que consigues es pagar por repetir un fallo.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num">2</div><h2>Tiro en seco:<br>el motor del progreso</h2></div>
+      <p class="sub">Sin munición, sin ruido, sin retroceso. Solo técnica pura, todos los días.</p>
+    </div>
+
+    <div class="rv">
+      <p>El tiro en seco es la herramienta más potente y más barata del tirador, y es la que casi nadie hace lo suficiente. La razón por la que funciona es fisiológica, no moral: <strong>sin retroceso no hay anticipación</strong>. El cerebro deja de prepararse para el golpe y, en el momento en que deja de prepararse, deja de mover el arma medio segundo antes de que salga el tiro. Ese medio segundo es la diferencia entre un 10 y un 7 a las ocho en punto.</p>
+      <p>Además aísla la variable que más puntos cuesta —el accionamiento del disparador— y la deja desnuda. En fuego real el retroceso enmascara el error; en seco no hay dónde esconderse: o el punto de mira se queda quieto al caer el martillo, o no.</p>
+    </div>
+
+    <div class="card rv" style="margin-top:18px">
+      <div class="lbl">Proporción recomendada · tiempo dedicado</div>
+      <div class="bars3d">
+        <div class="bar-row">
+          <div class="cap"><span>INICIACIÓN</span><span style="color:var(--amber)">3 : 1</span></div>
+          <div class="bar"><i class="seco" style="flex:3">SECO</i><i class="real" style="flex:1">FUEGO</i></div>
+        </div>
+        <div class="bar-row">
+          <div class="cap"><span>COMPETICIÓN NACIONAL</span><span style="color:var(--amber)">4 : 1</span></div>
+          <div class="bar"><i class="seco" style="flex:4">SECO</i><i class="real" style="flex:1">FUEGO</i></div>
+        </div>
+      </div>
+      <p style="font-size:.82rem;color:var(--muted);margin-top:4px">Volumen orientativo de fuego real: <strong>60–100 disparos/semana</strong> en iniciación · <strong>150–300</strong> en nacional. La proporción se mide en tiempo, no en disparos.</p>
+    </div>
+
+    <div class="grid g2 rv">
+      <div class="card">
+        <h3>Dosis por sesión</h3>
+        <p>Iniciación: <strong>10–20 minutos</strong>. Nacional: <strong>20–30 minutos</strong>. Nunca más de media hora seguida: la atención cae y repites errores con la sensación de estar entrenando. Si necesitas más volumen, haz dos bloques separados.</p>
+      </div>
+      <div class="card red">
+        <h3>Seguridad, sin excepciones</h3>
+        <p>Arma descargada, cargador fuera, verificación <strong>visual y táctil</strong> y <strong>ninguna munición en la habitación</strong>. Dirección de apuntado segura siempre, aunque el arma esté vacía. La rutina de seguridad también se automatiza: no la relajes porque «solo es seco».</p>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:20px">
+      <div class="lbl">Los ejercicios esenciales</div>
+      <div class="cubes">
+        <div class="cube"><div class="n">1</div><h4>Blanco vuelto</h4><p>Pared blanca, sin referencias. Solo enrase y disparador.</p></div>
+        <div class="cube"><div class="n">2</div><h4>La moneda</h4><p>Sobre el carro. No debe caer al percutir.</p></div>
+        <div class="cube"><div class="n">3</div><h4>Holds</h4><p>Sostener 20–30 s en puntería. Resistencia específica.</p></div>
+        <div class="cube a"><div class="n">4</div><h4>Alzada 45°</h4><p>Subir, estabilizar y disparar en 3 s. Base del duelo.</p></div>
+        <div class="cube a"><div class="n">5</div><h4>Metrónomo</h4><p>Cadencia de 20″ y 10″. ~32 BPM para la serie de 10″.</p></div>
+        <div class="cube"><div class="n">6</div><h4>Transiciones</h4><p>Encadenar 5 disparos recuperando el enrase entre cada uno.</p></div>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:20px">
+      <h3>Por qué el blanco vuelto es el rey</h3>
+      <p>Parece un ejercicio absurdo: apuntar a una pared sin nada que apuntar. Es precisamente el motivo por el que funciona. Al eliminar el blanco eliminas la tentación de «cazar» el 10 —esa presión brusca que damos al disparador justo cuando el punto pasa por el centro— y te quedas a solas con lo único que importa: <strong>que las miras estén enrasadas y que el dedo se mueva sin perturbar nada</strong>.</p>
+      <p>Y hay un matiz que cuesta aceptar: <em>un cuadro de mira perfecto no es necesario</em>. Si las miras están correctamente enrasadas entre sí, un error de posición del arma sobre el blanco (error paralelo) apenas mueve el impacto. Un error de enrase (angular), en cambio, se multiplica por los 25 metros. Por eso el foco visual va al punto de mira, siempre, y el blanco se ve borroso.</p>
+    </div>
+
+    <div class="card green rv">
+      <h3>Cómo saber que lo estás haciendo bien</h3>
+      <ul>
+        <li>El punto de mira <strong>no se mueve</strong> en el instante en que cae el martillo.</li>
+        <li>La moneda no cae en más del 90 % de las repeticiones.</li>
+        <li>Mantienes el <em>follow-through</em> dos segundos sin soltar el dedo.</li>
+        <li>Puedes describir dónde estaba el punto en el momento del disparo sin dudar.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num amber">3</div><h2>Respiración:<br>la ventana del disparo</h2></div>
+      <p class="sub">No dispares cuando tú quieras: dispara cuando tu cuerpo te lo permita.</p>
+    </div>
+
+    <div class="rv">
+      <p>La respiración no es un detalle del calentamiento: es lo que abre y cierra la única ventana temporal en la que el disparo es posible. Al respirar, el tórax sube y baja, y con él el arma. Al dejar de respirar, el arma se estabiliza —pero solo unos segundos, porque el oxígeno cae, el pulso sube, la visión se degrada y el temblor crece. Todo el arte consiste en <strong>colocar el disparo dentro de esa ventana</strong>.</p>
+    </div>
+
+    <div class="card rv" style="padding:16px 12px">
+      <div class="lbl" style="padding-left:6px">Ciclo respiratorio del disparo de precisión</div>
+      <svg viewBox="0 0 340 190" role="img" aria-label="Curva de respiración con la ventana óptima de disparo">
+        <defs>
+          <linearGradient id="gwin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2fa574" stop-opacity=".28"/><stop offset="1" stop-color="#2fa574" stop-opacity=".04"/></linearGradient>
+          <linearGradient id="gbad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d1533f" stop-opacity=".26"/><stop offset="1" stop-color="#d1533f" stop-opacity=".03"/></linearGradient>
+          <linearGradient id="gline" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a5787"/><stop offset=".55" stop-color="#2fa574"/><stop offset="1" stop-color="#d1533f"/></linearGradient>
+          <filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0d1c2e" flood-opacity=".28"/></filter>
+        </defs>
+        <rect x="176" y="26" width="56" height="118" fill="url(#gwin)" rx="3"/>
+        <rect x="232" y="26" width="42" height="118" fill="url(#gbad)" rx="3"/>
+        <line x1="176" y1="26" x2="232" y2="26" stroke="#2fa574" stroke-width="2.5"/>
+        <text x="204" y="20" text-anchor="middle" font-size="8.5" font-weight="800" fill="#2fa574">VENTANA ÓPTIMA</text>
+        <text x="204" y="40" text-anchor="middle" font-size="9.5" font-weight="800" fill="#22855c">5 – 7 s</text>
+        <text x="253" y="20" text-anchor="middle" font-size="8" font-weight="800" fill="#d1533f">ABORTAR</text>
+        <text x="253" y="40" text-anchor="middle" font-size="7" fill="#b8402d">temblor y vista</text>
+        <line x1="18" y1="144" x2="322" y2="144" stroke="#c8d4e0" stroke-width="1.5"/>
+        <path d="M18,104 C40,44 66,44 88,104 C110,164 138,164 160,108 C168,86 172,74 178,72 L230,72 C246,78 262,108 292,132 L322,142" fill="none" stroke="url(#gline)" stroke-width="4" stroke-linecap="round" filter="url(#sh)"/>
+        <circle cx="198" cy="72" r="8" fill="#2fa574" opacity=".22"/>
+        <circle cx="198" cy="72" r="4.5" fill="#2fa574" stroke="#fff" stroke-width="1.5"/>
+        <line x1="198" y1="80" x2="198" y2="104" stroke="#2fa574" stroke-width="1.2" stroke-dasharray="3 2"/>
+        <text x="198" y="118" text-anchor="middle" font-size="7.5" font-weight="800" fill="#22855c">DISPARO</text>
+        <g font-size="7.5" fill="#5f7386">
+          <text x="55" y="160" text-anchor="middle" font-weight="800" fill="#14304f">1 · OXIGENAR</text>
+          <text x="55" y="171" text-anchor="middle">2-3 respiraciones</text>
+          <text x="130" y="160" text-anchor="middle" font-weight="800" fill="#14304f">2 · ESPIRAR</text>
+          <text x="130" y="171" text-anchor="middle">unos 2/3 del aire</text>
+          <text x="204" y="160" text-anchor="middle" font-weight="800" fill="#22855c">3 · APNEA</text>
+          <text x="204" y="171" text-anchor="middle">aquí sale el tiro</text>
+          <text x="292" y="160" text-anchor="middle" font-weight="800" fill="#b8402d">4 · ABORTAR</text>
+          <text x="292" y="171" text-anchor="middle">baja y reinicia</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="rv">
+      <h3 style="margin-top:18px">La regla 5–7</h3>
+      <p>Desde que entras en apnea tienes entre <strong>cinco y siete segundos</strong> de estabilidad útil. A partir de ahí, la falta de oxígeno sube el pulso, difumina la visión y multiplica el temblor. Si el disparo no ha salido en ese margen, <strong>no lo fuerces: baja el arma, respira dos ciclos y vuelve a empezar</strong>. Perder diez segundos no cuesta nada; forzar un tiro cuesta tres puntos y graba el hábito de disparar sin condiciones.</p>
+      <h3 style="margin-top:16px">Por qué la espiración es <em>parcial</em></h3>
+      <p>No vacíes los pulmones del todo. Suelta unos dos tercios del aire y detente en el <strong>punto natural de reposo respiratorio</strong>, ese instante en que el diafragma no empuja ni retiene. Con los pulmones llenos, el arma flota. Vacíos del todo, el cuerpo pide aire de inmediato. En el punto intermedio hay calma mecánica.</p>
+      <h3 style="margin-top:16px">Disparar entre latidos</h3>
+      <p>Cada latido mueve el arma. No puedes eliminarlo, pero sí hacerlo más lento y más espaciado: <strong>un pulso bajo alarga la pausa entre latidos</strong> y, con ella, la ventana en la que el punto está realmente quieto. Ese es el motivo —el único— por el que un tirador hace cardio suave tres veces por semana. No para estar en forma: para tener más microsegundos de quietud.</p>
+    </div>
+
+    <div class="card acc rv" style="margin-top:16px">
+      <h3>Respiración de control 4–2–6</h3>
+      <p>Úsala antes de cada serie y en las esperas de competición: inspira <strong>4 s</strong> por la nariz llevando el aire al abdomen, retén <strong>2 s</strong>, espira <strong>6 s</strong> por la boca. Repite entre cinco y diez ciclos.</p>
+      <div class="bar" style="margin:14px 0 10px">
+        <i class="seco" style="flex:4">INSPIRA 4 s</i>
+        <i style="flex:2;background:linear-gradient(180deg,#7593ad,#4f6d89)">RETÉN 2</i>
+        <i style="flex:6;background:linear-gradient(180deg,#4dbb90,#22855c)">ESPIRA 6 s</i>
+      </div>
+      <p>La clave está en que la <strong>espiración sea más larga que la inspiración</strong>: eso activa el sistema parasimpático y baja las pulsaciones. Es tu freno de mano fisiológico. Automatízalo en entrenamiento; en competición ya debe ser reflejo, porque allí no tendrás cabeza para acordarte.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num amber">4</div><h2>El disparador:<br>donde se pierden los puntos</h2></div>
+      <p class="sub">El 90 % de los malos disparos nacen aquí. Y el 100 % se corrigen en seco.</p>
+    </div>
+
+    <div class="rv">
+      <p>El principio es contraintuitivo y hay que repetirlo hasta que duela: <strong>el disparo debe sorprenderte</strong>. Si sabes exactamente cuándo va a salir, tu cuerpo se prepara —hombro, muñeca, mano— para absorber el retroceso, y esa preparación mueve el arma <em>antes</em> de que la bala haya salido del cañón. Es el famoso gatillazo, y no es un problema de fuerza: es un problema de <em>anticipación</em>.</p>
+      <p>La presión correcta es <strong>recta hacia atrás, creciente e ininterrumpida</strong>, mientras el resto de la mano permanece absolutamente inmóvil. Nunca un tirón. Nunca una pausa y luego un empujón. Un aumento continuo hasta que el arma dispara sola.</p>
+    </div>
+
+    <div class="card rv" style="padding:16px 12px">
+      <div class="lbl" style="padding-left:6px">Curva de presión: correcto vs. gatillazo</div>
+      <svg viewBox="0 0 340 170" role="img" aria-label="Comparación de curvas de presión sobre el disparador">
+        <defs><filter id="sh2" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#0d1c2e" flood-opacity=".3"/></filter></defs>
+        <line x1="30" y1="140" x2="325" y2="140" stroke="#c8d4e0" stroke-width="1.5"/>
+        <line x1="30" y1="18" x2="30" y2="140" stroke="#c8d4e0" stroke-width="1.5"/>
+        <text x="18" y="80" font-size="7" fill="#5f7386" transform="rotate(-90 18,80)" text-anchor="middle">PRESIÓN</text>
+        <text x="180" y="158" font-size="7" fill="#5f7386" text-anchor="middle">TIEMPO</text>
+        <path d="M30,140 L80,116 L140,88 L210,52 L262,26" fill="none" stroke="#2fa574" stroke-width="4" stroke-linecap="round" filter="url(#sh2)"/>
+        <circle cx="262" cy="26" r="7" fill="#2fa574" opacity=".2"/>
+        <circle cx="262" cy="26" r="4" fill="#2fa574" stroke="#fff" stroke-width="1.4"/>
+        <text x="272" y="22" font-size="7.5" font-weight="800" fill="#22855c">SORPRESA</text>
+        <text x="78" y="108" font-size="6.8" fill="#22855c" font-weight="700">progresiva, continua</text>
+        <path d="M30,140 L150,136 L162,30 L172,27" fill="none" stroke="#d1533f" stroke-width="4" stroke-linecap="round" filter="url(#sh2)"/>
+        <circle cx="172" cy="27" r="7" fill="#d1533f" opacity=".2"/>
+        <circle cx="172" cy="27" r="4" fill="#d1533f" stroke="#fff" stroke-width="1.4"/>
+        <text x="118" y="18" font-size="7.5" font-weight="800" fill="#d1533f">GATILLAZO</text>
+        <text x="46" y="132" font-size="6.8" fill="#b8402d" font-weight="700">espera… ¡y golpe!</text>
+      </svg>
+    </div>
+
+    <div class="rv" style="margin-top:20px">
+      <div class="lbl">Diagnóstico por la agrupación · tirador diestro</div>
+      <div class="card" style="padding:16px 12px">
+        <svg viewBox="0 0 340 205" role="img" aria-label="Diana con las zonas típicas de error">
+          <defs>
+            <radialGradient id="gt" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#24405e"/><stop offset="1" stop-color="#0b1727"/></radialGradient>
+            <filter id="sh3" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0d1c2e" flood-opacity=".35"/></filter>
+          </defs>
+          <g transform="translate(75,6)" filter="url(#sh3)">
+            <circle cx="95" cy="95" r="92" fill="#fdfdfd" stroke="#dbe3ec" stroke-width="1.5"/>
+            <circle cx="95" cy="95" r="72" fill="#f3f6fa" stroke="#dbe3ec"/>
+            <circle cx="95" cy="95" r="52" fill="url(#gt)"/>
+            <circle cx="95" cy="95" r="30" fill="#0b1727"/>
+            <circle cx="95" cy="95" r="8" fill="#e8a33d"/>
+            <line x1="95" y1="3" x2="95" y2="187" stroke="#cfdae5" stroke-width=".7"/>
+            <line x1="3" y1="95" x2="187" y2="95" stroke="#cfdae5" stroke-width=".7"/>
+            <circle cx="52" cy="140" r="10" fill="#d1533f"/><circle cx="49" cy="137" r="3" fill="#fff" opacity=".35"/>
+            <circle cx="95" cy="34" r="9" fill="#e8a33d"/><circle cx="92" cy="31" r="2.6" fill="#fff" opacity=".4"/>
+            <circle cx="152" cy="95" r="9" fill="#5b7c9d"/><circle cx="149" cy="92" r="2.6" fill="#fff" opacity=".4"/>
+            <circle cx="38" cy="95" r="9" fill="#2fa574"/><circle cx="35" cy="92" r="2.6" fill="#fff" opacity=".4"/>
+          </g>
+        </svg>
+        <div style="margin-top:12px">
+          <div class="leg"><span class="c" style="background:#d1533f"></span><span><strong>Abajo-izquierda:</strong> gatillazo / anticipación del retroceso. El error más común y el más caro.</span></div>
+          <div class="leg"><span class="c" style="background:#e8a33d"></span><span><strong>Arriba:</strong> aflojar la muñeca o empujar con la base de la mano al disparar.</span></div>
+          <div class="leg"><span class="c" style="background:#5b7c9d"></span><span><strong>Derecha:</strong> poco dedo en el disparador; empujas el arma lateralmente.</span></div>
+          <div class="leg"><span class="c" style="background:#2fa574"></span><span><strong>Izquierda:</strong> demasiado dedo; tiras del arma hacia dentro.</span></div>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:10px">Invierte izquierda y derecha si eres zurdo. Y no diagnostiques con menos de 15 disparos: un tiro suelto es ruido; un patrón repetido en tres series es información.</p>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:20px">
+      <div class="lbl">Los cuatro tiempos del dedo</div>
+      <div class="tl">
+        <div class="tl-item"><div class="dot">1</div><h4>Colocar</h4><p>La falange distal, plana, perpendicular al cañón. Nunca la articulación: si el disparador toca el pliegue del dedo, empujarás el arma de lado en cada disparo.</p></div>
+        <div class="tl-item"><div class="dot">2</div><h4>Precargar</h4><p>Elimina el recorrido libre mientras alzas el arma. Llega al muro y quédate ahí. En las series rápidas, esto es lo que te devuelve el tiempo que crees que no tienes.</p></div>
+        <div class="tl-item a"><div class="dot">3</div><h4>Presionar</h4><p>Recta hacia atrás, creciente, sin interrupciones. El resto de la mano no se mueve, no aprieta más ni menos. La presión de empuñadura es constante de principio a fin.</p></div>
+        <div class="tl-item g"><div class="dot">4</div><h4>Mantener</h4><p><em>Follow-through</em>: dos segundos con el dedo apretado y las miras enrasadas después de que el tiro haya salido. Luego resetea sin sacar el dedo del disparador.</p></div>
+      </div>
+    </div>
+
+    <div class="card dark rv">
+      <div class="lbl" style="color:var(--amber2)">El diagnóstico infalible · Ball-and-dummy</div>
+      <p>Que un compañero mezcle cartuchos reales y vainas inertes en el cargador <strong>sin que tú veas el orden</strong>. Tira la serie con normalidad. Cuando el martillo caiga sobre una inerte, el arma debe quedarse <strong>completamente inmóvil</strong>.</p>
+      <p style="margin-top:8px">Si cabecea, tienes anticipación. Y no discutas con el resultado: la mayoría de los tiradores juran que no anticipan hasta que ven su propia arma dar un salto sobre un cartucho vacío. Es el mejor detector de gatillazo que existe sin electrónica, y cuesta cero euros.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num">5</div><h2>Configuración del arma<br>y del puesto</h2></div>
+      <p class="sub">El material no dispara por ti, pero mal ajustado te impide disparar bien.</p>
+    </div>
+
+    <div class="rv">
+      <p>Hay una regla que ahorra años: <strong>ajusta el arma una vez y déjala en paz</strong>. Cambiar cachas, muelles o alzas cada semana hace imposible saber si estás mejorando tú o si simplemente has tenido suerte con el último cambio. Y antes de tocar las miras, comprueba que la técnica es correcta: el noventa por ciento de las «malas miras» son, en realidad, gatillazo.</p>
+    </div>
+
+    <div class="card rv" style="padding:16px 12px">
+      <div class="lbl" style="padding-left:6px">Puntos de ajuste</div>
+      <svg viewBox="0 0 340 180" role="img" aria-label="Esquema de la pistola con sus puntos de ajuste">
+        <defs>
+          <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5c7189"/><stop offset=".5" stop-color="#33455a"/><stop offset="1" stop-color="#1c2c3d"/></linearGradient>
+          <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a9825b"/><stop offset="1" stop-color="#6f5335"/></linearGradient>
+          <filter id="shp" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#0d1c2e" flood-opacity=".35"/></filter>
+        </defs>
+        <g transform="translate(85,44)" filter="url(#shp)">
+          <path d="M0,18 L160,18 L160,34 L120,34 L120,42 L48,42 L44,90 L14,90 L21,42 L0,42 Z" fill="url(#steel)"/>
+          <path d="M0,18 L160,18 L160,23 L0,23 Z" fill="#8fa6bc" opacity=".55"/>
+          <rect x="8" y="9" width="15" height="9" rx="1.5" fill="#101d2b"/>
+          <rect x="144" y="9" width="11" height="9" rx="1.5" fill="#101d2b"/>
+          <path d="M50,42 q5,12 1,19" stroke="#e8a33d" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M44,44 q16,26 -6,26" stroke="#33455a" stroke-width="3.5" fill="none"/>
+          <path d="M22,48 L44,48 L38,86 L18,86 Z" fill="url(#wood)"/>
+          <path d="M22,48 L30,48 L25,86 L18,86 Z" fill="#fff" opacity=".08"/>
+        </g>
+        <g font-size="7.5" fill="#3a4d61">
+          <line x1="95" y1="52" x2="52" y2="26" stroke="#5b7c9d" stroke-width=".9"/>
+          <text x="0" y="14" font-weight="800" fill="#14304f">ALZA</text>
+          <text x="0" y="24">Ranura ancha. Comprueba cuánto</text>
+          <text x="0" y="33">mueve un clic a 25 m en TU arma.</text>
+          <line x1="234" y1="52" x2="276" y2="26" stroke="#5b7c9d" stroke-width=".9"/>
+          <text x="245" y="14" font-weight="800" fill="#14304f">PUNTO DE MIRA</text>
+          <text x="245" y="24">Mate, sin brillos.</text>
+          <text x="245" y="33">Aquí va tu foco visual.</text>
+          <line x1="135" y1="106" x2="62" y2="132" stroke="#e8a33d" stroke-width=".9"/>
+          <text x="0" y="144" font-weight="800" fill="#14304f">DISPARADOR</text>
+          <text x="0" y="154">Mínimo ISSF: 1.000 g (Standard)</text>
+          <text x="0" y="163">y 1.360 g (Fuego Central).</text>
+          <text x="0" y="172">Ajusta también su posición.</text>
+          <line x1="115" y1="124" x2="250" y2="132" stroke="#5b7c9d" stroke-width=".9"/>
+          <text x="245" y="144" font-weight="800" fill="#14304f">CACHA</text>
+          <text x="245" y="154">Muñeca visible y libre.</text>
+          <text x="245" y="163">Sin apoyos. La mano entra</text>
+          <text x="245" y="172">siempre exactamente igual.</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="rv" style="margin-top:18px">
+      <div class="lbl">Límites reglamentarios ISSF</div>
+      <table class="tbl">
+        <tr><th>Parámetro</th><th>Standard</th><th>Fuego Central</th></tr>
+        <tr><td>Calibre</td><td>.22 LR</td><td>7,62 – 9,65 mm</td></tr>
+        <tr><td>Peso máx. del arma</td><td>1.400 g</td><td>1.400 g</td></tr>
+        <tr><td>Peso mín. disparador</td><td>1.000 g</td><td>1.360 g</td></tr>
+        <tr><td>Caja de medida</td><td>300×150×50 mm</td><td>300×150×50 mm</td></tr>
+        <tr><td>Miras</td><td colspan="2">Abiertas. Sin ópticas ni lentes correctoras en el arma</td></tr>
+      </table>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:8px">Verifica siempre la edición vigente del reglamento antes de competir: las cifras se revisan periódicamente.</p>
+    </div>
+
+    <div class="card rv" style="margin-top:16px;padding:16px 12px">
+      <div class="lbl" style="padding-left:6px">El puesto: cotas que debes conocer</div>
+      <svg viewBox="0 0 340 155" role="img" aria-label="Esquema del puesto de tiro con distancia y altura de diana">
+        <defs><linearGradient id="gfloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dbe3ec"/><stop offset="1" stop-color="#b9c8d6"/></linearGradient></defs>
+        <path d="M10,132 L330,132 L306,142 L34,142 Z" fill="url(#gfloor)"/>
+        <line x1="10" y1="132" x2="330" y2="132" stroke="#93a7b9" stroke-width="1.2"/>
+        <circle cx="42" cy="56" r="9" fill="#14304f"/>
+        <rect x="37" y="66" width="11" height="42" rx="4" fill="#14304f"/>
+        <rect x="37" y="106" width="11" height="26" rx="3" fill="#0d1c2e"/>
+        <line x1="48" y1="74" x2="88" y2="74" stroke="#14304f" stroke-width="5" stroke-linecap="round"/>
+        <rect x="86" y="70" width="14" height="7" rx="2" fill="#33455a"/>
+        <line x1="48" y1="74" x2="76" y2="102" stroke="#e8a33d" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+        <text x="62" y="118" font-size="7" font-weight="800" fill="#c98a20">45° LISTO</text>
+        <line x1="284" y1="132" x2="284" y2="60" stroke="#93a7b9" stroke-width="3"/>
+        <circle cx="284" cy="48" r="22" fill="#fdfdfd" stroke="#14304f" stroke-width="1.5"/>
+        <circle cx="284" cy="48" r="13" fill="#0d1c2e"/>
+        <circle cx="284" cy="48" r="4" fill="#e8a33d"/>
+        <line x1="312" y1="48" x2="312" y2="132" stroke="#d1533f" stroke-width="1.2" stroke-dasharray="3 3"/>
+        <line x1="308" y1="48" x2="316" y2="48" stroke="#d1533f" stroke-width="1.2"/>
+        <line x1="308" y1="132" x2="316" y2="132" stroke="#d1533f" stroke-width="1.2"/>
+        <text x="336" y="86" font-size="8" font-weight="800" fill="#d1533f" text-anchor="end">1,40 m</text>
+        <text x="336" y="96" font-size="6.5" fill="#b8402d" text-anchor="end">±0,05</text>
+        <line x1="48" y1="147" x2="284" y2="147" stroke="#14304f" stroke-width="1.2"/>
+        <text x="166" y="144" text-anchor="middle" font-size="8.5" font-weight="800" fill="#14304f">25 m</text>
+      </svg>
+      <p style="margin-top:10px;font-size:.86rem">El centro del 10 está a <strong>1,40 m ± 0,05</strong> sobre el nivel del puesto de tiro (regla ISSF 6.3.9). En la posición de <strong>LISTO</strong>, el brazo apunta hacia abajo formando un ángulo no mayor de <strong>45°</strong> con la vertical, y no debe haber movimiento visible del brazo durante la espera.</p>
+    </div>
+
+    <div class="grid g2 rv" style="margin-top:14px">
+      <div class="card">
+        <h3>Los cursos de fuego, de memoria</h3>
+        <p><strong>Standard:</strong> 60 disparos en series de 5. Cuatro series a 150″, cuatro a 20″ y cuatro a 10″.</p>
+        <p><strong>Fuego Central:</strong> 60 disparos. Fase de precisión (6 series de 5, cinco minutos cada una) y fase de duelo (6 series de 5, con el blanco 7 s de perfil y 3 s de cara; un disparo por aparición).</p>
+      </div>
+      <div class="card acc">
+        <h3>Munición: la variable olvidada</h3>
+        <p>Prueba varias marcas y <strong>quédate con una</strong>. Cambiar de lote a mitad de temporada introduce una variable que no controlas y que te hará dudar de tu propia técnica. Si una te funciona, compra cantidad del mismo lote.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num">6</div><h2>El cuerpo y la cabeza:<br>la base invisible</h2></div>
+      <p class="sub">No dan puntos directamente. Deciden si puedes ejecutar lo que sabes.</p>
+    </div>
+
+    <div class="rv">
+      <p>El tirador no necesita ser fuerte: necesita ser <strong>estable</strong>. Y la estabilidad tiene tres patas: un hombro capaz de sostener el arma sin temblar en el disparo sesenta, un cuerpo que oscila poco y un pulso bajo. Nada de eso se consigue levantando pesos grandes; se consigue con trabajo isométrico, equilibrio y cardio suave.</p>
+      <p>Un matiz importante: <strong>nada de fuerza intensa ni cardio duro el día antes de tirar</strong>. La fatiga residual es temblor, y el temblor es puntos.</p>
+    </div>
+
+    <div class="grid g3 rv">
+      <div class="card">
+        <h3>Isométricos</h3>
+        <p>Sostener el arma (o 1–1,5 kg) con el brazo extendido en posición de puntería, 30–45 s por serie. <strong>Aumenta el tiempo antes que el peso.</strong> Dos o tres veces por semana.</p>
+      </div>
+      <div class="card">
+        <h3>Agarre y antebrazo</h3>
+        <p>Grippers, cubo de arroz, flexo-extensión de muñeca. Trabaja también los extensores, no solo los flexores: el desequilibrio agarrota la mano.</p>
+      </div>
+      <div class="card">
+        <h3>Equilibrio</h3>
+        <p>Apoyo monopodal, ojos cerrados, superficie inestable. La postura de tiro es una plancha vertical: cuanto menos oscila tu cuerpo, más quieto está el punto.</p>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:20px">
+      <h3>La rutina pre-disparo: tu ancla</h3>
+      <p>En competición no ejecutas técnica: <strong>ejecutas tu rutina</strong>. Una secuencia fija, idéntica en seco, en entrenamiento y en el campeonato: colocar los pies, verificar la empuñadura, respirar, alzar, enrasar, presionar, mantener, bajar y evaluar. Siempre en el mismo orden y en el mismo tiempo.</p>
+      <p>La rutina hace dos cosas a la vez. Primero, garantiza que no te saltas nada bajo presión —que es exactamente cuando el cerebro empieza a saltarse cosas—. Segundo, ocupa la mente: mientras sigues la secuencia, no estás pensando en el marcador, ni en el rival, ni en el 7 de la serie anterior.</p>
+      <div class="quote">El disparo anterior ya no existe. No lo puedes cambiar. El único disparo que importa es el que estás a punto de hacer.</div>
+    </div>
+
+    <div class="grid g2 rv">
+      <div class="card acc">
+        <h3>Visualización</h3>
+        <p>Ensaya mentalmente el disparo perfecto <strong>en primera persona</strong>: la sensación de la cacha, la imagen de las miras, la presión creciendo, el retroceso, el impacto. Diez minutos al día. El cerebro no distingue del todo entre un disparo imaginado con nitidez y uno real: es entrenamiento gratis, sin desgaste ni munición.</p>
+      </div>
+      <div class="card acc">
+        <h3>Llamada del tiro</h3>
+        <p>Antes de mirar el blanco, di dónde ha impactado. Si aciertas, es que estabas viendo las miras en el instante del disparo —que es lo único que se te pide—. <strong>Si no puedes llamar el tiro, no estabas mirando donde debías.</strong> Es el mejor test de atención que existe y es gratis.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num amber">7</div><h2>Preparación:<br>sesión y día de competición</h2></div>
+      <p class="sub">Lo que ocurre antes del primer disparo decide gran parte del resultado.</p>
+    </div>
+
+    <div class="grid g2 rv">
+      <div class="card">
+        <h3>Antes de cada entrenamiento</h3>
+        <ul>
+          <li>Define <strong>un solo foco</strong>, según el análisis de la sesión anterior.</li>
+          <li>Prepara el material la noche antes: arma, munición, gafas, protección, diario.</li>
+          <li>Calentamiento articular ligero de hombro, muñeca y cuello: cinco minutos.</li>
+          <li>Diez disparos en seco en el puesto antes del primer real.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Al terminar</h3>
+        <ul>
+          <li><strong>Guarda los blancos</strong> separados por fase.</li>
+          <li>Anota en el diario: foco, sensaciones, condiciones y porcentaje de llamadas acertadas.</li>
+          <li>Decide el foco de la siguiente sesión ahí mismo, en caliente.</li>
+          <li>Termina con un buen disparo, aunque sea en seco.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:22px">
+      <div class="lbl">Cronología del día de competición</div>
+      <div class="tl">
+        <div class="tl-item"><div class="dot">1</div><h4>La noche anterior</h4><p>Bolsa preparada y revisada pieza a pieza. Cena normal, sin experimentos. Dormir bien también es entrenamiento, y es la parte que más gente descuida.</p></div>
+        <div class="tl-item"><div class="dot">2</div><h4>Llegada · 60–90 min antes</h4><p>Sin prisas. Control de equipo. Reconoce la galería, la luz, el viento, dónde están los baños. Hidrátate. Los nervios crecen con la incertidumbre: elimina toda la que puedas.</p></div>
+        <div class="tl-item a"><div class="dot">3</div><h4>Calentamiento · 30 min antes</h4><p>Movilidad ligera, diez o quince disparos en seco y cinco ciclos de respiración 4–2–6. Visualiza tu primera serie completa antes de que empiece.</p></div>
+        <div class="tl-item g"><div class="dot">4</div><h4>Durante la tirada</h4><p>Ejecuta tu rutina, no la técnica. Un disparo cada vez. Si sale un mal tiro, vuelve al proceso: el marcador no se arregla mirándolo.</p></div>
+        <div class="tl-item r"><div class="dot">5</div><h4>Después</h4><p>Analiza el proceso, no solo la puntuación. ¿Se rompió la rutina? ¿En qué serie? ¿Por qué? Eso —y no el resultado— es el foco del lunes.</p></div>
+      </div>
+    </div>
+
+    <div class="grid g2 rv">
+      <div class="card red">
+        <h3>Lo que nunca debes hacer</h3>
+        <ul>
+          <li>Cambiar arma, munición o cachas la semana de la competición.</li>
+          <li>Entrenar fuerte dos días antes.</li>
+          <li>Buscar «el truco» en el último momento: no existe.</li>
+          <li>Ir sumando la puntuación mentalmente mientras tiras.</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <h3>Lo que sí debes hacer</h3>
+        <p>Exactamente lo mismo que llevas ocho semanas haciendo. La competición es un entrenamiento más, solo que con público.</p>
+        <p style="margin-top:8px"><strong>Objetivo real:</strong> que tu puntuación bajo presión difiera <strong>menos de un 3 %</strong> de tu media de entrenamiento. Eso —y no un récord aislado— es competir bien.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:linear-gradient(165deg,#14304f,#0b1727);color:#fff">
+  <div class="wrap">
+    <div class="rv">
+      <div class="sec-head"><div class="num amber">★</div><h2 style="color:#fff">Los diez principios</h2></div>
+      <p class="sub" style="color:#9dc2e6">Si solo te llevas una pantalla de toda la guía, que sea esta.</p>
+    </div>
+
+    <div class="flips rv">
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 1">
+        <div class="face front"><div class="idx">01</div><h4>El seco construye,<br>el fuego verifica</h4></div>
+        <div class="face back"><div class="idx">01</div><p>3:1 en iniciación. 4:1 en nacional. Si el error aparece en el campo, se corrige en casa.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 2">
+        <div class="face front"><div class="idx">02</div><h4>Un solo foco<br>por sesión</h4></div>
+        <div class="face back"><div class="idx">02</div><p>Nunca corrijas dos errores a la vez: no sabrás cuál de las correcciones funcionó.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 3">
+        <div class="face front"><div class="idx">03</div><h4>El disparo debe<br>sorprenderte</h4></div>
+        <div class="face back"><div class="idx">03</div><p>Presión progresiva e ininterrumpida. Si sabes cuándo va a salir, tu cuerpo ya lo ha estropeado.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 4">
+        <div class="face front"><div class="idx">04</div><h4>Enfoca el<br>punto de mira</h4></div>
+        <div class="face back"><div class="idx">04</div><p>El blanco, borroso. Siempre. El error de enrase se multiplica por 25 metros; el de posición, no.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 5">
+        <div class="face front"><div class="idx">05</div><h4>La regla 5–7</h4></div>
+        <div class="face back"><div class="idx">05</div><p>Si el tiro no sale en 7 s desde la apnea, abórtalo. A partir de ahí solo empeora.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 6">
+        <div class="face front"><div class="idx">06</div><h4>Abortar es<br>entrenar bien</h4></div>
+        <div class="face back"><div class="idx">06</div><p>Forzar el disparo entrena el error. Bajar el arma es una decisión técnica, no una debilidad.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 7">
+        <div class="face front"><div class="idx">07</div><h4>Llama<br>cada tiro</h4></div>
+        <div class="face back"><div class="idx">07</div><p>Si no puedes decir dónde ha impactado antes de mirarlo, no estabas viendo tus miras.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 8">
+        <div class="face front"><div class="idx">08</div><h4>En rápido, no dispares<br>más rápido</h4></div>
+        <div class="face back"><div class="idx">08</div><p>Recupera el enrase más rápido. El tiempo se gana entre disparos, no en el disparo.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 9">
+        <div class="face front"><div class="idx">09</div><h4>Consistencia sobre<br>intensidad</h4></div>
+        <div class="face back"><div class="idx">09</div><p>Cinco sesiones cortas superan a dos maratonianas. El sistema nervioso aprende por frecuencia.</p></div>
+      </div>
+      <div class="flip" tabindex="0" role="button" aria-label="Principio 10">
+        <div class="face front"><div class="idx">10</div><h4>En competición,<br>ejecuta tu rutina</h4></div>
+        <div class="face back"><div class="idx">10</div><p>No tu técnica: ya la tienes dentro. Un disparo cada vez. El anterior ya no existe.</p></div>
+      </div>
+    </div>
+    <p class="hint">Toca una tarjeta para ver el detalle</p>
+
+    <div class="card rv" style="margin-top:24px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);box-shadow:none">
+      <div class="lbl" style="color:var(--amber2)">El resumen del resumen</div>
+      <p style="font-size:1.15rem;font-weight:800;color:#fff;line-height:1.35">Miras enrasadas + presión progresiva + no perturbar el arma.</p>
+      <p style="margin-top:10px;color:#a9c8e6">Todo lo demás de esta guía existe únicamente para que esas tres cosas ocurran, disparo tras disparo, también cuando estás nervioso y el reloj corre.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <strong>Academia · Principios básicos del tirador</strong><br>
+    Pistola Standard 25 m · Pistola Fuego Central 25 m<br>
+    <span style="display:block;margin-top:8px;color:#6d8fae;font-size:.74rem">Basado en el reglamento ISSF y en manuales de referencia de tiro deportivo. Verifica siempre la edición vigente del reglamento antes de competir.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var els = document.querySelectorAll('.rv');
+  if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in')}); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+  },{rootMargin:'0px 0px -8% 0px', threshold:.08});
+  els.forEach(function(e){ io.observe(e); });
+})();
+document.querySelectorAll('.flip').forEach(function(f){
+  function t(){ f.classList.toggle('on'); }
+  f.addEventListener('click', t);
+  f.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); t(); } });
+});
+</script>
+</body>
+</html>
