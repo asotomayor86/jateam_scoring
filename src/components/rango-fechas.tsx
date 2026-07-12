@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type PointerEvent as RPtr } from "react";
+import { useEffect, useRef, useState, type PointerEvent as RPtr } from "react";
 
 const DIA = 86400000;
 const MESES = [
@@ -19,10 +19,15 @@ function fmt(ts: number): string {
   return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
+function clamp(v: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, v));
+}
+
 /**
- * Slider de rango de fechas a todo el ancho, con dos tiradores. La etiqueta del
- * tirador inferior (desde) se muestra debajo de la barra y la del superior
- * (hasta) encima. Devuelve los timestamps (a día) al mover.
+ * Slider de rango de fechas con dos tiradores. La zona táctil es alta (fácil de
+ * agarrar con el dedo) aunque la barra se vea fina, y los tiradores siguen al
+ * dedo de forma local (fluida); el recálculo de los resultados va limitado con
+ * requestAnimationFrame para que no dé tirones.
  */
 export function RangoFechas({
   min,
@@ -39,25 +44,52 @@ export function RangoFechas({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const activo = useRef<"desde" | "hasta" | null>(null);
+  const raf = useRef(0);
+  const pend = useRef<{ d: number; h: number } | null>(null);
   const span = max - min || 1;
 
-  const fDesde = (desde - min) / span;
-  const fHasta = (hasta - min) / span;
+  // Posición local de los tiradores (para que sigan al dedo sin esperar al
+  // recálculo). Se sincroniza con las props cuando no se está arrastrando.
+  const [loc, setLoc] = useState({ desde, hasta });
+  useEffect(() => {
+    if (!activo.current) setLoc({ desde, hasta });
+  }, [desde, hasta]);
+
+  const D = loc.desde;
+  const H = loc.hasta;
+  const fD = clamp((D - min) / span, 0, 1);
+  const fH = clamp((H - min) / span, 0, 1);
 
   function tsEn(clientX: number): number {
     const r = ref.current!.getBoundingClientRect();
-    let f = (clientX - r.left) / r.width;
-    f = Math.max(0, Math.min(1, f));
+    const f = clamp((clientX - r.left) / r.width, 0, 1);
     return min + Math.round((f * span) / DIA) * DIA;
+  }
+
+  /** Notifica el cambio al padre como mucho una vez por frame (fluido). */
+  function emitir(d: number, h: number) {
+    pend.current = { d, h };
+    if (raf.current) return;
+    raf.current = requestAnimationFrame(() => {
+      raf.current = 0;
+      if (pend.current) onChange(pend.current.d, pend.current.h);
+    });
+  }
+
+  function mover(ts: number) {
+    let d = D;
+    let h = H;
+    if (activo.current === "desde") d = Math.min(ts, H);
+    else h = Math.max(ts, D);
+    setLoc({ desde: d, hasta: h });
+    emitir(d, h);
   }
 
   function onDown(e: RPtr<HTMLDivElement>) {
     if (span <= 0) return;
     e.preventDefault();
     const ts = tsEn(e.clientX);
-    // Elige el tirador más cercano (si empatan, el que deje mover en esa dirección).
-    activo.current =
-      Math.abs(ts - desde) <= Math.abs(ts - hasta) ? "desde" : "hasta";
+    activo.current = Math.abs(ts - D) <= Math.abs(ts - H) ? "desde" : "hasta";
     ref.current?.setPointerCapture(e.pointerId);
     mover(ts);
   }
@@ -68,19 +100,21 @@ export function RangoFechas({
     mover(tsEn(e.clientX));
   }
 
-  function mover(ts: number) {
-    if (activo.current === "desde") onChange(Math.min(ts, hasta), hasta);
-    else onChange(desde, Math.max(ts, desde));
-  }
-
   function onUp() {
+    if (!activo.current) return;
     activo.current = null;
+    if (raf.current) {
+      cancelAnimationFrame(raf.current);
+      raf.current = 0;
+    }
+    onChange(loc.desde, loc.hasta); // valor final exacto
   }
 
   const desactivado = span <= 0;
 
   return (
-    <div style={{ width: "90%", margin: "0 auto", padding: "2rem 0 2.1rem", userSelect: "none" }}>
+    <div style={{ width: "90%", margin: "0 auto", padding: "1.7rem 0 1.8rem", userSelect: "none" }}>
+      {/* Zona táctil alta (44 px) con la barra fina centrada dentro. */}
       <div
         ref={ref}
         onPointerDown={onDown}
@@ -89,34 +123,45 @@ export function RangoFechas({
         onPointerCancel={onUp}
         style={{
           position: "relative",
-          height: 5,
-          background: "color-mix(in srgb, var(--texto) 12%, transparent)",
-          borderRadius: 4,
+          height: 44,
           touchAction: "none",
           cursor: desactivado ? "default" : "pointer",
         }}
       >
+        {/* Barra */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            right: 0,
+            height: 6,
+            transform: "translateY(-50%)",
+            background: "color-mix(in srgb, var(--texto) 14%, transparent)",
+            borderRadius: 5,
+          }}
+        />
         {/* Tramo seleccionado */}
         <div
           style={{
             position: "absolute",
-            top: 0,
-            bottom: 0,
-            left: `${fDesde * 100}%`,
-            right: `${(1 - fHasta) * 100}%`,
-            background: "color-mix(in srgb, var(--acento) 70%, transparent)",
-            borderRadius: 4,
+            top: "50%",
+            height: 6,
+            transform: "translateY(-50%)",
+            left: `${fD * 100}%`,
+            right: `${(1 - fH) * 100}%`,
+            background: "color-mix(in srgb, var(--acento) 75%, transparent)",
+            borderRadius: 5,
           }}
         />
-        {/* Etiqueta "hasta" (arriba) */}
-        <Etiqueta frac={fHasta} arriba>
-          {fmt(hasta)}
+        {/* Etiquetas */}
+        <Etiqueta frac={fH} arriba>
+          {fmt(H)}
         </Etiqueta>
-        {/* Etiqueta "desde" (abajo) */}
-        <Etiqueta frac={fDesde}>{fmt(desde)}</Etiqueta>
+        <Etiqueta frac={fD}>{fmt(D)}</Etiqueta>
         {/* Tiradores */}
-        <Tirador frac={fDesde} />
-        <Tirador frac={fHasta} />
+        <Tirador frac={fD} />
+        <Tirador frac={fH} />
       </div>
     </div>
   );
@@ -129,14 +174,14 @@ function Tirador({ frac }: { frac: number }) {
         position: "absolute",
         top: "50%",
         left: `${frac * 100}%`,
-        width: 17,
-        height: 17,
-        marginTop: -8.5,
-        marginLeft: -8.5,
+        width: 26,
+        height: 26,
+        marginTop: -13,
+        marginLeft: -13,
         borderRadius: "50%",
-        background: "color-mix(in srgb, var(--acento) 85%, transparent)",
-        border: "2px solid var(--fondo)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+        background: "var(--acento)",
+        border: "3px solid var(--fondo)",
+        boxShadow: "0 1px 5px rgba(0,0,0,0.35)",
         pointerEvents: "none",
       }}
     />
@@ -158,7 +203,9 @@ function Etiqueta({
         position: "absolute",
         left: `${frac * 100}%`,
         transform: "translateX(-50%)",
-        [arriba ? "bottom" : "top"]: 11,
+        // Pegada al tirador (que está en el centro vertical de la zona táctil).
+        [arriba ? "bottom" : "top"]: "50%",
+        [arriba ? "marginBottom" : "marginTop"]: 17,
         fontSize: "0.75rem",
         fontWeight: 700,
         color: "var(--texto)",
