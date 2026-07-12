@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type PointerEvent as RPtr } from "react";
+import { useEffect, useRef, useState, type PointerEvent as RPtr } from "react";
 import {
   DIANA_25M,
   type DianaSpec,
@@ -82,6 +82,10 @@ export function DianaCanvas({
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Zoom/pan: viewBox actual (en coordenadas SVG). Por defecto, la diana entera.
   const [view, setView] = useState({ x: -R, y: -R, w: VIEW, h: VIEW });
+  // Si cambia el blanco (precisión ↔ duelo), reajusta el viewBox a su tamaño.
+  useEffect(() => {
+    setView({ x: -R, y: -R, w: VIEW, h: VIEW });
+  }, [R, VIEW]);
   const punteros = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinch = useRef<{ startDist: number; startW: number; anchorX: number; anchorY: number } | null>(null);
 
