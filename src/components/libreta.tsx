@@ -442,7 +442,8 @@ export function Libreta({
                     className="chip"
                     style={{ marginLeft: "0.4rem", fontWeight: 600 }}
                   >
-                    {fase.nombre} · {fase.segundos}s
+                    {fase.nombre}
+                    {fase.tipo !== "duelo" ? ` · ${fase.segundos}s` : ""}
                   </span>
                 ) : null}
               </strong>

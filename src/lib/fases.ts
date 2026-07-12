@@ -9,7 +9,7 @@
  */
 
 export type Fase = {
-  tipo: "precision" | "velocidad";
+  tipo: "precision" | "velocidad" | "duelo";
   segundos: number;
   nombre: string;
 };
@@ -20,6 +20,11 @@ export function faseSerie(modalitySlug: string, idx: number): Fase | null {
     if (idx <= 4) return { tipo: "precision", segundos: 150, nombre: "Precisión" };
     if (idx <= 8) return { tipo: "velocidad", segundos: 20, nombre: "Velocidad" };
     return { tipo: "velocidad", segundos: 10, nombre: "Velocidad" };
+  }
+  // Fuego Central: 6 series de precisión (150″) + 6 series de duelo (5×7/3).
+  if (modalitySlug === "fuego-central") {
+    if (idx <= 6) return { tipo: "precision", segundos: 150, nombre: "Precisión" };
+    return { tipo: "duelo", segundos: 3, nombre: "Duelo" };
   }
   if (modalitySlug === "pistola-velocidad") {
     return { tipo: "velocidad", segundos: 20, nombre: "Velocidad" };
@@ -104,6 +109,14 @@ export function planTimer(
   const fase =
     faseSerie(modalitySlug, idx) ??
     ({ tipo: "precision", segundos: 150, nombre: "Precisión" } as Fase);
+  // Duelo: reutiliza los pasos del duelo 7/3 (ya empiezan con su atención).
+  if (fase.tipo === "duelo") {
+    return {
+      opciones: opcionesConCarguen(dueloIntrinsecos(), "Serie", false),
+      finalLabel: "Fin",
+      conPitido: tipoTirada === "entrenamiento",
+    };
+  }
   return {
     opciones: opcionesConCarguen(intrinsecosDeFase(fase)),
     finalLabel: fase.tipo === "velocidad" ? "¡Paren!" : "Tiempo cumplido",
