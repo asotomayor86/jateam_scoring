@@ -225,7 +225,8 @@ export function Libreta({
               shotCount: modalidad.defaultSeriesSize,
               subtotal: c.subtotal,
               inner: c.inner,
-              impacts: null, // en casillas no hay diana
+              // Los impactos son persistentes: se conservan aunque se cierre la diana.
+              impacts: fila.impacts.length ? fila.impacts : null,
             });
         if (r.ok) {
           if (typeof r.total === "number") setTotal(r.total);
@@ -317,6 +318,13 @@ export function Libreta({
   function actualizaImpactos(idx: number, next: Impacto[], commit: boolean) {
     setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, impacts: next } : f)));
     if (commit) guardarDianaTiro(idx, next);
+  }
+
+  /** Borra todos los impactos de una serie (con doble confirmación). */
+  function resetDiana(idx: number) {
+    if (!window.confirm("¿Borrar TODOS los impactos de esta serie?")) return;
+    if (!window.confirm("Esta acción no se puede deshacer. ¿Confirmas el reseteo?")) return;
+    actualizaImpactos(idx, [], true);
   }
 
   /** Conmuta una serie entre las casillas y la diana gráfica. */
@@ -515,6 +523,24 @@ export function Libreta({
                   onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
                 />
                 <ImpactosBoxes impacts={fila.impacts} />
+                {!finalizada && fila.impacts.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => resetDiana(fila.idx)}
+                    style={{
+                      marginTop: "0.5rem",
+                      border: "1px solid var(--borde)",
+                      background: "transparent",
+                      color: "var(--rojo)",
+                      borderRadius: 8,
+                      padding: "0.4rem 0.7rem",
+                      cursor: "pointer",
+                      fontSize: "0.82rem",
+                    }}
+                  >
+                    Resetear diana
+                  </button>
+                ) : null}
               </>
             ) : fila.modo === "tiros" ? (
               <div className="serie-grid">

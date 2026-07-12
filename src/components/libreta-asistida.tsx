@@ -202,7 +202,8 @@ export function LibretaAsistida({
           idx,
           blancoNuevo: fila.blancoNuevo,
           buckets: nums(fila),
-          impacts: fila.usaDiana ? fila.impacts : null,
+          // Los impactos son persistentes: se conservan aunque se cierre la diana.
+          impacts: fila.impacts.length ? fila.impacts : null,
           dianaType: dianaTipoDe(idx),
         });
         setEstado(idx, r.ok ? "guardado" : "error");
@@ -250,8 +251,15 @@ export function LibretaAsistida({
     setFilas((prev) =>
       prev.map((f) => (f.idx === idx ? { ...f, usaDiana: !f.usaDiana } : f)),
     );
-    // Al SALIR de la diana se persiste (guarda el recuento y limpia impactos).
+    // Al salir de la diana se persiste el estado (los impactos se conservan).
     if (era) programar(idx);
+  }
+
+  /** Borra todos los impactos de una serie (con doble confirmación). */
+  function resetDiana(idx: number) {
+    if (!window.confirm("¿Borrar TODOS los impactos de esta serie?")) return;
+    if (!window.confirm("Esta acción no se puede deshacer. ¿Confirmas el reseteo?")) return;
+    actualizaImpactos(idx, [], true);
   }
 
   const programar = useCallback(
@@ -422,6 +430,24 @@ export function LibretaAsistida({
                   onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
                 />
                 <ImpactosBoxes impacts={fila.impacts} />
+                {!finalizada && fila.impacts.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => resetDiana(fila.idx)}
+                    style={{
+                      marginTop: "0.5rem",
+                      border: "1px solid var(--borde)",
+                      background: "transparent",
+                      color: "var(--rojo)",
+                      borderRadius: 8,
+                      padding: "0.4rem 0.7rem",
+                      cursor: "pointer",
+                      fontSize: "0.82rem",
+                    }}
+                  >
+                    Resetear diana
+                  </button>
+                ) : null}
               </>
             ) : (
               <div className="serie-grid">

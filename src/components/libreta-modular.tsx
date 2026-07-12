@@ -380,12 +380,15 @@ export function LibretaModular({
       setEstado(idx, "guardando");
       try {
         let ok = true;
+        // Los impactos son persistentes: se conservan aunque se cierre la diana.
+        const impactosPersist = fila.impacts.length ? fila.impacts : undefined;
         if (modo === "asistido") {
           const r = await guardarSerieAsistida({
             scorecardId,
             idx,
             blancoNuevo: fila.blancoNuevo,
             buckets: numsAsistido(fila),
+            impacts: impactosPersist,
           });
           ok = r.ok;
         } else {
@@ -408,6 +411,7 @@ export function LibretaModular({
             subtotal: subtotalDe(fila, modo),
             inner,
             moduleType: fila.moduleType,
+            impacts: impactosPersist,
           });
           ok = r.ok;
         }
@@ -510,8 +514,15 @@ export function LibretaModular({
         return { ...f, usaDiana: true };
       }),
     );
-    // Al SALIR de la diana se persiste (guarda casillas y limpia impactos).
+    // Al salir de la diana se persiste el estado (los impactos se conservan).
     if (era) programar(idx);
+  }
+
+  /** Borra todos los impactos de una serie (con doble confirmación). */
+  function resetDiana(idx: number) {
+    if (!window.confirm("¿Borrar TODOS los impactos de esta serie?")) return;
+    if (!window.confirm("Esta acción no se puede deshacer. ¿Confirmas el reseteo?")) return;
+    cambiaImpactos(idx, [], true);
   }
 
   function cambiaCelda(idx: number, j: number, valor: string) {
@@ -1046,6 +1057,24 @@ export function LibretaModular({
                   onChange={(next, commit) => cambiaImpactos(fila.idx, next, commit)}
                 />
                 <ImpactosBoxes impacts={fila.impacts} />
+                {!finalizada && fila.impacts.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => resetDiana(fila.idx)}
+                    style={{
+                      marginTop: "0.5rem",
+                      border: "1px solid var(--borde)",
+                      background: "transparent",
+                      color: "var(--rojo)",
+                      borderRadius: 8,
+                      padding: "0.4rem 0.7rem",
+                      cursor: "pointer",
+                      fontSize: "0.82rem",
+                    }}
+                  >
+                    Resetear diana
+                  </button>
+                ) : null}
               </>
             ) : modo === "tiros" ? (
               <div className="serie-grid">
