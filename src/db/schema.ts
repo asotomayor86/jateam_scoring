@@ -246,6 +246,9 @@ export const series = pgTable(
     // "reducida" (7 m). Se guarda para el análisis (a 7 m las puntuaciones
     // tienden a ser más bajas). null = no informado / no aplica.
     distanceMode: text("distance_mode"),
+    // Diana usada para puntuar los impactos gráficos: "precision" (25 m) o
+    // "duelo" (fuego rápido). null = precisión (por defecto).
+    dianaType: text("diana_type"),
     // Solo modo "diana": impactos sobre la diana a escala, en mm desde el
     // centro (x → derecha, y → arriba) con su puntuación derivada del anillo
     // (corregible). El subtotal/shots/inner se derivan de estos impactos.

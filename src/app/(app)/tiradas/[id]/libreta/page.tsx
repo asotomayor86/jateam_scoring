@@ -91,6 +91,7 @@ export default async function LibretaPage({
             rating: s.rating,
             reps: s.reps,
             distanceMode: s.distanceMode,
+            dianaType: s.dianaType,
             notes: s.notes,
             impacts: s.impacts,
           }))}

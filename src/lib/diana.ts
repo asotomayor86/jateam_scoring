@@ -16,8 +16,11 @@ export type Impacto = { x: number; y: number; s: number };
 export type DianaSpec = {
   slug: string;
   nombre: string;
-  /** mm entre anillos (radio del 10). */
+  /** mm entre anillos (paso de radio de un anillo al siguiente). */
   ringStep: number;
+  /** mm: radio del anillo del 10. Si se omite, es igual a `ringStep` (blanco
+   *  "regular" como el de precisión). En el de duelo el 10 es mayor que el paso. */
+  tenRingR?: number;
   /** mm: radio del diez interior (X). */
   innerTenR: number;
   /** valor máximo (10 en pistola). */
@@ -48,9 +51,36 @@ export const DIANA_25M: DianaSpec = {
   decimals: false,
 };
 
-/** Radio (mm) del anillo de valor 1 = borde exterior puntuable. */
+/**
+ * Diana de duelo / fuego rápido 25 m (medidas ISSF). Anillo 10 = 100 mm ⌀
+ * (radio 50), paso 80 mm ⌀ (40 mm de radio), diez interior 50 mm ⌀ (radio 25),
+ * zona negra hasta el anillo 5 (⌀500, radio 250). El anillo 1 queda a ⌀820.
+ */
+export const DIANA_DUELO: DianaSpec = {
+  slug: "duelo25",
+  nombre: "Duelo 25 m",
+  ringStep: 40,
+  tenRingR: 50,
+  innerTenR: 25,
+  maxScore: 10,
+  blackR: 250,
+  caliberMm: 12,
+  decimals: false,
+};
+
+/** Diana según el tipo ("duelo" → diana de duelo; resto → precisión 25 m). */
+export function dianaPorTipo(tipo: string | null | undefined): DianaSpec {
+  return tipo === "duelo" ? DIANA_DUELO : DIANA_25M;
+}
+
+/** Radio (mm) del anillo del 10. */
+export function radioDiez(spec: DianaSpec): number {
+  return spec.tenRingR ?? spec.ringStep;
+}
+
+/** Radio (mm) del borde exterior del anillo de valor 1 (límite puntuable). */
 export function radioExterior(spec: DianaSpec): number {
-  return spec.ringStep * spec.maxScore;
+  return radioDiez(spec) + spec.ringStep * (spec.maxScore - 1);
 }
 
 /** Distancia radial (mm) de un punto al centro. */
@@ -73,9 +103,10 @@ export function radioEfectivo(spec: DianaSpec, r: number): number {
  * El radio que se pasa aquí debe ser ya el radio efectivo (borde del balín).
  */
 export function puntuacionEnRadio(spec: DianaSpec, r: number): number {
-  if (r <= 0) return spec.maxScore;
-  const anillo = Math.ceil(r / spec.ringStep); // 1 = el 10, 2 = el 9, …
-  const score = spec.maxScore + 1 - anillo;
+  const t = radioDiez(spec);
+  if (r <= t) return spec.maxScore; // dentro del anillo del 10
+  const anillo = Math.ceil((r - t) / spec.ringStep); // 1 = el 9, 2 = el 8, …
+  const score = spec.maxScore - anillo;
   return Math.max(0, Math.min(spec.maxScore, score));
 }
 

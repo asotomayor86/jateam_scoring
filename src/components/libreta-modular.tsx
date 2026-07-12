@@ -11,7 +11,7 @@ import {
   finalizarHoja,
   reabrirHoja,
 } from "@/actions/scorecards";
-import type { Impacto } from "@/lib/diana";
+import { dianaPorTipo, type Impacto } from "@/lib/diana";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
 import { LaserCamLink } from "@/components/laser-cam-link";
@@ -48,12 +48,14 @@ type SerieInicial = {
   rating: string | null;
   reps: number | null;
   distanceMode: string | null;
+  dianaType: string | null;
   notes: string | null;
   impacts: Impacto[] | null;
 };
 
 type Modo = "tiros" | "total" | "asistido" | "diana";
 type Distancia = "real" | "reducida";
+type DianaTipo = "precision" | "duelo";
 type EstadoGuardado = "" | "guardando" | "guardado" | "error";
 
 type Fila = {
@@ -68,6 +70,7 @@ type Fila = {
   rating: string | null;
   reps: string; // repeticiones realizadas (texto del input)
   distancia: Distancia; // solo módulos de disparo: 25 m (real) / 7 m (reducida)
+  dianaTipo: DianaTipo; // diana para puntuar impactos gráficos: precisión / duelo
   notes: string | null;
   impacts: Impacto[];
   usaDiana: boolean; // conmutador por módulo: apuntar en la diana en vez de casillas
@@ -108,6 +111,7 @@ function filaVacia(): Omit<Fila, "idx" | "kind" | "estado"> {
     rating: null,
     reps: "",
     distancia: "real",
+    dianaTipo: "precision",
     notes: null,
     impacts: [],
     usaDiana: false,
@@ -139,6 +143,7 @@ function filasIniciales(series: SerieInicial[], modo: Modo): Fila[] {
         ...filaVacia(),
         moduleType: s.moduleType as string,
         distancia: s.distanceMode === "reducida" ? "reducida" : "real",
+        dianaTipo: s.dianaType === "duelo" ? "duelo" : "precision",
         notes: s.notes,
         celdas: Array.from({ length: mod.shots }, (_, j) =>
           modo === "tiros" && s.shots && j < s.shots.length
@@ -261,6 +266,7 @@ export function LibretaModular({
   );
   const [tipoNuevo, setTipoNuevo] = useState(MODULOS[0].key);
   const [distanciaNueva, setDistanciaNueva] = useState<Distancia>("real");
+  const [dianaNueva, setDianaNueva] = useState<DianaTipo>("duelo");
   const [ejNuevo, setEjNuevo] = useState(ejercicios[0]?.id ?? "");
   const [laserFila, setLaserFila] = useState<number | null>(null);
   const filasRef = useRef(filas);
@@ -425,9 +431,10 @@ export function LibretaModular({
     async (idx: number, impacts: Impacto[]) => {
       const fila = filasRef.current.find((f) => f.idx === idx);
       const moduleType = fila?.kind === "modulo" ? fila.moduleType : null;
+      const dianaType = fila?.kind === "modulo" ? fila.dianaTipo : "precision";
       setEstado(idx, "guardando");
       try {
-        const r = await guardarDianaSerie({ scorecardId, idx, impacts, moduleType });
+        const r = await guardarDianaSerie({ scorecardId, idx, impacts, moduleType, dianaType });
         setEstado(idx, r.ok ? "guardado" : "error");
       } catch {
         setEstado(idx, "error");
@@ -440,6 +447,7 @@ export function LibretaModular({
     async (idx: number, impacts: Impacto[]) => {
       const fila = filasRef.current.find((f) => f.idx === idx);
       const moduleType = fila?.kind === "modulo" ? fila.moduleType : null;
+      const dianaType = fila?.kind === "modulo" ? fila.dianaTipo : "precision";
       const blancoNuevo = fila?.blancoNuevo ?? false;
       setEstado(idx, "guardando");
       try {
@@ -450,6 +458,7 @@ export function LibretaModular({
           buckets: histograma(impacts),
           impacts,
           moduleType,
+          dianaType,
         });
         setEstado(idx, r.ok ? "guardado" : "error");
       } catch {
@@ -550,6 +559,8 @@ export function LibretaModular({
     const esPrimero = !filasRef.current.some((f) => f.kind === "modulo");
     const idx = siguienteIdx();
     const distancia = distanciaNueva;
+    // Solo el módulo de duelo ofrece elegir diana; el resto usa precisión.
+    const dianaType: DianaTipo = mod.key === "duelo" ? dianaNueva : "precision";
     setFilas((prev) => [
       ...prev,
       {
@@ -558,6 +569,7 @@ export function LibretaModular({
         ...filaVacia(),
         moduleType: mod.key,
         distancia,
+        dianaTipo: dianaType,
         celdas: Array(mod.shots).fill(""),
         blancoNuevo: esPrimero,
         estado: "",
@@ -571,9 +583,10 @@ export function LibretaModular({
         buckets: ASISTIDO_VALORES.map(() => 0),
         moduleType: mod.key,
         distancia,
+        dianaType,
       });
     } else if (modo === "diana") {
-      await guardarDianaSerie({ scorecardId, idx, impacts: [], moduleType: mod.key, distancia });
+      await guardarDianaSerie({ scorecardId, idx, impacts: [], moduleType: mod.key, distancia, dianaType });
     } else {
       await guardarSerie({
         scorecardId,
@@ -584,6 +597,7 @@ export function LibretaModular({
         inner: 0,
         moduleType: mod.key,
         distancia,
+        dianaType,
       });
     }
   }
@@ -907,6 +921,11 @@ export function LibretaModular({
                     7 m
                   </span>
                 ) : null}
+                {fila.dianaTipo === "duelo" ? (
+                  <span className="chip" style={{ marginLeft: "0.4rem", fontWeight: 600 }}>
+                    Diana duelo
+                  </span>
+                ) : null}
               </strong>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span style={{ fontSize: "0.8rem", color: "var(--texto-suave)" }}>
@@ -1023,6 +1042,7 @@ export function LibretaModular({
                   impacts={fila.impacts}
                   background={modo === "asistido" ? fondoModular(modulos, fila.idx) : []}
                   finalizada={finalizada}
+                  spec={dianaPorTipo(fila.dianaTipo)}
                   onChange={(next, commit) => cambiaImpactos(fila.idx, next, commit)}
                 />
                 <ImpactosBoxes impacts={fila.impacts} />
@@ -1125,6 +1145,17 @@ export function LibretaModular({
                 <option value="real">25 m (real)</option>
                 <option value="reducida">7 m (reducida)</option>
               </select>
+              {tipoNuevo === "duelo" ? (
+                <select
+                  value={dianaNueva}
+                  onChange={(e) => setDianaNueva(e.target.value as DianaTipo)}
+                  style={selectStyle}
+                  title="Diana para puntuar en modo gráfico"
+                >
+                  <option value="duelo">Diana duelo</option>
+                  <option value="precision">Diana precisión</option>
+                </select>
+              ) : null}
               <button
                 type="button"
                 className="btn btn-primario"

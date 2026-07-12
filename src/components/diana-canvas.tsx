@@ -3,24 +3,21 @@
 import { useRef, useState, type PointerEvent as RPtr } from "react";
 import {
   DIANA_25M,
+  type DianaSpec,
   type Impacto,
   puntuacionDeImpacto,
   estadisticas,
   radioExterior,
+  radioDiez,
   mm,
 } from "@/lib/diana";
 
-const SPEC = DIANA_25M;
-// Radio del lienzo (mm): el exterior puntuable + un margen para ver impactos al borde.
-const R = radioExterior(SPEC) + 22;
-const VIEW = R * 2;
 const HIT_MM = 18; // radio (mm) para seleccionar un impacto al tocarlo
-// Radio del punto = mitad del calibre: así el BORDE del punto que se ve es justo
-// el que decide la puntuación (lo que ves es lo que puntúa).
-const DOT_MM = SPEC.caliberMm / 2;
 const LONG_PRESS_MS = 320; // pulsación larga para crear un impacto
 const MOVE_THRESHOLD_PX = 8; // desplazamiento mínimo para considerarlo arrastre
-const MIN_VIEW = VIEW / 4; // zoom máximo (×4): el viewBox no baja de aquí
+
+/** Nombre por defecto (diana de precisión) para textos de ayuda. */
+export const DIANA_NOMBRE = DIANA_25M.nombre;
 
 /** Estado de un gesto en curso sobre la diana. */
 type Gesto = {
@@ -46,8 +43,6 @@ const FONDO_IMPACTO = "rgba(140,146,153,0.65)"; // impactos acumulados (gris)
 const MPI_COLOR = "#0ea5b7";
 const MPI_FILL = "rgba(14,165,183,0.18)"; // azul semitransparente del círculo de agrupación
 
-export const DIANA_NOMBRE = SPEC.nombre;
-
 function clamp(v: number, a: number, b: number) {
   return Math.max(a, Math.min(b, v));
 }
@@ -63,13 +58,22 @@ export function DianaCanvas({
   background = [],
   finalizada,
   onChange,
+  spec = DIANA_25M,
 }: {
   impacts: Impacto[];
   /** Impactos de referencia (grises, no editables): p. ej. lo acumulado del blanco. */
   background?: Impacto[];
   finalizada: boolean;
   onChange: (next: Impacto[], commit: boolean) => void;
+  /** Geometría de la diana (precisión por defecto; duelo para fuego rápido). */
+  spec?: DianaSpec;
 }) {
+  const SPEC = spec;
+  // Radio del lienzo (mm): el exterior puntuable + margen para ver impactos al borde.
+  const R = radioExterior(SPEC) + 22;
+  const VIEW = R * 2;
+  const DOT_MM = SPEC.caliberMm / 2;
+  const MIN_VIEW = VIEW / 4; // zoom máximo (×4)
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [sel, setSel] = useState<number | null>(null);
   const selRef = useRef<number | null>(sel);
@@ -282,7 +286,7 @@ export function DianaCanvas({
           userSelect: "none",
         }}
       >
-        <Anillos />
+        <Anillos spec={SPEC} R={R} VIEW={VIEW} />
         {/* Impactos acumulados de series anteriores (referencia, no editables). */}
         {background.map((im, i) => (
           <circle
@@ -329,7 +333,7 @@ export function DianaCanvas({
         ))}
         {/* Valor flotante del impacto seleccionado / que se está colocando. */}
         {sel != null && impacts[sel] && (
-          <ValorFlotante im={impacts[sel]} />
+          <ValorFlotante im={impacts[sel]} R={R} DOT={DOT_MM} />
         )}
       </svg>
 
@@ -434,11 +438,11 @@ export function DianaCanvas({
 }
 
 /** Valor numérico del impacto, flotando a su lado (halo blanco para legibilidad). */
-function ValorFlotante({ im }: { im: Impacto }) {
+function ValorFlotante({ im, R, DOT }: { im: Impacto; R: number; DOT: number }) {
   // Si el impacto está pegado al borde derecho, la etiqueta va a su izquierda.
   const derecha = im.x < R - 70;
-  const x = im.x + (derecha ? DOT_MM + 6 : -(DOT_MM + 6));
-  const y = -im.y - (DOT_MM + 8);
+  const x = im.x + (derecha ? DOT + 6 : -(DOT + 6));
+  const y = -im.y - (DOT + 8);
   return (
     <text
       x={x}
@@ -459,18 +463,19 @@ function ValorFlotante({ im }: { im: Impacto }) {
 }
 
 /** Dibuja los anillos, la zona negra, la cruz central y los números de referencia. */
-function Anillos() {
-  const rings = [];
-  for (let r = 1; r <= SPEC.maxScore; r++) rings.push(r * SPEC.ringStep);
-  const numeros = [];
-  for (let r = 2; r <= SPEC.maxScore; r++) {
-    const mid = (r - 0.5) * SPEC.ringStep;
-    numeros.push({ v: SPEC.maxScore + 1 - r, y: mid });
+function Anillos({ spec, R, VIEW }: { spec: DianaSpec; R: number; VIEW: number }) {
+  const tenR = radioDiez(spec);
+  const rings: number[] = [];
+  for (let i = 0; i < spec.maxScore; i++) rings.push(tenR + i * spec.ringStep);
+  const numeros: { v: number; y: number }[] = [];
+  for (let v = spec.maxScore - 1; v >= 1; v--) {
+    const y = tenR + (spec.maxScore - v - 0.5) * spec.ringStep;
+    numeros.push({ v, y });
   }
   return (
     <g>
       <rect x={-R} y={-R} width={VIEW} height={VIEW} fill={PAPEL} />
-      <circle cx={0} cy={0} r={SPEC.blackR} fill={NEGRO} />
+      <circle cx={0} cy={0} r={spec.blackR} fill={NEGRO} />
       {rings.map((rad) => (
         <circle
           key={rad}
@@ -478,14 +483,14 @@ function Anillos() {
           cy={0}
           r={rad}
           fill="none"
-          stroke={rad <= SPEC.blackR ? LINEA_CLARA : LINEA_OSCURA}
+          stroke={rad <= spec.blackR ? LINEA_CLARA : LINEA_OSCURA}
           strokeWidth={1.4}
         />
       ))}
       <circle
         cx={0}
         cy={0}
-        r={SPEC.innerTenR}
+        r={spec.innerTenR}
         fill="none"
         stroke={LINEA_CLARA}
         strokeWidth={1.2}
@@ -504,7 +509,7 @@ function Anillos() {
           fontWeight={700}
           textAnchor="middle"
           dominantBaseline="central"
-          fill={y <= SPEC.blackR ? LINEA_CLARA : LINEA_OSCURA}
+          fill={y <= spec.blackR ? LINEA_CLARA : LINEA_OSCURA}
         >
           {v}
         </text>

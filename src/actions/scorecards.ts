@@ -12,7 +12,7 @@ import {
   restaRecuentos,
   ASISTIDO_VALORES,
 } from "@/lib/scoring";
-import { DIANA_25M, radio, esDiezInterior } from "@/lib/diana";
+import { radio, esDiezInterior, dianaPorTipo } from "@/lib/diana";
 import { db, scorecards, series } from "@/db";
 
 export type SerieCalculada = { idx: number; subtotal: number; shotCount: number };
@@ -213,6 +213,7 @@ const esquemaSerie = z.object({
   moduleType: z.string().max(20).nullable().optional(),
   // Distancia de la sesión (modular): "real" (25 m) o "reducida" (7 m).
   distancia: z.enum(["real", "reducida"]).nullable().optional(),
+  dianaType: z.enum(["precision", "duelo"]).nullable().optional(),
   // Si la serie se apuntó con la diana gráfica: sus impactos (o null si no).
   impacts: impactosSchema.nullable().optional(),
 });
@@ -249,6 +250,7 @@ export async function guardarSerie(
         inner: d.inner,
         moduleType: d.moduleType ?? null,
         distanceMode: d.distancia ?? null,
+        dianaType: d.dianaType ?? null,
         impacts: d.impacts ?? null,
       })
       // La distancia se fija al crear la fila (no se toca al actualizar).
@@ -283,6 +285,7 @@ const esquemaAsistida = z.object({
   // Solo asistido dentro de un modular: tipo de módulo (para conservarlo).
   moduleType: z.string().max(20).nullable().optional(),
   distancia: z.enum(["real", "reducida"]).nullable().optional(),
+  dianaType: z.enum(["precision", "duelo"]).nullable().optional(),
 });
 
 /**
@@ -322,6 +325,7 @@ export async function guardarSerieAsistida(
         impacts: d.impacts ?? null,
         moduleType: d.moduleType ?? null,
         distanceMode: d.distancia ?? null,
+        dianaType: d.dianaType ?? null,
       })
       // No se toca moduleType/distancia al actualizar: se fijan al crear la fila.
       .onConflictDoUpdate({
@@ -345,12 +349,13 @@ const esquemaDiana = z.object({
   // Solo si la diana es una serie de un entrenamiento modular: tipo de módulo.
   moduleType: z.string().max(20).nullable().optional(),
   distancia: z.enum(["real", "reducida"]).nullable().optional(),
+  dianaType: z.enum(["precision", "duelo"]).nullable().optional(),
 });
 
 /**
  * Crea o actualiza una serie en modo "diana": guarda los impactos (coordenadas
  * en mm + puntuación corregida) y deriva subtotal, nº de tiros y dieces
- * interiores (estos, por geometría, para el desempate). Recalcula la hoja.
+ * interiores (según la diana: precisión o duelo). Recalcula la hoja.
  */
 export async function guardarDianaSerie(
   input: z.input<typeof esquemaDiana>,
@@ -368,9 +373,10 @@ export async function guardarDianaSerie(
     return { ok: false, mensaje: "No puedes editar esta hoja" };
   }
 
+  const spec = dianaPorTipo(d.dianaType);
   const shots = d.impacts.map((i) => i.s);
   const subtotal = redondea1(shots.reduce((a, s) => a + s, 0));
-  const inner = d.impacts.filter((i) => esDiezInterior(DIANA_25M, radio(i.x, i.y))).length;
+  const inner = d.impacts.filter((i) => esDiezInterior(spec, radio(i.x, i.y))).length;
 
   try {
     await db
@@ -385,9 +391,10 @@ export async function guardarDianaSerie(
         blancoNuevo: false,
         moduleType: d.moduleType ?? null,
         distanceMode: d.distancia ?? null,
+        dianaType: d.dianaType ?? null,
         impacts: d.impacts,
       })
-      // No se toca moduleType/distancia al actualizar: se fijan al crear la fila.
+      // No se toca moduleType/distancia/diana al actualizar: se fijan al crear.
       .onConflictDoUpdate({
         target: [series.scorecardId, series.idx],
         set: { shots, shotCount: d.impacts.length, subtotal, inner, impacts: d.impacts },

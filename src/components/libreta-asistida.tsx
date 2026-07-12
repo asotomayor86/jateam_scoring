@@ -15,7 +15,7 @@ import {
   redondea1,
   formatPunt,
 } from "@/lib/scoring";
-import type { Impacto } from "@/lib/diana";
+import { dianaPorTipo, type Impacto } from "@/lib/diana";
 import { Card } from "@/components/ui";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
@@ -184,6 +184,13 @@ export function LibretaAsistida({
     setFilas((prev) => prev.map((f) => (f.idx === idx ? { ...f, estado } : f)));
   }, []);
 
+  // Diana según la fase: las series de duelo (fuego central) usan la diana de duelo.
+  const dianaTipoDe = useCallback(
+    (idx: number): "precision" | "duelo" =>
+      faseSerie(modalitySlug, idx)?.tipo === "duelo" ? "duelo" : "precision",
+    [modalitySlug],
+  );
+
   const guardar = useCallback(
     async (idx: number) => {
       const fila = filasRef.current.find((f) => f.idx === idx);
@@ -196,13 +203,14 @@ export function LibretaAsistida({
           blancoNuevo: fila.blancoNuevo,
           buckets: nums(fila),
           impacts: fila.usaDiana ? fila.impacts : null,
+          dianaType: dianaTipoDe(idx),
         });
         setEstado(idx, r.ok ? "guardado" : "error");
       } catch {
         setEstado(idx, "error");
       }
     },
-    [scorecardId, setEstado],
+    [scorecardId, setEstado, dianaTipoDe],
   );
 
   /** Guarda un recuento apuntado en la diana: deriva el histograma por valor. */
@@ -218,13 +226,14 @@ export function LibretaAsistida({
           blancoNuevo,
           buckets: histograma(impacts),
           impacts,
+          dianaType: dianaTipoDe(idx),
         });
         setEstado(idx, r.ok ? "guardado" : "error");
       } catch {
         setEstado(idx, "error");
       }
     },
-    [scorecardId, setEstado],
+    [scorecardId, setEstado, dianaTipoDe],
   );
 
   function actualizaImpactos(idx: number, next: Impacto[], commit: boolean) {
@@ -409,6 +418,7 @@ export function LibretaAsistida({
                   impacts={fila.impacts}
                   background={fondoDe(filas, fila.idx)}
                   finalizada={finalizada}
+                  spec={dianaPorTipo(dianaTipoDe(fila.idx))}
                   onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
                 />
                 <ImpactosBoxes impacts={fila.impacts} />

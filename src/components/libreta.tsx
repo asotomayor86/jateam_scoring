@@ -9,7 +9,7 @@ import {
   reabrirHoja,
 } from "@/actions/scorecards";
 import { parseTiro, redondea1, formatPunt } from "@/lib/scoring";
-import { DIANA_25M, type Impacto, radio, esDiezInterior } from "@/lib/diana";
+import { DIANA_25M, dianaPorTipo, type Impacto, radio, esDiezInterior } from "@/lib/diana";
 import { Card } from "@/components/ui";
 import { DianaCanvas } from "@/components/diana-canvas";
 import { DianaToggle } from "@/components/diana-toggle";
@@ -511,6 +511,7 @@ export function Libreta({
                 <DianaCanvas
                   impacts={fila.impacts}
                   finalizada={finalizada}
+                  spec={dianaPorTipo(fase?.tipo === "duelo" ? "duelo" : "precision")}
                   onChange={(next, commit) => actualizaImpactos(fila.idx, next, commit)}
                 />
                 <ImpactosBoxes impacts={fila.impacts} />
