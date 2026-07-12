@@ -56,7 +56,7 @@ export function SesionesGuard({ nav, children }: { nav: ReactNode; children: Rea
     };
   }, []);
 
-  const elegir = useCallback(async (rol: "control" | "camara") => {
+  const elegir = useCallback(async (rol: "control" | "camara" | "unico") => {
     setEstado(await elegirRol(tokenRef.current, rol));
   }, []);
 
@@ -84,7 +84,9 @@ export function SesionesGuard({ nav, children }: { nav: ReactNode; children: Rea
 
   return (
     <LaserBloqueadoContext.Provider value={laserBloqueado}>
-      {estado && estado.total >= 2 ? <BarraSesiones estado={estado} onCerrar={cerrar} /> : null}
+      {estado && estado.total >= 2 ? (
+        <BarraSesiones estado={estado} onCerrar={cerrar} onUnico={() => elegir("unico")} />
+      ) : null}
       {nav}
       {children}
       {estado?.necesitaRol ? <ModalRol onElegir={elegir} /> : null}
@@ -95,9 +97,11 @@ export function SesionesGuard({ nav, children }: { nav: ReactNode; children: Rea
 function BarraSesiones({
   estado,
   onCerrar,
+  onUnico,
 }: {
   estado: EstadoSesiones;
   onCerrar: (id: string) => void;
+  onUnico: () => void;
 }) {
   const yo = estado.sesiones.find((s) => s.esEste);
   const otras = estado.sesiones.filter((s) => !s.esEste);
@@ -130,6 +134,9 @@ function BarraSesiones({
           {estado.capturaActiva ? "📷 capturando" : "📷 cámara conectada"}
         </span>
       ) : null}
+      <button type="button" className="btn" style={miniBtn} onClick={onUnico}>
+        Solo este
+      </button>
       {yo ? (
         <button type="button" className="btn" style={miniBtn} onClick={() => onCerrar(yo.id)}>
           Cerrar esta
@@ -144,7 +151,11 @@ function BarraSesiones({
   );
 }
 
-function ModalRol({ onElegir }: { onElegir: (rol: "control" | "camara") => void }) {
+function ModalRol({
+  onElegir,
+}: {
+  onElegir: (rol: "control" | "camara" | "unico") => void;
+}) {
   return (
     <div style={overlay}>
       <div style={caja}>
@@ -152,7 +163,11 @@ function ModalRol({ onElegir }: { onElegir: (rol: "control" | "camara") => void 
         <p style={{ color: "var(--texto-suave)", fontSize: "0.9rem", margin: "0 0 1rem" }}>
           Elige qué es este dispositivo:
         </p>
-        <button type="button" className="btn btn-primario btn-bloque" onClick={() => onElegir("control")}>
+        <button type="button" className="btn btn-primario btn-bloque" onClick={() => onElegir("unico")}>
+          📱 Único dispositivo (cierra los demás)
+        </button>
+        <div style={{ height: 8 }} />
+        <button type="button" className="btn btn-bloque" onClick={() => onElegir("control")}>
           🕹️ Control (todo, menos el láser)
         </button>
         <div style={{ height: 8 }} />

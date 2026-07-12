@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { db, deviceSessions } from "@/db";
 import { requireUser } from "@/auth/helpers";
 
@@ -97,17 +97,55 @@ export async function estadoSesiones(deviceToken: string): Promise<EstadoSesione
   return leerEstado(user.id, token);
 }
 
-/** Elige el rol de este dispositivo. */
+/**
+ * Elige el modo de este dispositivo:
+ *  - "unico": cierra TODAS las demás sesiones (queda como dispositivo único).
+ *  - "control"/"camara": fija el rol y cierra cualquier OTRA sesión con ese mismo
+ *    rol (solo puede haber un Control y una Cámara).
+ */
 export async function elegirRol(
   deviceToken: string,
-  rol: "control" | "camara",
+  rol: "control" | "camara" | "unico",
 ): Promise<EstadoSesiones> {
   const { user } = await requireUser();
   const token = deviceToken.slice(0, 80);
+
+  if (rol === "unico") {
+    // Cierra las demás sesiones activas del usuario.
+    await db
+      .update(deviceSessions)
+      .set({ active: false, role: null })
+      .where(
+        and(
+          eq(deviceSessions.userId, user.id),
+          eq(deviceSessions.active, true),
+          ne(deviceSessions.deviceToken, token),
+        ),
+      );
+    // Esta queda sin rol (dispositivo único, sin restricciones).
+    await db
+      .update(deviceSessions)
+      .set({ role: null, lastSeenAt: new Date() })
+      .where(and(eq(deviceSessions.userId, user.id), eq(deviceSessions.deviceToken, token)));
+    return leerEstado(user.id, token);
+  }
+
   await db
     .update(deviceSessions)
     .set({ role: rol, lastSeenAt: new Date() })
     .where(and(eq(deviceSessions.userId, user.id), eq(deviceSessions.deviceToken, token)));
+  // Solo un dispositivo por rol: cierra las otras que tengan el mismo rol.
+  await db
+    .update(deviceSessions)
+    .set({ active: false, role: null })
+    .where(
+      and(
+        eq(deviceSessions.userId, user.id),
+        eq(deviceSessions.active, true),
+        ne(deviceSessions.deviceToken, token),
+        eq(deviceSessions.role, rol),
+      ),
+    );
   return leerEstado(user.id, token);
 }
 
