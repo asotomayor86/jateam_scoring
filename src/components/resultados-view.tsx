@@ -7,7 +7,7 @@ import { DianaMini } from "@/components/diana-mini";
 import { MiniGrafica, RepartoBarras } from "@/components/mini-grafica";
 import { RangoFechas, diaTs } from "@/components/rango-fechas";
 import { formatPunt } from "@/lib/scoring";
-import { mm } from "@/lib/diana";
+import { mm, dianaPorTipo } from "@/lib/diana";
 import {
   agregarTiradas,
   agruparEntrenamientosPorTipo,
@@ -435,33 +435,35 @@ function BloqueTipo({ grupo }: { grupo: GrupoTipo }) {
         </div>
       )}
 
-      {a.conImpactos && (
-        <div style={{ marginTop: "0.8rem" }}>
-          <div style={{ fontSize: "0.78rem", color: "var(--texto-suave)", marginBottom: "0.3rem" }}>
-            Agrupación acumulada ({a.impactos.length} impactos)
+      {a.conImpactos &&
+        a.dianas.map((d) => (
+          <div key={d.tipo} style={{ marginTop: "0.8rem" }}>
+            <div style={{ fontSize: "0.78rem", color: "var(--texto-suave)", marginBottom: "0.3rem" }}>
+              Agrupación acumulada · <strong>Diana {d.tipo === "duelo" ? "duelo" : "precisión"}</strong>{" "}
+              ({d.nImpactos} impactos)
+            </div>
+            <DianaMini impactos={d.impactos} spec={dianaPorTipo(d.tipo)} />
+            <div
+              style={{
+                display: "flex",
+                gap: "1.1rem",
+                flexWrap: "wrap",
+                marginTop: "0.5rem",
+                fontSize: "0.8rem",
+                color: "var(--texto-suave)",
+              }}
+            >
+              {d.agrupacionMedia != null && <Dato etiqueta="Agrupación media" valor={`${mm(d.agrupacionMedia)} mm`} />}
+              {d.dispersionMedia != null && <Dato etiqueta="Dispersión media" valor={`${mm(d.dispersionMedia)} mm`} />}
+              {d.derivaMag != null && d.derivaX != null && d.derivaY != null && (
+                <Dato
+                  etiqueta="Deriva"
+                  valor={d.derivaMag < 3 ? "centrada" : `${mm(d.derivaMag)} mm ${rumbo(d.derivaX, d.derivaY)}`}
+                />
+              )}
+            </div>
           </div>
-          <DianaMini impactos={a.impactos} />
-          <div
-            style={{
-              display: "flex",
-              gap: "1.1rem",
-              flexWrap: "wrap",
-              marginTop: "0.5rem",
-              fontSize: "0.8rem",
-              color: "var(--texto-suave)",
-            }}
-          >
-            {a.agrupacionMedia != null && <Dato etiqueta="Agrupación media" valor={`${mm(a.agrupacionMedia)} mm`} />}
-            {a.dispersionMedia != null && <Dato etiqueta="Dispersión media" valor={`${mm(a.dispersionMedia)} mm`} />}
-            {a.derivaMag != null && a.derivaX != null && a.derivaY != null && (
-              <Dato
-                etiqueta="Deriva"
-                valor={a.derivaMag < 3 ? "centrada" : `${mm(a.derivaMag)} mm ${rumbo(a.derivaX, a.derivaY)}`}
-              />
-            )}
-          </div>
-        </div>
-      )}
+        ))}
 
       {a.progresion.length >= 2 && (
         <div style={{ marginTop: "0.7rem" }}>

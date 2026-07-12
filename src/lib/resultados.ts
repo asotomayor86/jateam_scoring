@@ -86,6 +86,8 @@ export type SerieTipo = {
   tieneImpactos: boolean;
   /** Distancia de la sesión: "real" (25 m) / "reducida" (7 m) / null. */
   distancia: string | null;
+  /** Diana usada: "duelo" o "precision" (null = precisión). */
+  dianaTipo: "precision" | "duelo";
 };
 
 /** Subconjunto de series de un grupo según el modo de datos. */
@@ -105,6 +107,18 @@ export type GrupoTipo = {
   hayImpactos: boolean;
 };
 
+/** Agrupación acumulada de un tipo de diana (precisión o duelo). */
+export type DianaAgg = {
+  tipo: "precision" | "duelo";
+  nImpactos: number;
+  impactos: Impacto[];
+  agrupacionMedia: number | null;
+  dispersionMedia: number | null;
+  derivaX: number | null;
+  derivaY: number | null;
+  derivaMag: number | null;
+};
+
 export type AggTipo = {
   nSeries: number;
   nTiros: number;
@@ -117,12 +131,8 @@ export type AggTipo = {
   conValores: boolean;
   /** La agrupación es rigurosa (todas las series consideradas tienen impactos). */
   conImpactos: boolean;
-  impactos: Impacto[];
-  agrupacionMedia: number | null;
-  dispersionMedia: number | null;
-  derivaX: number | null;
-  derivaY: number | null;
-  derivaMag: number | null;
+  /** Agrupación separada por tipo de diana (precisión / duelo). */
+  dianas: DianaAgg[];
   progresion: { fecha: string; media: number }[];
 };
 
@@ -165,6 +175,7 @@ export function agruparEntrenamientosPorTipo(
       tieneValores: valores.length > 0,
       tieneImpactos: impactos.length > 0,
       distancia: s.distanceMode,
+      dianaTipo: s.dianaType === "duelo" ? "duelo" : "precision",
     });
   }
 
@@ -196,10 +207,15 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
   const valores: number[] = [];
   const reparto = new Array(11).fill(0);
   const mediasSerie: number[] = [];
-  const impactos: Impacto[] = [];
-  const spreads: number[] = [];
-  const dispersions: number[] = [];
   const porFecha = new Map<string, { suma: number; tiros: number }>();
+  // Impactos y estadísticas separados por tipo de diana (precisión / duelo).
+  const porDiana: Record<
+    "precision" | "duelo",
+    { impactos: Impacto[]; spreads: number[]; dispersions: number[] }
+  > = {
+    precision: { impactos: [], spreads: [], dispersions: [] },
+    duelo: { impactos: [], spreads: [], dispersions: [] },
+  };
 
   for (const s of sub) {
     nTiros += s.shotCount;
@@ -217,11 +233,12 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
       porFecha.set(s.date, f);
     }
     if (s.impactos.length) {
-      impactos.push(...s.impactos);
+      const d = porDiana[s.dianaTipo];
+      d.impactos.push(...s.impactos);
       const st = estadisticas(s.impactos);
       if (st) {
-        spreads.push(st.spread);
-        dispersions.push(st.dispersion);
+        d.spreads.push(st.spread);
+        d.dispersions.push(st.dispersion);
       }
     }
   }
@@ -229,7 +246,25 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
   const n = sub.length;
   const todosValores = n > 0 && sub.every((s) => s.tieneValores);
   const todosImpactos = n > 0 && sub.every((s) => s.tieneImpactos);
-  const stGlobal = todosImpactos && impactos.length ? estadisticas(impactos) : null;
+
+  const dianas: DianaAgg[] = todosImpactos
+    ? (["precision", "duelo"] as const)
+        .filter((t) => porDiana[t].impactos.length > 0)
+        .map((t) => {
+          const d = porDiana[t];
+          const st = estadisticas(d.impactos);
+          return {
+            tipo: t,
+            nImpactos: d.impactos.length,
+            impactos: d.impactos,
+            agrupacionMedia: d.spreads.length ? media(d.spreads) : null,
+            dispersionMedia: d.dispersions.length ? media(d.dispersions) : null,
+            derivaX: st ? st.mpiX : null,
+            derivaY: st ? st.mpiY : null,
+            derivaMag: st ? st.offset : null,
+          };
+        })
+    : [];
 
   return {
     nSeries: n,
@@ -241,12 +276,7 @@ export function agregarTipo(series: SerieTipo[], modo: ModoDatos): AggTipo {
     reparto,
     conValores: todosValores,
     conImpactos: todosImpactos,
-    impactos: todosImpactos ? impactos : [],
-    agrupacionMedia: todosImpactos && spreads.length ? media(spreads) : null,
-    dispersionMedia: todosImpactos && dispersions.length ? media(dispersions) : null,
-    derivaX: stGlobal ? stGlobal.mpiX : null,
-    derivaY: stGlobal ? stGlobal.mpiY : null,
-    derivaMag: stGlobal ? stGlobal.offset : null,
+    dianas,
     progresion: [...porFecha.entries()]
       .sort((x, y) => x[0].localeCompare(y[0]))
       .map(([fecha, f]) => ({ fecha, media: f.suma / f.tiros })),

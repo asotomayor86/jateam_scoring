@@ -1,9 +1,11 @@
-import { DIANA_25M, type Impacto, estadisticas, radioExterior } from "@/lib/diana";
-
-const SPEC = DIANA_25M;
-const R = radioExterior(SPEC) + 22;
-const VIEW = R * 2;
-const DOT = SPEC.caliberMm / 2;
+import {
+  DIANA_25M,
+  type DianaSpec,
+  type Impacto,
+  estadisticas,
+  radioExterior,
+  radioDiez,
+} from "@/lib/diana";
 
 // Paleta fija de diana (igual en claro y oscuro).
 const PAPEL = "#e9e4d6";
@@ -20,10 +22,23 @@ const MPI_FILL = "rgba(14,165,183,0.16)";
  * agregado de "Mis resultados": todos los impactos se pintan en mm desde el
  * centro real, así se ve la tendencia y la dispersión de conjunto.
  */
-export function DianaMini({ impactos, maxWidth = 260 }: { impactos: Impacto[]; maxWidth?: number }) {
+export function DianaMini({
+  impactos,
+  maxWidth = 260,
+  spec = DIANA_25M,
+}: {
+  impactos: Impacto[];
+  maxWidth?: number;
+  spec?: DianaSpec;
+}) {
+  const SPEC = spec;
+  const R = radioExterior(SPEC) + 22;
+  const VIEW = R * 2;
+  const DOT = SPEC.caliberMm / 2;
+  const tenR = radioDiez(SPEC);
   const stats = estadisticas(impactos);
   const rings: number[] = [];
-  for (let r = 1; r <= SPEC.maxScore; r++) rings.push(r * SPEC.ringStep);
+  for (let i = 0; i < SPEC.maxScore; i++) rings.push(tenR + i * SPEC.ringStep);
   return (
     <svg
       viewBox={`${-R} ${-R} ${VIEW} ${VIEW}`}
