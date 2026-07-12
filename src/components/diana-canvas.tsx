@@ -9,6 +9,7 @@ import {
   estadisticas,
   radioExterior,
   radioDiez,
+  puntMin,
   mm,
 } from "@/lib/diana";
 
@@ -481,10 +482,11 @@ function ValorFlotante({ im, R, DOT }: { im: Impacto; R: number; DOT: number }) 
 /** Dibuja los anillos, la zona negra, la cruz central y los números de referencia. */
 function Anillos({ spec, R, VIEW }: { spec: DianaSpec; R: number; VIEW: number }) {
   const tenR = radioDiez(spec);
+  const vMin = puntMin(spec);
   const rings: number[] = [];
-  for (let i = 0; i < spec.maxScore; i++) rings.push(tenR + i * spec.ringStep);
+  for (let i = 0; i <= spec.maxScore - vMin; i++) rings.push(tenR + i * spec.ringStep);
   const numeros: { v: number; y: number }[] = [];
-  for (let v = spec.maxScore - 1; v >= 1; v--) {
+  for (let v = spec.maxScore - 1; v >= vMin; v--) {
     const y = tenR + (spec.maxScore - v - 0.5) * spec.ringStep;
     numeros.push({ v, y });
   }

@@ -25,6 +25,9 @@ export type DianaSpec = {
   innerTenR: number;
   /** valor máximo (10 en pistola). */
   maxScore: number;
+  /** valor mínimo puntuable (el anillo más externo). 1 por defecto; en el blanco
+   *  de velocidad es 5 (solo hay anillos del 10 al 5). Fuera de él → 0. */
+  minScore?: number;
   /** mm: radio de la zona negra (solo visual). */
   blackR: number;
   /** mm: diámetro del punto de impacto tal como se dibuja en la diana. La
@@ -52,25 +55,32 @@ export const DIANA_25M: DianaSpec = {
 };
 
 /**
- * Diana de duelo / fuego rápido 25 m (medidas ISSF). Anillo 10 = 100 mm ⌀
- * (radio 50), paso 80 mm ⌀ (40 mm de radio), diez interior 50 mm ⌀ (radio 25),
- * zona negra hasta el anillo 5 (⌀500, radio 250). El anillo 1 queda a ⌀820.
+ * Blanco de velocidad / fuego rápido 25 m (medidas ISSF, tarjeta 55×55 cm).
+ * Solo tiene anillos del 10 al 5: 10 = 100 mm ⌀ (radio 50), paso 80 mm ⌀ (40 mm
+ * de radio), 5 = 500 mm ⌀ (radio 250). Diez interior 50 mm ⌀ (radio 25). Toda la
+ * zona puntuable es negra (⌀500). Fuera del 5 → 0.
  */
 export const DIANA_DUELO: DianaSpec = {
-  slug: "duelo25",
-  nombre: "Duelo 25 m",
+  slug: "vel25",
+  nombre: "Velocidad 25 m",
   ringStep: 40,
   tenRingR: 50,
   innerTenR: 25,
   maxScore: 10,
+  minScore: 5,
   blackR: 250,
   caliberMm: 12,
   decimals: false,
 };
 
-/** Diana según el tipo ("duelo" → diana de duelo; resto → precisión 25 m). */
+/** Diana según el tipo ("duelo" → blanco de velocidad; resto → precisión 25 m). */
 export function dianaPorTipo(tipo: string | null | undefined): DianaSpec {
   return tipo === "duelo" ? DIANA_DUELO : DIANA_25M;
+}
+
+/** Valor mínimo puntuable (anillo más externo). */
+export function puntMin(spec: DianaSpec): number {
+  return spec.minScore ?? 1;
 }
 
 /** Radio (mm) del anillo del 10. */
@@ -78,9 +88,9 @@ export function radioDiez(spec: DianaSpec): number {
   return spec.tenRingR ?? spec.ringStep;
 }
 
-/** Radio (mm) del borde exterior del anillo de valor 1 (límite puntuable). */
+/** Radio (mm) del borde exterior del anillo puntuable más externo. */
 export function radioExterior(spec: DianaSpec): number {
-  return radioDiez(spec) + spec.ringStep * (spec.maxScore - 1);
+  return radioDiez(spec) + spec.ringStep * (spec.maxScore - puntMin(spec));
 }
 
 /** Distancia radial (mm) de un punto al centro. */
@@ -107,7 +117,9 @@ export function puntuacionEnRadio(spec: DianaSpec, r: number): number {
   if (r <= t) return spec.maxScore; // dentro del anillo del 10
   const anillo = Math.ceil((r - t) / spec.ringStep); // 1 = el 9, 2 = el 8, …
   const score = spec.maxScore - anillo;
-  return Math.max(0, Math.min(spec.maxScore, score));
+  // Fuera del anillo más externo puntuable → 0 (en velocidad, por debajo del 5).
+  if (score < puntMin(spec)) return 0;
+  return Math.min(spec.maxScore, score);
 }
 
 /** ¿El impacto es diez interior (X)? Se usa para el desempate. Cuenta por borde. */

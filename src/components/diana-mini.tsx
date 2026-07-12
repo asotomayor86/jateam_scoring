@@ -5,6 +5,7 @@ import {
   estadisticas,
   radioExterior,
   radioDiez,
+  puntMin,
 } from "@/lib/diana";
 
 // Paleta fija de diana (igual en claro y oscuro).
@@ -38,7 +39,7 @@ export function DianaMini({
   const tenR = radioDiez(SPEC);
   const stats = estadisticas(impactos);
   const rings: number[] = [];
-  for (let i = 0; i < SPEC.maxScore; i++) rings.push(tenR + i * SPEC.ringStep);
+  for (let i = 0; i <= SPEC.maxScore - puntMin(SPEC); i++) rings.push(tenR + i * SPEC.ringStep);
   return (
     <svg
       viewBox={`${-R} ${-R} ${VIEW} ${VIEW}`}
